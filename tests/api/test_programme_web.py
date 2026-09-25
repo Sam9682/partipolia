@@ -110,6 +110,22 @@ def _client(view: ProgramPageView) -> TestClient:
     return TestClient(_build_app(_FakeProgramService(view)))
 
 
+def test_root_redirects_to_programme() -> None:
+    """``GET /`` redirige (307) vers la page publique ``/programme`` (plus de 404)."""
+    response = _client(_sample_view()).get("/", follow_redirects=False)
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "/programme"
+
+
+def test_root_follows_redirect_to_programme_ok() -> None:
+    """En suivant la redirection, ``GET /`` aboutit à la page Programme (``200``)."""
+    response = _client(_sample_view()).get("/")
+
+    assert response.status_code == 200
+    assert "Programme" in response.text
+
+
 def test_programme_is_public_and_renders() -> None:
     """``GET /programme`` est public (``200``) et rend du HTML (Exigences 24.4, 25.1)."""
     response = _client(_sample_view()).get("/programme")

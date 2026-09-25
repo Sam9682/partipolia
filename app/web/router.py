@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,6 +41,23 @@ def get_program_service(
 ) -> ProgramService:
     """Dépendance fournissant un :class:`ProgramService` lié à la session de requête."""
     return ProgramService(session)
+
+
+@web_router.get(
+    "/",
+    name="accueil",
+    include_in_schema=False,
+    summary="Racine du site — redirige vers la page Programme",
+)
+async def accueil() -> RedirectResponse:
+    """Page d'accueil ``/`` : redirige vers la page publique ``/programme``.
+
+    La racine du site ne disposait d'aucun gestionnaire, ce qui produisait une
+    réponse ``404`` normalisée (``code`` ``NOT_FOUND``) lors de la consultation
+    de ``https://partipolia.fr``. On redirige donc vers la page Programme, point
+    d'entrée public consultable sans authentification (Exigence 24.4).
+    """
+    return RedirectResponse(url="/programme", status_code=307)
 
 
 @web_router.get(
