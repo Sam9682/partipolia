@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Mentions légales — PARTIPOLAI{% endblock %}
+
+{#
+  Page Mentions légales SSR (Exigence 28.3). Consultation sans authentification.
+#}
+
+{% block content %}
+  <article class="prose max-w-none">
+    <h1 class="text-2xl font-semibold text-slate-900">Mentions légales</h1>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold text-slate-800">Éditeur de la Plateforme</h2>
+      <p class="mt-2 text-slate-700">
+        PARTIPOLAI est une plateforme de participation citoyenne. Les informations
+        d'édition (raison sociale, adresse, contact) sont précisées par
+        l'exploitant lors de la mise en production.
+      </p>
+    </section>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold text-slate-800">Hébergement</h2>
+      <p class="mt-2 text-slate-700">
+        Les coordonnées de l'hébergeur sont communiquées par l'exploitant. La
+        Plateforme est conçue pour un hébergement respectueux de la
+        réglementation applicable aux données personnelles (RGPD).
+      </p>
+    </section>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold text-slate-800">Propriété intellectuelle</h2>
+      <p class="mt-2 text-slate-700">
+        Les contributions publiées (Propositions, Arguments, Commentaires)
+        restent celles de leurs auteurs. Les Sources documentaires citées
+        appartiennent à leurs éditeurs respectifs.
+      </p>
+    </section>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold text-slate-800">Données personnelles</h2>
+      <p class="mt-2 text-slate-700">
+        Le traitement des données personnelles est décrit sur la page
+        <a href="/confidentialite" class="text-blue-700 underline">Politique de confidentialité</a>.
+        L'usage des cookies est détaillé sur la page
+        <a href="/cookies" class="text-blue-700 underline">Cookies</a>.
+      </p>
+    </section>
+  </article>
+{% endblock %}

@@ -1,0 +1,155 @@
+# ---------------------------------------------------------------------------
+# PARTIPOLAI — Orchestration des services (Exigences 32.1, 32.2, 32.3, 33.1)
+#
+#   `docker compose up` démarre : web (API + SSR), worker (Celery), postgres
+#   (PostgreSQL 16 + pgvector), redis (broker/cache/rate limit) et nginx (bord
+#   HTTPS + en-têtes de sécurité + rate limit). `flower` est optionnel via le
+#   profil `monitoring`.
+#
+# Les secrets proviennent de `.env` (jamais committé — Exigence 32.6). Les URL
+# internes (postgres/redis) sont surchargées ici pour pointer sur les noms de
+# services du réseau Compose plutôt que sur `localhost`.
+# ---------------------------------------------------------------------------
+
+x-app-env: &app-env
+  # Connexions internes au réseau Compose (surchargent les valeurs .env locales).
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-partipolia}:${POSTGRES_PASSWORD:-partipolia}@postgres:5432/${POSTGRES_DB:-partipolia}
+  REDIS_URL: redis://redis:6379/0
+
+services:
+  # -------------------------------------------------------------------------
+  # Service Web : API REST /api/v1 + rendu SSR. Non exposé directement à
+  # l'extérieur — le trafic passe par nginx (Exigence 26.1 : tout via HTTPS).
+  # -------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      <<: *app-env
+    expose:
+      - "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - partipolia
+
+  # -------------------------------------------------------------------------
+  # Worker Celery : ingestion documentaire, embeddings, tâches asynchrones.
+  # -------------------------------------------------------------------------
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      <<: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - partipolia
+
+  # -------------------------------------------------------------------------
+  # PostgreSQL 16 + pgvector. Persistance via volume nommé (Exigence 32.2).
+  # -------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-partipolia}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-partipolia}
+      POSTGRES_DB: ${POSTGRES_DB:-partipolia}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-partipolia} -d ${POSTGRES_DB:-partipolia}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - partipolia
+
+  # -------------------------------------------------------------------------
+  # Redis : cache, broker Celery et limitation de débit (Exigence 32.3).
+  # -------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - partipolia
+
+  # -------------------------------------------------------------------------
+  # Nginx : bordure HTTPS, en-têtes de sécurité, rate limit (Exigences 26.1,
+  # 26.4, 26.6). Termine TLS et relaie vers le service web.
+  # -------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      web:
+        condition: service_started
+    networks:
+      - partipolia
+
+  # -------------------------------------------------------------------------
+  # Flower : supervision optionnelle du Worker Celery.
+  #   Activation : `docker compose --profile monitoring up`
+  # -------------------------------------------------------------------------
+  flower:
+    image: mher/flower:2.0
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    command: ["celery", "--broker=redis://redis:6379/0", "flower", "--port=5555"]
+    environment:
+      <<: *app-env
+    ports:
+      - "5555:5555"
+    depends_on:
+      redis:
+        condition: service_healthy
+      worker:
+        condition: service_started
+    networks:
+      - partipolia
+
+volumes:
+  # Volume de persistance PostgreSQL (Exigence 32.2 — les données survivent aux
+  # redémarrages / recréations de conteneurs).
+  pgdata:
+  redisdata:
+
+networks:
+  partipolia:
+    driver: bridge

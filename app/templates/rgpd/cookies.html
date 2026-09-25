@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Cookies — PARTIPOLAI{% endblock %}
+
+{#
+  Page Cookies SSR (Exigence 28.3). Consultation sans authentification.
+#}
+
+{% block content %}
+  <article class="prose max-w-none">
+    <h1 class="text-2xl font-semibold text-slate-900">Gestion des cookies</h1>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold text-slate-800">Cookies strictement nécessaires</h2>
+      <p class="mt-2 text-slate-700">
+        La Plateforme n'utilise que des cookies strictement nécessaires à son
+        fonctionnement, notamment les cookies d'authentification
+        (<code>access_token</code>, <code>refresh_token</code>) déposés lors de la
+        connexion. Ces cookies sont <strong>HttpOnly</strong>, transmis de manière
+        sécurisée et limités à la session.
+      </p>
+    </section>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold text-slate-800">Absence de traceurs publicitaires</h2>
+      <p class="mt-2 text-slate-700">
+        Aucun cookie de publicité, de mesure d'audience tierce ou de profilage
+        n'est déposé. La Plateforme ne constitue aucun profil politique individuel.
+      </p>
+    </section>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold text-slate-800">Votre consentement</h2>
+      <p class="mt-2 text-slate-700">
+        Les cookies strictement nécessaires ne requièrent pas de consentement.
+        Vos éventuels choix de consentement fonctionnels sont gérés depuis votre
+        espace, et détaillés sur la page
+        <a href="/confidentialite" class="text-blue-700 underline">Politique de confidentialité</a>.
+      </p>
+    </section>
+  </article>
+{% endblock %}

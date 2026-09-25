@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Conditions d'utilisation — PARTIPOLAI{% endblock %}
+
+{#
+  Page Conditions d'utilisation SSR (Exigence 28.3). Consultation sans authentification.
+#}
+
+{% block content %}
+  <article class="prose max-w-none">
+    <h1 class="text-2xl font-semibold text-slate-900">Conditions d'utilisation</h1>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold text-slate-800">Objet</h2>
+      <p class="mt-2 text-slate-700">
+        PARTIPOLAI est une plateforme de participation citoyenne permettant de
+        consulter des Propositions, de voter, de commenter et de débattre. La
+        consultation est libre ; la contribution nécessite un compte.
+      </p>
+    </section>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold text-slate-800">Règles de participation</h2>
+      <ul class="mt-3 list-disc space-y-1 pl-6 text-slate-700">
+        <li>Les contributions doivent respecter les personnes et la loi.</li>
+        <li>
+          Les contributions douteuses sont soumises à modération avant
+          publication.
+        </li>
+        <li>
+          L'Assistant IA documente et assiste : il ne vote pas et ne recommande
+          aucun vote individuel.
+        </li>
+      </ul>
+    </section>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold text-slate-800">Compte et données</h2>
+      <p class="mt-2 text-slate-700">
+        Vous pouvez à tout moment exporter vos données ou supprimer votre compte.
+        Le traitement de vos données est décrit dans la
+        <a href="/confidentialite" class="text-blue-700 underline">Politique de confidentialité</a>.
+      </p>
+    </section>
+  </article>
+{% endblock %}

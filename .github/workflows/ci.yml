@@ -1,0 +1,79 @@
+# PARTIPOLAI — Intégration continue (Exigence 32.5 : suite de tests exécutable qui passe).
+#
+# Le pipeline exécute successivement l'analyse statique (ruff), le typage (mypy)
+# et les tests (pytest), le tout via l'outillage `uv` (cf. Makefile / pyproject.toml).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Annule les exécutions redondantes sur une même branche/PR.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, typage et tests
+    runs-on: ubuntu-latest
+
+    # Postgres 16 + pgvector pour les tests d'intégration et les migrations.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: partipolia
+          POSTGRES_PASSWORD: partipolia
+          POSTGRES_DB: partipolia
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U partipolia"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Configuration minimale requise par les tests (aucun secret réel — Exigence 32.6).
+      DATABASE_URL: postgresql+psycopg://partipolia:partipolia@localhost:5432/partipolia
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: ci-test-secret-not-for-production
+      APP_ENV: test
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v4
+
+      - name: Installation de uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Installation de Python 3.13
+        run: uv python install 3.13
+
+      - name: Installation des dépendances (runtime + extras + dev)
+        run: uv sync --all-extras --dev
+
+      - name: Analyse statique (ruff)
+        run: |
+          uv run ruff check app tests scripts
+          uv run ruff format --check app tests scripts
+
+      - name: Vérification du typage (mypy)
+        run: uv run mypy app
+
+      - name: Tests (pytest)
+        run: uv run pytest

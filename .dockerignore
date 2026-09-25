@@ -1,0 +1,48 @@
+# PARTIPOLAI — contexte de build minimal (Exigences 32.6 : pas de secret en image)
+
+# Secrets & environnement
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Contrôle de version & CI
+.git
+.gitignore
+.github
+
+# Caches Python & outillage
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.uv/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+htmlcov/
+coverage.xml
+
+# Tests (non nécessaires à l'exécution en production)
+tests/
+
+# Données locales / volumes
+pgdata/
+*.sqlite3
+
+# Docker & specs
+Dockerfile
+Dockerfile.worker
+docker-compose.yml
+.dockerignore
+.kiro/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Programme — PARTIPOLAI{% endblock %}
+
+{#
+  Page Programme SSR (Exigences 24.2, 24.3, 24.4, 25.1).
+
+  Affiche la liste des Thèmes et, pour chaque mesure incluse au Programme, le
+  nombre de propositions, le nombre de votes, le soutien agrégé et les coûts,
+  recettes et économies estimés (Exigence 24.2). Les hypothèses des agrégats
+  financiers sont explicitées (Exigence 24.3). Consultation sans authentification
+  (Exigence 24.4).
+#}
+
+{% macro money(amount) -%}
+  {%- if amount is none -%}
+    <span class="text-slate-400">Non estimé</span>
+  {%- else -%}
+    {{ "{:,.0f}".format(amount).replace(",", " ") }} €
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro support(support_count, oppose_count, support_rate) -%}
+  {#- Un pourcentage n'est jamais affiché seul : on montre toujours les décomptes absolus (Exigence 7.4). -#}
+  {{ (support_rate * 100) | round(1) }}%
+  <span class="text-slate-500">({{ support_count }} pour / {{ oppose_count }} contre)</span>
+{%- endmacro %}
+
+{% block content %}
+  <section class="mb-8">
+    <h1 class="text-2xl font-bold text-slate-900">Programme</h1>
+    <p class="mt-2 text-sm text-slate-600">
+      Restitution des mesures incluses au Programme, regroupées par Thème. Les
+      décomptes de participation et les estimations financières sont factuels.
+    </p>
+  </section>
+
+  {# Encart d'hypothèses des agrégats financiers (Exigence 24.3). #}
+  <section
+    class="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+    aria-label="Hypothèses des agrégats financiers"
+    data-testid="financial-assumptions"
+  >
+    <h2 class="font-semibold">Hypothèses des agrégats financiers</h2>
+    <ul class="mt-2 list-disc space-y-1 pl-5">
+      <li>Les montants sont des <strong>estimations</strong> déclarées mesure par mesure, non des chiffres consolidés certifiés.</li>
+      <li>Les totaux par Thème et pour le Programme sont la <strong>somme des montants estimés renseignés</strong> ; une mesure « Non estimé » ne contribue pas au total.</li>
+      <li>Les montants sont exprimés en euros, hors actualisation et hors variation dans le temps.</li>
+      <li>Coûts, recettes et économies sont présentés séparément et ne sont pas compensés entre eux.</li>
+    </ul>
+  </section>
+
+  {# Totaux du Programme. #}
+  <section class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4" data-testid="program-totals">
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="text-xs uppercase tracking-wide text-slate-500">Mesures</p>
+      <p class="mt-1 text-xl font-semibold">{{ program.total_measure_count }}</p>
+    </div>
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="text-xs uppercase tracking-wide text-slate-500">Votes exprimés</p>
+      <p class="mt-1 text-xl font-semibold">{{ program.total_vote_count }}</p>
+    </div>
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="text-xs uppercase tracking-wide text-slate-500">Coût estimé</p>
+      <p class="mt-1 text-xl font-semibold">{{ money(program.total_estimated_cost) }}</p>
+    </div>
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="text-xs uppercase tracking-wide text-slate-500">Recettes / Économies estimées</p>
+      <p class="mt-1 text-sm font-semibold">
+        {{ money(program.total_estimated_revenue) }} / {{ money(program.total_estimated_savings) }}
+      </p>
+    </div>
+  </section>
+
+  {% if program.themes %}
+    <div class="space-y-6" data-testid="theme-list">
+      {% for theme in program.themes %}
+        <section
+          class="rounded-lg border border-slate-200 bg-white"
+          data-testid="theme"
+          data-theme-slug="{{ theme.slug }}"
+        >
+          <header class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-100 px-5 py-4">
+            <h2 class="text-lg font-semibold text-slate-900">{{ theme.name }}</h2>
+            <p class="text-sm text-slate-500">
+              {{ theme.measure_count }} proposition{{ "s" if theme.measure_count > 1 else "" }}
+              · {{ theme.vote_count }} vote{{ "s" if theme.vote_count > 1 else "" }}
+              · Soutien {{ support(theme.support_count, theme.oppose_count, theme.support_rate) }}
+            </p>
+          </header>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th scope="col" class="px-5 py-2">Mesure</th>
+                  <th scope="col" class="px-5 py-2">Votes</th>
+                  <th scope="col" class="px-5 py-2">Soutien</th>
+                  <th scope="col" class="px-5 py-2">Coût estimé</th>
+                  <th scope="col" class="px-5 py-2">Recettes estimées</th>
+                  <th scope="col" class="px-5 py-2">Économies estimées</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                {% for measure in theme.measures %}
+                  <tr data-testid="measure" data-proposal-slug="{{ measure.slug }}">
+                    <td class="px-5 py-3">
+                      <a href="/propositions/{{ measure.slug }}" class="font-medium text-slate-900 hover:underline">
+                        {{ measure.title }}
+                      </a>
+                    </td>
+                    <td class="px-5 py-3 text-slate-600">{{ measure.participation_count }}</td>
+                    <td class="px-5 py-3 text-slate-600">
+                      {{ support(measure.support_count, measure.oppose_count, measure.support_rate) }}
+                    </td>
+                    <td class="px-5 py-3 text-slate-600">{{ money(measure.estimated_cost) }}</td>
+                    <td class="px-5 py-3 text-slate-600">{{ money(measure.estimated_revenue) }}</td>
+                    <td class="px-5 py-3 text-slate-600">{{ money(measure.estimated_savings) }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="rounded-lg border border-slate-200 bg-white p-6 text-slate-600" data-testid="empty-program">
+      Aucune mesure n'a encore été incluse au Programme.
+    </p>
+  {% endif %}
+{% endblock %}

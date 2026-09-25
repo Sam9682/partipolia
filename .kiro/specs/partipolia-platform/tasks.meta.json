@@ -1,0 +1,1212 @@
+{
+  "pbtResults": {
+    "5.3 Test de propriété : round-trip de retrait de Vote": {
+      "status": "passed",
+      "lastRunTimestamp": 1789647341884
+    },
+    "6.5 Test de propriété : invariants de chunking et préservation des métadonnées": {
+      "status": "passed",
+      "lastRunTimestamp": 1789648078273
+    },
+    "7.2 Test de propriété : somme des poids de fusion égale à 1.0": {
+      "status": "passed",
+      "lastRunTimestamp": 1789648743272
+    },
+    "7.4 Test de propriété : reranking — exactement 6 parmi les 20 meilleurs": {
+      "status": "passed",
+      "lastRunTimestamp": 1789648748357
+    },
+    "7.8 Test de propriété : découplage IA — non-écriture dans les tables de décision": {
+      "status": "passed",
+      "lastRunTimestamp": 1789651051726
+    },
+    "7.7 Test de propriété : ancrage documentaire des réponses RAG": {
+      "status": "passed",
+      "lastRunTimestamp": 1789651058136
+    }
+  },
+  "executionHistory": {
+    "1.1 Initialiser le projet Python et l'outillage": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594025036
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594043410
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594612524
+      }
+    ],
+    "1.2 Implémenter `app/core/config.py` (configuration par variables d'environnement)": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594025206
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594617069
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594867274
+      }
+    ],
+    "1.3 Implémenter `app/core/database.py` et `app/core/redis.py`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594025428
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594618418
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594868732
+      }
+    ],
+    "1.4 Implémenter `app/core/logging.py` (journalisation structurée + request_id)": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594025550
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594619389
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594869746
+      }
+    ],
+    "1.5 Créer le point d'entrée FastAPI et les health checks": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594025702
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594874313
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789595357520
+      }
+    ],
+    "1.6 Conteneurisation et orchestration": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594025818
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594875738
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789595358802
+      }
+    ],
+    "1.7 Initialiser Alembic et l'intégration continue": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594025974
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594876661
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789595359744
+      }
+    ],
+    "2.1 Modèles noyau : `users`, `themes`, `proposals`, `proposal_versions`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594026092
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789595365456
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789597647177
+      }
+    ],
+    "2.2 Modèles de participation : `votes`, `arguments`, `comments`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594026212
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789595366899
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789597648384
+      }
+    ],
+    "2.3 Modèles documentaires : `sources`, `proposal_sources`, `documents`, `document_chunks`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594026355
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789595368300
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789597649784
+      }
+    ],
+    "2.4 Modèles programme, équipes, mandat, audit : `programs`, `program_proposals`, `teams`,": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594026499
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789595369541
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789597651167
+      }
+    ],
+    "2.5 Migration Alembic initiale et index de recherche": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594026656
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789597655588
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789598029244
+      }
+    ],
+    "2.6 Scripts d'amorçage : `scripts/seed.py` et `scripts/create_admin.py`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594026770
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789598033730
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789598233295
+      }
+    ],
+    "3.1 Implémenter `app/services/auth_service.py`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594026926
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789598035130
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789598230843
+      }
+    ],
+    "3.2 Tests unitaires d'`auth_service`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594027059
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789601256620
+      },
+      {
+        "executionId": "9cb1bc51-c9e9-4b28-b18a-201e80eb8f69",
+        "chatSessionId": "sess_d1fd12f9-663b-4e96-a110-3ec03281409a",
+        "timestamp": 1789655322262
+      }
+    ],
+    "3.3 Schémas d'auth et endpoints API `app/api/v1/auth.py`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594027190
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789601256975
+      },
+      {
+        "executionId": "9cb1bc51-c9e9-4b28-b18a-201e80eb8f69",
+        "chatSessionId": "sess_d1fd12f9-663b-4e96-a110-3ec03281409a",
+        "timestamp": 1789655323514
+      }
+    ],
+    "3.4 Dépendances d'autorisation `app/api/deps.py`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594027309
+      },
+      {
+        "executionId": "9cb1bc51-c9e9-4b28-b18a-201e80eb8f69",
+        "chatSessionId": "sess_d1fd12f9-663b-4e96-a110-3ec03281409a",
+        "timestamp": 1789655324934
+      }
+    ],
+    "3.5 Tests d'API d'authentification": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594027463
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789630228564
+      },
+      {
+        "executionId": "9cb1bc51-c9e9-4b28-b18a-201e80eb8f69",
+        "chatSessionId": "sess_d1fd12f9-663b-4e96-a110-3ec03281409a",
+        "timestamp": 1789655626288
+      }
+    ],
+    "4. Thèmes et Propositions": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594027632
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653479335
+      }
+    ],
+    "4.1 Implémenter `app/services/theme_service.py` et l'API Thèmes": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594027824
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789630229857
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789634532091
+      }
+    ],
+    "4.2 Implémenter `app/services/proposal_service.py` (création, versionnement, archivage)": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594027999
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789630231277
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789634509124
+      }
+    ],
+    "4.3 Test de propriété : versionnement monotone et historique immuable": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594028156
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789643977807
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789647896677
+      }
+    ],
+    "4.4 Tests unitaires de `proposal_service`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594028294
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789643979158
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789647897630
+      }
+    ],
+    "4.5 Schémas et API des Propositions `app/api/v1/proposals.py`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594028423
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648636007
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789649478759
+      }
+    ],
+    "4.6 Implémenter `app/services/popularity_service.py`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594028543
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789630232686
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789634510585
+      }
+    ],
+    "4.7 Test de propriété : taux de soutien borné et exclusion du NEUTRE": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594028667
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789643980557
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789647899062
+      }
+    ],
+    "5.1 Implémenter `app/services/vote_service.py` (UPSERT/retrait/décomptes)": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594028789
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789630234045
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789634511607
+      }
+    ],
+    "5.2 Test de propriété : unicité et idempotence du Vote": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594028907
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789643981986
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789647900445
+      }
+    ],
+    "5.3 Test de propriété : round-trip de retrait de Vote": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594029051
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789643983052
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789647901509
+      }
+    ],
+    "5.4 API des Votes `app/api/v1/votes.py`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594029181
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648637399
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789649474613
+      }
+    ],
+    "5.5 Implémenter `app/services/argument_service.py` et l'API Arguments": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594029305
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789647906068
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648490024
+      }
+    ],
+    "5.6 Implémenter `app/services/audit_service.py`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594029439
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789634548418
+      },
+      {
+        "executionId": "9cb1bc51-c9e9-4b28-b18a-201e80eb8f69",
+        "chatSessionId": "sess_d1fd12f9-663b-4e96-a110-3ec03281409a",
+        "timestamp": 1789655326306
+      }
+    ],
+    "5.7 Implémenter `app/services/moderation_service.py` (Moteur_De_Modération)": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594029567
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789647907469
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648492799
+      }
+    ],
+    "5.8 Implémenter `app/services/comment_service.py` et l'API Commentaires": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594029719
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648638361
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789649476050
+      }
+    ],
+    "5.9 Tests unitaires de `vote_service` et contrôle d'accès Arguments/Commentaires": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594029850
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650080488
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650621890
+      }
+    ],
+    "6.1 Implémenter `app/services/source_service.py` et l'API Sources": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594030007
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789634549800
+      },
+      {
+        "executionId": "9cb1bc51-c9e9-4b28-b18a-201e80eb8f69",
+        "chatSessionId": "sess_d1fd12f9-663b-4e96-a110-3ec03281409a",
+        "timestamp": 1789655327797
+      }
+    ],
+    "6.2 Définir les Protocols Providers IA `app/rag/providers/`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594030151
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789598036064
+      },
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789598232214
+      }
+    ],
+    "6.3 Implémenter les modules d'ingestion `app/rag/` (téléchargement → chunking)": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594030318
+      },
+      {
+        "executionId": "4d706a23-e647-4e12-87c7-a8dd8947e206",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789634550915
+      },
+      {
+        "executionId": "9cb1bc51-c9e9-4b28-b18a-201e80eb8f69",
+        "chatSessionId": "sess_d1fd12f9-663b-4e96-a110-3ec03281409a",
+        "timestamp": 1789655627409
+      }
+    ],
+    "6.4 Test de propriété : idempotence de l'ingestion par checksum": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594030446
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789647908932
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648493740
+      }
+    ],
+    "6.5 Test de propriété : invariants de chunking et préservation des métadonnées": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594030585
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789647910355
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648491422
+      }
+    ],
+    "6.6 Tâches Celery d'ingestion `app/workers/`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594030708
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789649486081
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650070177
+      }
+    ],
+    "6.7 Endpoint d'ingestion et script `scripts/ingest_sources.py`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594030852
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650630798
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650907012
+      }
+    ],
+    "7.1 Implémenter `HybridSearch` et `ScoreFusion` (`app/rag/`)": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594030955
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789647911583
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648488697
+      }
+    ],
+    "7.2 Test de propriété : somme des poids de fusion égale à 1.0": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594031095
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648639759
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789649473265
+      }
+    ],
+    "7.3 Implémenter `Reranker` (`app/rag/`)": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594031232
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648501731
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648630228
+      }
+    ],
+    "7.4 Test de propriété : reranking — exactement 6 parmi les 20 meilleurs": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594031351
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789648641249
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789649477429
+      }
+    ],
+    "7.5 Implémenter `QuestionClassifier`, `QueryRewriter`, `ContextBuilder`, `CitationValidator`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594031490
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789649484831
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650068986
+      }
+    ],
+    "7.6 Implémenter `RagPipeline` et le prompt système avec garde-fous": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594031611
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650075065
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650617862
+      }
+    ],
+    "7.7 Test de propriété : ancrage documentaire des réponses RAG": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594031742
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650912081
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789651562475
+      }
+    ],
+    "7.8 Test de propriété : découplage IA — non-écriture dans les tables de décision": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594031862
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650913467
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789651558431
+      }
+    ],
+    "7.9 Endpoint chat, journalisation RAG et détection de doublons": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594032022
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650914890
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789651559809
+      }
+    ],
+    "7.10 Tests unitaires `rag_retriever` et `ranking`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594032168
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789651570704
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789652569477
+      }
+    ],
+    "8.1 Implémenter `app/services/program_service.py` et l'API Programme": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594032333
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650076449
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650616572
+      }
+    ],
+    "8.2 Tests unitaires de `program_service`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594032467
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650916402
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789651556980
+      }
+    ],
+    "8.3 Implémenter `TeamService`, `MandateService` et leurs API": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594032602
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650078016
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650619252
+      }
+    ],
+    "8.4 Implémenter `app/services/statistics_service.py` et l'API statistiques": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594032737
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650079301
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650620727
+      }
+    ],
+    "8.5 Page SSR du Programme avec hypothèses financières": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594032850
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789650917295
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789651561249
+      }
+    ],
+    "9. Checkpoint — Assurer que tous les tests passent": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594033002
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653486076
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653729991
+      }
+    ],
+    "10.1 Middleware de sécurité et gestion globale des exceptions `app/core/`": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594033151
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789651568392
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789652570548
+      }
+    ],
+    "10.2 Limitation de débit basée sur Redis": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594033275
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789652580673
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653120434
+      }
+    ],
+    "10.3 Pages et fonctions RGPD": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594033391
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789651569393
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789652568129
+      }
+    ],
+    "11.1 Tests d'API des Propositions, Votes et Commentaires": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594033528
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653130746
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653464479
+      }
+    ],
+    "11.2 Tests d'API du chat RAG": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594033642
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653131796
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653465869
+      }
+    ],
+    "11.3 Dataset et évaluation du Pipeline RAG (`tests/rag/`)": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594033753
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653133198
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653467197
+      }
+    ],
+    "11.4 Tests d'intégration d'infrastructure et santé": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594033857
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653134383
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653463586
+      }
+    ],
+    "12. Checkpoint final — Assurer que tous les tests passent": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789594033965
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653735324
+      },
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789654736505
+      }
+    ],
+    "1. Échafaudage du projet et infrastructure": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789595359858
+      }
+    ],
+    "2. Couche de données (modèles SQLAlchemy et migrations)": [
+      {
+        "executionId": "6a3c5fe4-d5df-4771-972d-17bbda701fb5",
+        "chatSessionId": "sess_250a8522-35a9-4c03-9c3a-14257afe1d9e",
+        "timestamp": 1789598233423
+      }
+    ],
+    "4.7b Pages SSR de restitution des Propositions et Thèmes": [
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789649478896
+      }
+    ],
+    "8. Programme, équipes, mandat et statistiques": [
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789651561470
+      }
+    ],
+    "7. Recherche hybride et Assistant IA/RAG": [
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789652569638
+      }
+    ],
+    "10. Sécurité, conformité et durcissement": [
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653120675
+      }
+    ],
+    "11. Tests d'API, d'intégration et évaluation RAG": [
+      {
+        "executionId": "f499c0b1-edaf-4eba-a349-1385790e48a4",
+        "chatSessionId": "sess_2c991f40-87ce-4868-a815-9b0250f3aaf3",
+        "timestamp": 1789653467337
+      }
+    ],
+    "5. Vote, Arguments, Commentaires et modération simple": [
+      {
+        "executionId": "9cb1bc51-c9e9-4b28-b18a-201e80eb8f69",
+        "chatSessionId": "sess_d1fd12f9-663b-4e96-a110-3ec03281409a",
+        "timestamp": 1789655326464
+      }
+    ],
+    "3. Authentification et contrôle d'accès": [
+      {
+        "executionId": "9cb1bc51-c9e9-4b28-b18a-201e80eb8f69",
+        "chatSessionId": "sess_d1fd12f9-663b-4e96-a110-3ec03281409a",
+        "timestamp": 1789655626546
+      }
+    ],
+    "6. Sources et pipeline d'ingestion documentaire": [
+      {
+        "executionId": "9cb1bc51-c9e9-4b28-b18a-201e80eb8f69",
+        "chatSessionId": "sess_d1fd12f9-663b-4e96-a110-3ec03281409a",
+        "timestamp": 1789655627623
+      }
+    ]
+  }
+}
