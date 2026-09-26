@@ -29,7 +29,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
@@ -114,6 +114,21 @@ async def health() -> dict[str, str]:
     seulement que le processus applicatif répond.
     """
     return {"status": "ok"}
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon() -> FileResponse:
+    """Sert l'icône du site pour les requêtes automatiques ``GET /favicon.ico``.
+
+    Les navigateurs demandent ``/favicon.ico`` par défaut ; sans gestionnaire,
+    cela produisait une réponse ``404`` bruitant les journaux d'accès. On renvoie
+    l'icône SVG servie sous ``app/static/favicon.svg`` avec un en-tête de cache.
+    """
+    return FileResponse(
+        STATIC_DIR / "favicon.svg",
+        media_type="image/svg+xml",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @app.get("/ready", tags=["ops"], summary="Sonde de disponibilité")

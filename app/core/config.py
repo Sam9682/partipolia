@@ -18,6 +18,7 @@ Principes directeurs :
 
 from __future__ import annotations
 
+import json
 from functools import lru_cache
 from typing import Literal
 
@@ -36,6 +37,13 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
+        # Désactive le décodage JSON automatique des champs « complexes »
+        # (ex. ``list[str]``). Sans cela, ``pydantic-settings`` tente un
+        # ``json.loads`` sur la valeur brute d'environnement AVANT nos
+        # validateurs, ce qui échoue pour une liste séparée par des virgules
+        # (``CORS_ALLOW_ORIGINS=http://a,http://b``). La valeur brute atteint
+        # ainsi le validateur ``_split_csv`` qui la découpe correctement.
+        enable_decoding=False,
     )
 
     # --- Application -------------------------------------------------------
@@ -144,9 +152,19 @@ class Settings(BaseSettings):
         """Autorise une liste séparée par des virgules dans une variable d'environnement.
 
         ``CORS_ALLOW_ORIGINS=http://a,http://b`` devient ``["http://a", "http://b"]``.
-        Une valeur déjà de type liste est renvoyée telle quelle.
+        Par robustesse, une chaîne au format tableau JSON (``["http://a","http://b"]``)
+        est également acceptée. Une valeur déjà de type liste est renvoyée telle quelle.
         """
         if isinstance(value, str):
+            stripped = value.strip()
+            # Repli : accepter également une syntaxe tableau JSON explicite.
+            if stripped.startswith("[") and stripped.endswith("]"):
+                try:
+                    parsed = json.loads(stripped)
+                except json.JSONDecodeError:
+                    parsed = None
+                if isinstance(parsed, list):
+                    return [str(item).strip() for item in parsed]
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
 

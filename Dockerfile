@@ -43,6 +43,9 @@ COPY scripts ./scripts
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --extra openai --no-dev
 
+# Rendre le point d'entrée exécutable (applique les migrations au démarrage).
+RUN chmod +x /app/scripts/entrypoint.sh
+
 # ---------------------------------------------------------------------------
 # Utilisateur non-root (Exigence 26 — surface d'attaque réduite).
 # ---------------------------------------------------------------------------
@@ -55,6 +58,9 @@ EXPOSE 8000
 # Health check applicatif (Exigence 27.1) : /health répond {status: ok}.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -fsS http://localhost:8000/health || exit 1
+
+# Applique les migrations Alembic (idempotent) puis lance le serveur.
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]
 
 # Serveur ASGI. En production, Gunicorn pilote des workers Uvicorn ; le nombre
 # de workers reste surchargeable via la variable d'environnement WEB_CONCURRENCY.

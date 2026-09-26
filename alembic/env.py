@@ -104,6 +104,12 @@ async def run_async_migrations() -> None:
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
+        # La connexion async ``AsyncConnection`` détient la transaction DBAPI
+        # réelle. ``context.begin_transaction()`` (dans ``do_run_migrations``)
+        # opère sur la façade *sync* et ne valide pas la transaction externe :
+        # sans ce ``commit`` explicite, tout le DDL est annulé à la fermeture de
+        # la connexion (``alembic upgrade`` réussit mais ne crée aucune table).
+        await connection.commit()
 
     await connectable.dispose()
 
