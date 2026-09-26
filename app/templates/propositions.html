@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Propositions — PARTIPOLAI{% endblock %}
+
+{#
+  Page Propositions SSR (Exigences 2.1, 4.3). Liste publique des Propositions,
+  consultable sans authentification. Reçoit ``proposals`` : liste de dicts issus
+  de ``ProposalSummary.model_dump()`` (champs ``id``, ``slug``, ``title``,
+  ``theme_id``, ``author_id``, ``status``, ``version``, ``created_at``,
+  ``updated_at``) et ``total`` : nombre total de Propositions correspondant.
+#}
+
+{% block content %}
+  <section class="mb-8">
+    <h1 class="text-2xl font-bold text-slate-900">Propositions</h1>
+    <p class="mt-2 text-sm text-slate-600">
+      Liste des Propositions publiées. Le tri ne s'appuie jamais sur le nombre de
+      votes.
+    </p>
+  </section>
+
+  <section class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2" data-testid="proposals-totals">
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="text-xs uppercase tracking-wide text-slate-500">Total des Propositions</p>
+      <p class="mt-1 text-xl font-semibold">{{ total }}</p>
+    </div>
+  </section>
+
+  {% if proposals %}
+    <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white" data-testid="proposal-list">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th scope="col" class="px-5 py-2">Proposition</th>
+            <th scope="col" class="px-5 py-2">Statut</th>
+            <th scope="col" class="px-5 py-2">Version</th>
+            <th scope="col" class="px-5 py-2">Créée le</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for proposal in proposals %}
+            <tr data-testid="proposal" data-proposal-slug="{{ proposal.slug }}">
+              <td class="px-5 py-3">
+                <a href="/propositions/{{ proposal.slug }}" class="font-medium text-slate-900 hover:underline">
+                  {{ proposal.title }}
+                </a>
+              </td>
+              <td class="px-5 py-3 text-slate-600">{{ proposal.status }}</td>
+              <td class="px-5 py-3 text-slate-600">{{ proposal.version }}</td>
+              <td class="px-5 py-3 text-slate-600">{{ proposal.created_at }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="rounded-lg border border-slate-200 bg-white p-6 text-slate-600" data-testid="empty-proposals">
+      Aucune Proposition n'a encore été publiée.
+    </p>
+  {% endif %}
+{% endblock %}

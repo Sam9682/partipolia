@@ -8,13 +8,27 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    {# Feuille de style locale de repli : garantit un rendu correct lorsque le
+       CDN Tailwind est absent, sans surcharger ni casser le CDN quand il est
+       présent (Exigences 2.2 et 2.3). Chargée en plus du CDN. #}
+    <link rel="stylesheet" href="/static/css/app.css" />
   </head>
   <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
     <header class="border-b border-slate-200 bg-white">
       <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
         <a href="/" class="text-lg font-semibold text-slate-900">PARTIPOLAI</a>
         <nav class="flex gap-4 text-sm">
+          {# Menu piloté par les données via la source de vérité serveur
+             ``nav_items`` (Exigence 2.1). Repli sûr : si ``nav_items`` est
+             absent ou vide, on rend au moins le lien « Programme » afin de ne
+             jamais régresser sous l'état actuel. #}
+          {% if nav_items %}
+            {% for item in nav_items %}
+          <a href="{{ item.href }}" class="text-slate-600 hover:text-slate-900">{{ item.label }}</a>
+            {% endfor %}
+          {% else %}
           <a href="/programme" class="text-slate-600 hover:text-slate-900">Programme</a>
+          {% endif %}
         </nav>
       </div>
     </header>

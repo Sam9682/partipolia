@@ -1,0 +1,494 @@
+/*
+ * PARTIPOLAI — Feuille de style locale (repli hors-CDN).
+ *
+ * Actif autonome servi par le montage StaticFiles sur /static (voir app/main.py).
+ * Il couvre la mise en page et les composants utilisés par base.html et les
+ * gabarits SSR (programme, thèmes, propositions, statistiques, équipes, mandat,
+ * assistant, pages RGPD) afin que les pages restent mises en forme lorsque le
+ * CDN Tailwind (cdn.tailwindcss.com) n'est pas disponible (blocage réseau,
+ * hors-ligne, CSP).
+ *
+ * Principes :
+ *  - Chaque règle reproduit une classe utilitaire Tailwind réellement employée
+ *    par les gabarits, avec la même faible spécificité (sélecteur de classe
+ *    unique). Quand le CDN EST présent, il génère les mêmes classes ; l'ordre et
+ *    la spécificité identiques garantissent un rendu équivalent sans surcharge.
+ *  - Aucun !important : le CSS local ne casse ni ne surcharge le rendu Tailwind
+ *    quand le CDN fonctionne (Exigence 3.4).
+ *  - Un reset minimal reproduit l'essentiel du "preflight" de Tailwind pour les
+ *    éléments utilisés, afin d'éviter le rendu HTML brut (police serif, liens
+ *    bleus soulignés) quand le CDN est absent.
+ *
+ * Palette (sous-ensemble Tailwind) :
+ *   slate-50  #f8fafc   slate-100 #f1f5f9   slate-200 #e2e8f0
+ *   slate-400 #94a3b8   slate-500 #64748b   slate-600 #475569
+ *   slate-700 #334155   slate-800 #1e293b   slate-900 #0f172a
+ *   amber-50  #fffbeb   amber-200 #fde68a   amber-900 #78350f
+ *   blue-700  #1d4ed8   white     #ffffff
+ */
+
+/* ---------------------------------------------------------------------------
+ * Reset minimal (équivalent preflight)
+ * ------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+}
+
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+}
+
+body {
+  margin: 0;
+  line-height: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+}
+
+p,
+ul,
+ol {
+  margin: 0;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+strong {
+  font-weight: bolder;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 1em;
+}
+
+table {
+  border-collapse: collapse;
+  text-indent: 0;
+  border-color: inherit;
+}
+
+th,
+td {
+  padding: 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+/* ---------------------------------------------------------------------------
+ * Mise en page / dimensions
+ * ------------------------------------------------------------------------- */
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.max-w-5xl {
+  max-width: 64rem;
+}
+
+.max-w-none {
+  max-width: none;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.min-w-full {
+  min-width: 100%;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+/* ---------------------------------------------------------------------------
+ * Flexbox / Grille
+ * ------------------------------------------------------------------------- */
+.flex {
+  display: flex;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-baseline {
+  align-items: baseline;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.grid {
+  display: grid;
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* espacements verticaux entre enfants (space-y-*) */
+.space-y-1 > * + * {
+  margin-top: 0.25rem;
+}
+
+.space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+/* séparateurs entre enfants (divide-y + couleurs) */
+.divide-y > * + * {
+  border-top-width: 1px;
+}
+
+.divide-slate-100 > * + * {
+  border-color: #f1f5f9;
+}
+
+.divide-slate-200 > * + * {
+  border-color: #e2e8f0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Marges externes
+ * ------------------------------------------------------------------------- */
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.mb-10 {
+  margin-bottom: 2.5rem;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-3 {
+  margin-top: 0.75rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Marges internes (padding)
+ * ------------------------------------------------------------------------- */
+.p-4 {
+  padding: 1rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.px-5 {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.py-4 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.py-6 {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.py-8 {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.pr-4 {
+  padding-right: 1rem;
+}
+
+.pl-5 {
+  padding-left: 1.25rem;
+}
+
+.pl-6 {
+  padding-left: 1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Typographie
+ * ------------------------------------------------------------------------- */
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.tracking-wide {
+  letter-spacing: 0.025em;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.antialiased {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.underline {
+  text-decoration-line: underline;
+}
+
+.list-disc {
+  list-style-type: disc;
+}
+
+/* ---------------------------------------------------------------------------
+ * Couleurs de fond
+ * ------------------------------------------------------------------------- */
+.bg-white {
+  background-color: #ffffff;
+}
+
+.bg-slate-50 {
+  background-color: #f8fafc;
+}
+
+.bg-amber-50 {
+  background-color: #fffbeb;
+}
+
+/* ---------------------------------------------------------------------------
+ * Couleurs de texte
+ * ------------------------------------------------------------------------- */
+.text-slate-400 {
+  color: #94a3b8;
+}
+
+.text-slate-500 {
+  color: #64748b;
+}
+
+.text-slate-600 {
+  color: #475569;
+}
+
+.text-slate-700 {
+  color: #334155;
+}
+
+.text-slate-800 {
+  color: #1e293b;
+}
+
+.text-slate-900 {
+  color: #0f172a;
+}
+
+.text-amber-900 {
+  color: #78350f;
+}
+
+.text-blue-700 {
+  color: #1d4ed8;
+}
+
+/* ---------------------------------------------------------------------------
+ * Bordures et couleurs de bordure
+ * ------------------------------------------------------------------------- */
+.border {
+  border-width: 1px;
+}
+
+.border-b {
+  border-bottom-width: 1px;
+}
+
+.border-t {
+  border-top-width: 1px;
+}
+
+.border-slate-100 {
+  border-color: #f1f5f9;
+}
+
+.border-slate-200 {
+  border-color: #e2e8f0;
+}
+
+.border-amber-200 {
+  border-color: #fde68a;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Typographie « prose » (pages RGPD)
+ * Rendu lisible minimal pour <article class="prose">.
+ * ------------------------------------------------------------------------- */
+.prose {
+  color: #334155;
+  max-width: 65ch;
+}
+
+.prose :where(h1, h2, h3):not(:first-child) {
+  margin-top: 1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+ * Interactions (hover)
+ * ------------------------------------------------------------------------- */
+.hover\:text-slate-700:hover {
+  color: #334155;
+}
+
+.hover\:text-slate-900:hover {
+  color: #0f172a;
+}
+
+.hover\:underline:hover {
+  text-decoration-line: underline;
+}
+
+/* ---------------------------------------------------------------------------
+ * Variantes responsives (points de rupture Tailwind : sm=640px, lg=1024px)
+ * ------------------------------------------------------------------------- */
+@media (min-width: 640px) {
+  .sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sm\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sm\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

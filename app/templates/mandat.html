@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Mandat — PARTIPOLAI{% endblock %}
+
+{#
+  Page Mandat SSR (Exigences 2.1, 21.1, 21.3). Suivi public des Engagements et
+  Indicateurs du mandat, consultable sans authentification.
+
+  Reçoit :
+  * ``commitments`` : liste de dicts issus de ``CommitmentPublic.model_dump()``
+    (champs ``id``, ``title``, ``status``, ``target_date``, ``progress``,
+    ``notes``, ``created_at``, ``updated_at``) ;
+  * ``indicators`` : liste de dicts issus de ``IndicatorPublic.model_dump()``
+    (champs ``id``, ``name``, ``unit``, ``baseline``, ``target``,
+    ``current_value``, ``source_id``, ``created_at``, ``updated_at``).
+#}
+
+{% macro nullable(value) -%}
+  {%- if value is none -%}
+    <span class="text-slate-400">—</span>
+  {%- else -%}
+    {{ value }}
+  {%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+  <section class="mb-8">
+    <h1 class="text-2xl font-bold text-slate-900">Mandat</h1>
+    <p class="mt-2 text-sm text-slate-600">
+      Suivi des Engagements pris et des Indicateurs mesurant leur avancement.
+    </p>
+  </section>
+
+  <section class="mb-10">
+    <h2 class="mb-4 text-lg font-semibold text-slate-900">Engagements</h2>
+    {% if commitments %}
+      <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white" data-testid="commitment-list">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th scope="col" class="px-5 py-2">Engagement</th>
+              <th scope="col" class="px-5 py-2">Statut</th>
+              <th scope="col" class="px-5 py-2">Échéance</th>
+              <th scope="col" class="px-5 py-2">Avancement</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for commitment in commitments %}
+              <tr data-testid="commitment" data-commitment-id="{{ commitment.id }}">
+                <td class="px-5 py-3 font-medium text-slate-900">{{ commitment.title }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ commitment.status }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ nullable(commitment.target_date) }}</td>
+                <td class="px-5 py-3 text-slate-600">
+                  {% if commitment.progress is none %}<span class="text-slate-400">—</span>{% else %}{{ commitment.progress }}%{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="rounded-lg border border-slate-200 bg-white p-6 text-slate-600" data-testid="empty-commitments">
+        Aucun Engagement n'a encore été enregistré pour ce mandat.
+      </p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2 class="mb-4 text-lg font-semibold text-slate-900">Indicateurs</h2>
+    {% if indicators %}
+      <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white" data-testid="indicator-list">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th scope="col" class="px-5 py-2">Indicateur</th>
+              <th scope="col" class="px-5 py-2">Unité</th>
+              <th scope="col" class="px-5 py-2">Référence</th>
+              <th scope="col" class="px-5 py-2">Cible</th>
+              <th scope="col" class="px-5 py-2">Valeur actuelle</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for indicator in indicators %}
+              <tr data-testid="indicator" data-indicator-id="{{ indicator.id }}">
+                <td class="px-5 py-3 font-medium text-slate-900">{{ indicator.name }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ nullable(indicator.unit) }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ nullable(indicator.baseline) }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ nullable(indicator.target) }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ nullable(indicator.current_value) }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="rounded-lg border border-slate-200 bg-white p-6 text-slate-600" data-testid="empty-indicators">
+        Aucun Indicateur n'a encore été défini pour ce mandat.
+      </p>
+    {% endif %}
+  </section>
+{% endblock %}

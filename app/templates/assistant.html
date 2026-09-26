@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Assistant — PARTIPOLAI{% endblock %}
+
+{#
+  Page Assistant SSR (Exigence 2.1). Point d'entrée public de l'Assistant (chat).
+  Elle ne reçoit aucun contexte de données propre (au-delà de la navigation) : le
+  chat lui-même est exposé sous ``/api/v1``. Cette page rend le lien de
+  navigation « Assistant » résolvable et utile.
+#}
+
+{% block content %}
+  <section class="mb-8">
+    <h1 class="text-2xl font-bold text-slate-900">Assistant</h1>
+    <p class="mt-2 text-sm text-slate-600">
+      L'Assistant répond à vos questions sur les Propositions, le Programme et les
+      Sources documentaires en s'appuyant sur les contenus publics de la
+      Plateforme.
+    </p>
+  </section>
+
+  <section class="rounded-lg border border-slate-200 bg-white p-6" data-testid="assistant-intro">
+    <h2 class="text-lg font-semibold text-slate-900">Comment interroger l'Assistant</h2>
+    <p class="mt-2 text-sm text-slate-600">
+      L'API de conversation est exposée sous <code>/api/v1</code>. Vous pouvez
+      explorer les points d'accès disponibles et en tester l'usage depuis la
+      documentation interactive.
+    </p>
+    <p class="mt-4">
+      <a href="/docs" class="font-medium text-blue-700 underline">Ouvrir la documentation de l'API</a>
+    </p>
+  </section>
+{% endblock %}

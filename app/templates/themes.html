@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Thèmes — PARTIPOLAI{% endblock %}
+
+{#
+  Page Thèmes SSR (Exigences 2.1, 2.2). Liste publique du Référentiel_Thématique,
+  consultable sans authentification. Reçoit ``themes`` : liste de dicts issus de
+  ``ThemePublic.model_dump()`` (champs ``id``, ``slug``, ``name``).
+#}
+
+{% block content %}
+  <section class="mb-8">
+    <h1 class="text-2xl font-bold text-slate-900">Thèmes</h1>
+    <p class="mt-2 text-sm text-slate-600">
+      Référentiel des Thèmes qui structurent les Propositions et le Programme.
+    </p>
+  </section>
+
+  {% if themes %}
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="theme-list">
+      {% for theme in themes %}
+        <section
+          class="rounded-lg border border-slate-200 bg-white p-4"
+          data-testid="theme"
+          data-theme-slug="{{ theme.slug }}"
+        >
+          <h2 class="text-lg font-semibold text-slate-900">{{ theme.name }}</h2>
+          <p class="mt-1 text-xs uppercase tracking-wide text-slate-500">{{ theme.slug }}</p>
+        </section>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="rounded-lg border border-slate-200 bg-white p-6 text-slate-600" data-testid="empty-themes">
+      Aucun Thème n'a encore été défini dans le Référentiel_Thématique.
+    </p>
+  {% endif %}
+{% endblock %}

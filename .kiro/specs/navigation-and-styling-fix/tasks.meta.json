@@ -1,0 +1,182 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Write bug condition exploration tests (BEFORE implementing the fix)": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790408991580
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790409000579
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790409318478
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing the fix)": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790408991758
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790409322726
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790409638496
+      }
+    ],
+    "3.1 Add the server-side navigation source of truth and shared SSR context in `app/web/router.py`": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790408991971
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790409645467
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790409967739
+      }
+    ],
+    "3.2 Add minimal read-only public SSR list views in `app/web/router.py`": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790408992109
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790409971258
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790410252087
+      }
+    ],
+    "3.3 Add the new SSR list templates under `app/templates/{fonction}.html`": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790408992228
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790410255640
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790410610303
+      }
+    ],
+    "3.4 Add the compiled local stylesheet `app/static/css/app.css` (new)": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790408992344
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790410613782
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790410940706
+      }
+    ],
+    "3.5 Update `app/templates/base.html` (data-driven nav + local stylesheet link)": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790408992492
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790410944447
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790411280348
+      }
+    ],
+    "3.6 Verify the bug condition exploration tests now pass": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790408992603
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790411284038
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790411593976
+      }
+    ],
+    "3.7 Verify the preservation tests still pass": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790408992729
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790411597519
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790411667247
+      }
+    ],
+    "4. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790408992838
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790411672652
+      },
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790412002290
+      }
+    ],
+    "3. Fix for incomplete header navigation and CDN-only styling (SSR/presentation layer only)": [
+      {
+        "executionId": "b483e426-3312-4a19-9765-93b3e5ead2fc",
+        "chatSessionId": "sess_20dc9144-72c7-47a2-9e26-96975f925fbf",
+        "timestamp": 1790411667393
+      }
+    ]
+  }
+}
