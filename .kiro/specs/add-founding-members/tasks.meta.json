@@ -1,0 +1,224 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Add display fields and make `user_id` nullable in `app/models/team.py`": [
+      {
+        "executionId": "f88afa39-4f3a-49f1-965b-e449a73e7270",
+        "chatSessionId": "sess_9c19a0fc-0b41-4159-a278-f2f22af6c165",
+        "timestamp": 1790413766349
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790416374064
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790417565013
+      }
+    ],
+    "2.1 Create `alembic/versions/0003_team_member_display_fields.py`": [
+      {
+        "executionId": "f88afa39-4f3a-49f1-965b-e449a73e7270",
+        "chatSessionId": "sess_9c19a0fc-0b41-4159-a278-f2f22af6c165",
+        "timestamp": 1790413766480
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790417573131
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790418620306
+      }
+    ],
+    "3.1 Create `alembic/versions/0004_seed_founding_members.py`": [
+      {
+        "executionId": "f88afa39-4f3a-49f1-965b-e449a73e7270",
+        "chatSessionId": "sess_9c19a0fc-0b41-4159-a278-f2f22af6c165",
+        "timestamp": 1790413766575
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790418647826
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790418966861
+      }
+    ],
+    "4. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "f88afa39-4f3a-49f1-965b-e449a73e7270",
+        "chatSessionId": "sess_9c19a0fc-0b41-4159-a278-f2f22af6c165",
+        "timestamp": 1790413766677
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790418972980
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790419663172
+      }
+    ],
+    "5.1 Extend `TeamMemberPublic` and `TeamMemberCreate` in `app/schemas/team.py`": [
+      {
+        "executionId": "f88afa39-4f3a-49f1-965b-e449a73e7270",
+        "chatSessionId": "sess_9c19a0fc-0b41-4159-a278-f2f22af6c165",
+        "timestamp": 1790413766796
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790417574550
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790418622118
+      }
+    ],
+    "6.1 Create `app/static/img/team/` and place `samuel-lepetre.jpg`": [
+      {
+        "executionId": "f88afa39-4f3a-49f1-965b-e449a73e7270",
+        "chatSessionId": "sess_9c19a0fc-0b41-4159-a278-f2f22af6c165",
+        "timestamp": 1790413766894
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790416378429
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790417568738
+      }
+    ],
+    "7.1 Add the `initials` macro and rich member rendering in `app/templates/equipes.html`": [
+      {
+        "executionId": "f88afa39-4f3a-49f1-965b-e449a73e7270",
+        "chatSessionId": "sess_9c19a0fc-0b41-4159-a278-f2f22af6c165",
+        "timestamp": 1790413767004
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790417575540
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790418623096
+      }
+    ],
+    "8. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "f88afa39-4f3a-49f1-965b-e449a73e7270",
+        "chatSessionId": "sess_9c19a0fc-0b41-4159-a278-f2f22af6c165",
+        "timestamp": 1790413767102
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790419667284
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790419831596
+      }
+    ],
+    "9.1 Verify `TeamService.list_teams()` returns founders with display fields": [
+      {
+        "executionId": "f88afa39-4f3a-49f1-965b-e449a73e7270",
+        "chatSessionId": "sess_9c19a0fc-0b41-4159-a278-f2f22af6c165",
+        "timestamp": 1790413767191
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790419835290
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790419918783
+      }
+    ],
+    "10. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "f88afa39-4f3a-49f1-965b-e449a73e7270",
+        "chatSessionId": "sess_9c19a0fc-0b41-4159-a278-f2f22af6c165",
+        "timestamp": 1790413767291
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790419922645
+      },
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790420494958
+      }
+    ],
+    "1. Extend the `TeamMember` ORM model": [
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790417565169
+      }
+    ],
+    "6. Add Samuel's static photo": [
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790417568862
+      }
+    ],
+    "2. Schema migration `0003_team_member_display_fields`": [
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790418620516
+      }
+    ],
+    "5. Update the public Pydantic schemas": [
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790418622377
+      }
+    ],
+    "7. Update the `equipes.html` SSR template": [
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790418623362
+      }
+    ],
+    "3. Founding-members seed migration `0004_seed_founding_members`": [
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790418967012
+      }
+    ],
+    "9. Integration and wiring": [
+      {
+        "executionId": "99546cb1-8d8c-4868-a1df-611da1cc0157",
+        "chatSessionId": "sess_4960dfe9-c15d-45a6-a29c-2854f4374e40",
+        "timestamp": 1790419919025
+      }
+    ]
+  }
+}

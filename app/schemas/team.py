@@ -27,7 +27,10 @@ class TeamMemberPublic(BaseModel):
 
     id: int
     team_id: int
-    user_id: int
+    user_id: int | None = None  # Exigence 5.2
+    display_name: str | None = None  # Exigence 5.1
+    photo_path: str | None = None  # Exigence 5.1
+    linkedin_url: str | None = None  # Exigence 5.1
     role: str | None = None
     bio: str | None = None
     created_at: datetime
@@ -59,6 +62,9 @@ class TeamMemberCreate(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    user_id: int = Field(gt=0)
+    user_id: int | None = Field(default=None, gt=0)
+    display_name: str | None = Field(default=None, max_length=255)
+    photo_path: str | None = Field(default=None, max_length=512)
+    linkedin_url: str | None = Field(default=None, max_length=512)
     role: str | None = Field(default=None, max_length=120)
     bio: str | None = None

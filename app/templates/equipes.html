@@ -8,8 +8,19 @@
   dicts issus de ``TeamPublic.model_dump()`` (champs ``id``, ``name``,
   ``created_at``, ``updated_at``, ``members`` : liste de dicts issus de
   ``TeamMemberPublic.model_dump()`` avec ``id``, ``team_id``, ``user_id``,
-  ``role``, ``bio``, ``created_at``, ``updated_at``).
+  ``display_name``, ``photo_path``, ``linkedin_url``, ``role``, ``bio``,
+  ``created_at``, ``updated_at``).
 #}
+
+{#
+  Macro initials(name) : dérive un Substitut_Initiales déterministe à partir du
+  nom affiché (première lettre des deux premiers mots, en majuscules). Fonction
+  pure et testable (Exigence 2.3, Property 3).
+#}
+{% macro initials(name) -%}
+  {%- set parts = (name or "").split() -%}
+  {{- (parts[0][:1] ~ (parts[1][:1] if parts|length > 1 else "")) | upper -}}
+{%- endmacro %}
 
 {% block content %}
   <section class="mb-8">
@@ -46,8 +57,34 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                   {% for member in team.members %}
+                    {% set member_name = member.display_name if member.display_name else "Utilisateur #" ~ member.user_id %}
                     <tr data-testid="team-member" data-user-id="{{ member.user_id }}">
-                      <td class="px-5 py-3 font-medium text-slate-900">Utilisateur #{{ member.user_id }}</td>
+                      <td class="px-5 py-3 font-medium text-slate-900">
+                        <div class="flex items-center gap-3">
+                          {% if member.photo_path %}
+                            <img
+                              src="{{ url_for('static', path=member.photo_path) }}"
+                              alt="{{ member_name }}"
+                              class="h-10 w-10 flex-shrink-0 rounded-full object-cover"
+                            >
+                          {% else %}
+                            <span
+                              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-600"
+                              aria-hidden="true"
+                            >{{ initials(member_name) }}</span>
+                          {% endif %}
+                          {% if member.linkedin_url %}
+                            <a
+                              href="{{ member.linkedin_url }}"
+                              rel="noopener"
+                              target="_blank"
+                              class="text-slate-900 hover:underline"
+                            >{{ member_name }}</a>
+                          {% else %}
+                            <span>{{ member_name }}</span>
+                          {% endif %}
+                        </div>
+                      </td>
                       <td class="px-5 py-3 text-slate-600">
                         {% if member.role %}{{ member.role }}{% else %}<span class="text-slate-400">—</span>{% endif %}
                       </td>

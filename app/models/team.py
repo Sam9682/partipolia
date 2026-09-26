@@ -43,8 +43,10 @@ class Team(TimestampMixin, Base):
 class TeamMember(TimestampMixin, Base):
     """Membre d'une Équipe (Exigence 20.2).
 
-    Porte le ``role`` occupé et une ``bio`` de présentation. Rattaché à un
-    Utilisateur existant via ``user_id``.
+    Porte le ``role`` occupé et une ``bio`` de présentation. Peut être rattaché
+    à un Utilisateur existant via ``user_id`` (facultatif, Exigence 1.4) ou
+    présenté par ses seuls Champs_Affichage (``display_name``, ``photo_path``,
+    ``linkedin_url``) lorsqu'aucun compte n'existe (Exigences 1.1 à 1.3).
     """
 
     __tablename__ = "team_members"
@@ -55,11 +57,17 @@ class TeamMember(TimestampMixin, Base):
         nullable=False,
         index=True,
     )
-    user_id: Mapped[int] = mapped_column(
+    # ``user_id`` devient facultatif (Exigence 1.4) ; la contrainte de clé
+    # étrangère vers ``users`` est conservée et s'applique aux valeurs non nulles
+    # (Exigence 1.5).
+    user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
+    display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)  # Exigence 1.1
+    photo_path: Mapped[str | None] = mapped_column(String(512), nullable=True)  # Exigence 1.2
+    linkedin_url: Mapped[str | None] = mapped_column(String(512), nullable=True)  # Exigence 1.3
     role: Mapped[str | None] = mapped_column(String(120), nullable=True)
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -69,7 +77,7 @@ class TeamMember(TimestampMixin, Base):
         back_populates="members",
         lazy="selectin",
     )
-    user: Mapped["User"] = relationship(
+    user: Mapped["User | None"] = relationship(
         "User",
         lazy="selectin",
     )

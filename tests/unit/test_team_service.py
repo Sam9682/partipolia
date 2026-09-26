@@ -70,6 +70,11 @@ class _FakeSession:
                 obj.created_at = now
                 obj.updated_at = now
             self.members[obj.id] = obj
+            # Rattache le membre à la collection ``members`` de son Équipe pour
+            # simuler le chargement anticipé ``selectin`` (Exigence 5.3).
+            team = self.teams.get(obj.team_id)
+            if team is not None and obj not in team.members:
+                team.members.append(obj)
         elif isinstance(obj, AuditLog):
             self.audit_logs.append(obj)
 
@@ -120,6 +125,11 @@ async def test_add_member_with_role_and_bio_records_audit() -> None:
     assert member.user_id == 42
     assert member.role == "Porte-parole"
     assert member.bio == "Bio courte."
+    # Les Champs_Affichage restent nuls pour un membre rattaché à un compte
+    # Utilisateur (Exigences 1.1 à 1.3).
+    assert member.display_name is None
+    assert member.photo_path is None
+    assert member.linkedin_url is None
     actions = [log.action for log in session.audit_logs]
     assert actions == ["TEAM_CREATE", "TEAM_MEMBER_ADD"]
 
@@ -175,3 +185,54 @@ async def test_list_teams_returns_ordered_teams() -> None:
     teams = await service.list_teams()
 
     assert [t.name for t in teams] == ["Première", "Seconde"]
+
+
+@pytest.mark.unit
+async def test_list_teams_returns_founders_with_display_fields() -> None:
+    """``list_teams`` renvoie les Membre_Fondateur avec leurs Champs_Affichage (Exigence 5.3).
+
+    L'Équipe « Fondateurs » et ses deux membres — présentés par leurs seuls
+    Champs_Affichage (``display_name``, ``photo_path``, ``linkedin_url``) avec un
+    ``user_id`` nul — sont retournés via le chargement anticipé ``selectin`` sans
+    modification de ``list_teams`` (Exigences 5.3, 1.4).
+    """
+    session = _FakeSession()
+    service = TeamService(session)  # type: ignore[arg-type]
+
+    team = await service.create_team("Fondateurs")
+    samuel = TeamMember(
+        team_id=team.id,
+        user_id=None,
+        display_name="Samuel Lepetre",
+        photo_path="img/team/samuel-lepetre.jpg",
+        linkedin_url="https://www.linkedin.com/in/samuel-lepetre%F0%9F%8F%89-90010713/",
+    )
+    nael = TeamMember(
+        team_id=team.id,
+        user_id=None,
+        display_name="Nael Lepetre",
+        photo_path=None,
+        linkedin_url=None,
+    )
+    session.add(samuel)
+    session.add(nael)
+
+    teams = await service.list_teams()
+
+    founders = next(t for t in teams if t.name == "Fondateurs")
+    members = {m.display_name: m for m in founders.members}
+    assert set(members) == {"Samuel Lepetre", "Nael Lepetre"}
+
+    # Les deux Membre_Fondateur ont un ``user_id`` nul (Exigence 1.4).
+    assert all(m.user_id is None for m in founders.members)
+
+    samuel_out = members["Samuel Lepetre"]
+    assert samuel_out.photo_path == "img/team/samuel-lepetre.jpg"
+    assert (
+        samuel_out.linkedin_url
+        == "https://www.linkedin.com/in/samuel-lepetre%F0%9F%8F%89-90010713/"
+    )
+
+    nael_out = members["Nael Lepetre"]
+    assert nael_out.photo_path is None
+    assert nael_out.linkedin_url is None
