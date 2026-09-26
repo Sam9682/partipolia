@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion — PARTIPOLAI{% endblock %}
+
+{#
+  Page Connexion SSR (Exigences 2.1, 2.2, 2.3). Point d'entrée public de la
+  connexion. Le formulaire soumet les identifiants au backend existant
+  ``POST /api/v1/auth/login`` (corps JSON ``{email, password}``) via fetch :
+  en succès, le backend dépose les cookies HttpOnly de session puis l'UI redirige
+  vers une page publique (``/programme``) ; en échec ``401`` générique, un message
+  d'erreur générique est affiché sans révéler l'existence du compte. Aucun fichier
+  ``app/api/v1/*`` n'est modifié.
+#}
+
+{% block content %}
+  <section class="mx-auto max-w-md" data-testid="login">
+    <h1 class="text-2xl font-bold text-slate-900">Connexion</h1>
+    <p class="mt-2 text-sm text-slate-600">
+      Connectez-vous avec votre adresse e-mail et votre mot de passe.
+    </p>
+
+    <form
+      class="mt-6 space-y-4 rounded-lg border border-slate-200 bg-white p-6"
+      action="/api/v1/auth/login"
+      method="post"
+      data-testid="login-form"
+      x-data="{
+        error: '',
+        loading: false,
+        async submit(event) {
+          this.error = '';
+          this.loading = true;
+          const form = event.target;
+          const payload = {
+            email: form.email.value,
+            password: form.password.value,
+          };
+          try {
+            const response = await fetch('/api/v1/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify(payload),
+            });
+            if (response.ok) {
+              window.location.assign('/programme');
+              return;
+            }
+            this.error = 'Identifiants invalides. Veuillez réessayer.';
+          } catch (err) {
+            this.error = 'Une erreur est survenue. Veuillez réessayer.';
+          } finally {
+            this.loading = false;
+          }
+        }
+      }"
+      @submit.prevent="submit($event)"
+    >
+      <div>
+        <label for="email" class="block text-sm font-medium text-slate-700">Adresse e-mail</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          required
+          autocomplete="email"
+          class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-slate-700">Mot de passe</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          required
+          autocomplete="current-password"
+          class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+      </div>
+
+      <p
+        class="text-sm text-red-600"
+        role="alert"
+        data-testid="login-error"
+        x-show="error"
+        x-text="error"
+      ></p>
+
+      <button
+        type="submit"
+        data-testid="login-submit"
+        class="w-full rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60"
+        :disabled="loading"
+      >
+        <span x-show="!loading">Se connecter</span>
+        <span x-show="loading">Connexion…</span>
+      </button>
+    </form>
+  </section>
+{% endblock %}

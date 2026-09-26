@@ -78,6 +78,7 @@ NAV_ITEMS: list[dict[str, str]] = [
     {"label": "Mandat", "href": "/mandat"},
     {"label": "Assistant", "href": "/assistant"},
     {"label": "API", "href": "/docs"},
+    {"label": "Connexion", "href": "/login"},
 ]
 
 
@@ -360,6 +361,25 @@ async def assistant_page(request: Request) -> HTMLResponse:
     lien de navigation « Assistant » résolvable et utile.
     """
     return templates.TemplateResponse(request, "assistant.html", ssr_context())
+
+
+@web_router.get(
+    "/login",
+    response_class=HTMLResponse,
+    name="login",
+    summary="Page Connexion (SSR, publique)",
+)
+async def login_page(request: Request) -> HTMLResponse:
+    """Rend la page ``/login`` : formulaire de connexion (Exigences 2.1, 2.2, 2.3).
+
+    Point d'entrée de connexion **public** (aucune authentification requise pour
+    afficher le formulaire), à l'image des autres vues SSR. Elle n'appelle aucun
+    Service : le formulaire soumet les identifiants au backend existant
+    ``POST /api/v1/auth/login`` (corps JSON ``{email, password}``), qui dépose les
+    cookies HttpOnly de session puis l'UI redirige vers une page publique. Aucun
+    fichier ``app/api/v1/*`` n'est modifié.
+    """
+    return templates.TemplateResponse(request, "login.html", ssr_context())
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,124 @@
+{
+  "pbtResults": {
+    "1. Écrire le test d'exploration de la condition de bug": {
+      "status": "passed",
+      "failingExample": "Le test d'exploration ÉCHOUE comme attendu sur le code NON corrigé — le bug est confirmé.\n\nCas 1 (PBT Hypothesis — présence du lien « Connexion ») : Falsifying example path='/programme' (et '/themes'). Aucun <a> du <nav> d'en-tête ne pointe vers '/login'. Liens observés : [('Programme','/programme'), ('Thèmes','/themes'), ('Propositions','/propositions'), ('Statistiques','/statistiques'), ('Équipes','/equipes'), ('Mandat','/mandat'), ('Assistant','/assistant'), ('API','/docs')] — 8 entrées, aucune « Connexion ».\n\nCas 2 (route /login manquante) : GET /login → statut 404 (attendu 200), aucune route SSR /login enregistrée.\n\nCas 3 (gabarit de connexion) : GET /login → 404, aucun login.html avec <form> ciblant /api/v1/auth/login.",
+      "lastRunTimestamp": 1790422976852
+    },
+    "2. Écrire les tests de préservation basés sur les propriétés (AVANT le correctif)": {
+      "status": "passed",
+      "lastRunTimestamp": 1790423216889
+    }
+  },
+  "executionHistory": {
+    "1. Écrire le test d'exploration de la condition de bug": [
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790422816752
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790422824423
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790422996014
+      }
+    ],
+    "2. Écrire les tests de préservation basés sur les propriétés (AVANT le correctif)": [
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790422816929
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790422999775
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790423239478
+      }
+    ],
+    "3.1 Implémenter le correctif (couche SSR/web uniquement)": [
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790422817064
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790423244538
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790425626941
+      }
+    ],
+    "3.2 Vérifier que le test d'exploration de la condition de bug passe désormais": [
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790422817207
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790425631057
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790426818706
+      }
+    ],
+    "3.3 Vérifier que les tests de préservation passent toujours": [
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790422817330
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790426822719
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790426856739
+      }
+    ],
+    "4. Checkpoint - S'assurer que tous les tests passent": [
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790422817483
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790426861610
+      },
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790426917338
+      }
+    ],
+    "3. Correctif pour l'absence de point d'entrée de connexion dans l'UI": [
+      {
+        "executionId": "a25dd966-10d0-4654-a16f-9bcff004a74a",
+        "chatSessionId": "sess_2db8e843-a173-4e77-855a-adbf6dc6a88d",
+        "timestamp": 1790426856931
+      }
+    ]
+  }
+}
