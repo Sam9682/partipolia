@@ -1,0 +1,23 @@
+{#
+  Fragment HTMX « Réparer la loi » — invitation à s'authentifier (Exigence 8.10).
+
+  Rendu par les points d'accès SSR d'action lorsqu'un visiteur NON authentifié tente
+  une action (Approuver, Rejeter, Proposer un amendement, Demander une explication,
+  Signaler un effet secondaire). AUCUNE mutation d'état n'est effectuée : en
+  particulier, tout Vote_Citoyen existant reste inchangé (Exigence 8.10). Seule une
+  invitation à s'authentifier (lien vers ``/login``) est retournée.
+#}
+<div
+  class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600"
+  data-testid="auth-required"
+>
+  <p>
+    Vous devez être connecté pour effectuer cette action. Aucun changement n'a été
+    enregistré.
+  </p>
+  <p class="mt-2">
+    <a href="/login" class="font-medium text-blue-700 underline" data-testid="auth-required-link">
+      Se connecter pour agir
+    </a>
+  </p>
+</div>

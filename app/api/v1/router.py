@@ -20,6 +20,7 @@ from app.api.v1 import (
     auth,
     chat,
     documents,
+    legal_problems,
     mandate,
     privacy,
     program,
@@ -96,6 +97,12 @@ api_router.include_router(mandate.router, prefix="/mandate", tags=["mandate"])
 # journalisée (request_id, user_id, timestamp, modèle, retrieved_documents)
 # (Exigences 13.1, 14.7, 30.2 ; tâche 7.9).
 api_router.include_router(chat.router, prefix="/chat", tags=["chat"])
+
+# Réparer la loi — Problèmes_Juridiques, Réformes_Proposées, décomptes de votes et
+# historique des versions ; consultation publique (Exigences 1, 4, 9, 10, 14 ;
+# tâche 8.1). Les points d'accès d'analyse et les points authentifiés d'écriture
+# sont ajoutés par les tâches 8.2 et 8.3.
+api_router.include_router(legal_problems.router, prefix="/legal-problems", tags=["legal-problems"])
 
 # RGPD — export des données, gestion du consentement et suppression de compte,
 # réservés à l'Utilisateur authentifié pour ses propres données ; politique de

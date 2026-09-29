@@ -1,0 +1,733 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Créer le modèle `LegalProblem`": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539922094
+      },
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539934954
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582108836
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582152519
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582329210
+      }
+    ],
+    "1.2 Créer le modèle d'association `LegalProblemReform`": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539922319
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582130543
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582334008
+      },
+      {
+        "executionId": "0a447d2a-bff0-4990-9643-d948ad4dd036",
+        "chatSessionId": "sess_2cd6bc09-a7b0-4d3a-bec1-a291b660f154",
+        "timestamp": 1790683236160
+      }
+    ],
+    "1.3 Créer le modèle `SideEffectReport`": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539922559
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582131059
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582335431
+      },
+      {
+        "executionId": "0a447d2a-bff0-4990-9643-d948ad4dd036",
+        "chatSessionId": "sess_2cd6bc09-a7b0-4d3a-bec1-a291b660f154",
+        "timestamp": 1790683237540
+      }
+    ],
+    "1.4 Créer le modèle `LegalAnalysis` (matérialisation des analyses IA)": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539922731
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582131398
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582336419
+      },
+      {
+        "executionId": "0a447d2a-bff0-4990-9643-d948ad4dd036",
+        "chatSessionId": "sess_2cd6bc09-a7b0-4d3a-bec1-a291b660f154",
+        "timestamp": 1790683238555
+      }
+    ],
+    "1.5 Générer la migration Alembic additive": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539922870
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582131788
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790669432458
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790670410704
+      }
+    ],
+    "2. Checkpoint — modèles et migration": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539922998
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582132235
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790670709817
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790671137243
+      }
+    ],
+    "3.1 Créer les schémas de Problème Juridique": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539923201
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582132616
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790669433719
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790670408388
+      }
+    ],
+    "3.3 Créer les schémas d'actions et d'analyses": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539923382
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582132881
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790669434786
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790670409889
+      }
+    ],
+    "4.1 Créer le squelette du service et la lecture des Problèmes Juridiques": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539923551
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582133165
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790670420399
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790670644203
+      }
+    ],
+    "4.3 Implémenter le rattachement des Réformes et la validation de cardinalité": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539923734
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582133498
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790671175292
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790671751756
+      }
+    ],
+    "4.5 Implémenter le vote citoyen et les décomptes (délégation)": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539923934
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582133852
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790671759283
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790673658030
+      }
+    ],
+    "4.8 Implémenter amendements, prises de position et signalements (délégation)": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539924076
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582134064
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790673667951
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790673961604
+      }
+    ],
+    "5. Checkpoint — service domaine": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539924203
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582134270
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790673974927
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790673994581
+      }
+    ],
+    "6.1 Créer le service, l'énumération `AgentKind` et la lecture des analyses matérialisées": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539924314
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582134466
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790670421307
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790670645413
+      }
+    ],
+    "6.2 Implémenter la génération d'agent avec récupération obligatoire": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539924432
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582134655
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790671176960
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790671752838
+      }
+    ],
+    "6.7 Implémenter la Simulation et la Détection d'Effets Pervers": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539924566
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582134875
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790671760630
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790673658757
+      }
+    ],
+    "6.11 Implémenter l'agrégation de la Conclusion_Technique et l'équilibre Défenseur/Opposant": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539924684
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582135139
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790673999903
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674208219
+      }
+    ],
+    "6.14 Implémenter l'assistant conversationnel `explain` et la comparaison de réformes": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539924807
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582135449
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790673663980
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790673960470
+      }
+    ],
+    "7. Checkpoint — service d'analyse IA": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539924921
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582135775
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674213088
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674224926
+      }
+    ],
+    "8.1 Créer le routeur et les endpoints de lecture (publics)": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539925036
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582136054
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674230436
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674511533
+      }
+    ],
+    "8.2 Ajouter les endpoints d'analyses IA (lecture matérialisée + 202)": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539925175
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582136292
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674517720
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674876406
+      }
+    ],
+    "8.3 Ajouter les endpoints d'écriture (authentifiés)": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539925342
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582136537
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674877611
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790676440656
+      }
+    ],
+    "9. Checkpoint — API REST": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539925479
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582136811
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790676446062
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790676457278
+      }
+    ],
+    "10.1 Implémenter la tâche `analyze_reform`": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539925609
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582137297
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674239337
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674512355
+      }
+    ],
+    "11.1 Implémenter les routes SSR liste et détail": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539925759
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582137587
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790676464486
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790680533105
+      }
+    ],
+    "11.2 Créer les templates liste et détail": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539925940
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582137872
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790680648837
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790680915355
+      }
+    ],
+    "11.3 Implémenter les fragments HTMX d'actions par réforme": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539926084
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582138183
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790680921556
+      },
+      {
+        "executionId": "0a447d2a-bff0-4990-9643-d948ad4dd036",
+        "chatSessionId": "sess_2cd6bc09-a7b0-4d3a-bec1-a291b660f154",
+        "timestamp": 1790685213300
+      }
+    ],
+    "12.1 Implémenter le seed ≥ 10 Problèmes Juridiques": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539926246
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582138517
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790676465830
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790680642498
+      }
+    ],
+    "13.1 Câbler la gestion d'erreurs et la journalisation transversales": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539926384
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582138898
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790680664621
+      },
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790680914298
+      }
+    ],
+    "14. Checkpoint final — Ensure all tests pass": [
+      {
+        "executionId": "7a7fa7e9-85ce-4ec2-94e3-b8432fd3ae49",
+        "chatSessionId": "sess_3458fac9-727e-45ae-b0c5-badd1f40041a",
+        "timestamp": 1790539926547
+      },
+      {
+        "executionId": "dd95a336-403f-4ffb-87ff-afcbdfd40565",
+        "chatSessionId": "sess_b2110c0f-009a-4a55-915e-8cc54821067c",
+        "timestamp": 1790582140456
+      },
+      {
+        "executionId": "0a447d2a-bff0-4990-9643-d948ad4dd036",
+        "chatSessionId": "sess_2cd6bc09-a7b0-4d3a-bec1-a291b660f154",
+        "timestamp": 1790685228428
+      },
+      {
+        "executionId": "0a447d2a-bff0-4990-9643-d948ad4dd036",
+        "chatSessionId": "sess_2cd6bc09-a7b0-4d3a-bec1-a291b660f154",
+        "timestamp": 1790686345659
+      }
+    ],
+    "3. Schémas Pydantic v2 « Réparer la loi »": [
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790670410099
+      }
+    ],
+    "4. Implémenter `legal_reform_service` (orchestration domaine)": [
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790673961720
+      }
+    ],
+    "6. Implémenter `legal_analysis_service` (agents IA au-dessus de RagPipeline)": [
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674208372
+      }
+    ],
+    "10. Tâches Celery de génération asynchrone des analyses": [
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790674512729
+      }
+    ],
+    "8. Routeur API REST `/api/v1/legal-problems`": [
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790676441107
+      }
+    ],
+    "12. Script de seed des Problèmes Juridiques": [
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790680642634
+      }
+    ],
+    "13. Intégration finale et câblage": [
+      {
+        "executionId": "4d174b99-d308-4ff0-8881-f0e0eb387c98",
+        "chatSessionId": "sess_9eba5926-94fa-4946-83d2-20e1d2970ad1",
+        "timestamp": 1790680914496
+      }
+    ],
+    "1. Modèles de données et migration Alembic additive": [
+      {
+        "executionId": "0a447d2a-bff0-4990-9643-d948ad4dd036",
+        "chatSessionId": "sess_2cd6bc09-a7b0-4d3a-bec1-a291b660f154",
+        "timestamp": 1790683238717
+      }
+    ],
+    "11. Pages SSR « Réparer la loi »": [
+      {
+        "executionId": "0a447d2a-bff0-4990-9643-d948ad4dd036",
+        "chatSessionId": "sess_2cd6bc09-a7b0-4d3a-bec1-a291b660f154",
+        "timestamp": 1790685213499
+      }
+    ]
+  }
+}

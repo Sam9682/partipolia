@@ -31,6 +31,7 @@ from app.core.config import settings
 _TASK_MODULES: tuple[str, ...] = (
     "app.workers.ingestion",
     "app.workers.statistics",
+    "app.workers.legal_analysis",
 )
 
 

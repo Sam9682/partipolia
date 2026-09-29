@@ -80,6 +80,14 @@ _STATIC_DIR = web.TEMPLATES_DIR.parent / "static"
 # (observé dans ``app.web.router.NAV_ITEMS``). Le correctif (tâche 3) doit
 # préserver ces huit entrées et leur ordre — la neuvième « Connexion » venant
 # APRÈS, sans altérer les huit premières (Exigence 3.1).
+#
+# La feature « Réparer la loi » (spec ``repair-the-law``, tâche 11.1) ajoute une
+# entrée LÉGITIME ``("Réparer la loi", "/reparer-la-loi")`` intercalée après
+# « Propositions ». La garantie de préservation reste : les huit entrées
+# existantes demeurent présentes DANS LE MÊME ORDRE RELATIF (sous-séquence), sans
+# suppression ni réordonnancement — seule une entrée additionnelle s'insère entre
+# elles. Les tests d'ordre vérifient donc une sous-séquence ordonnée plutôt qu'un
+# préfixe strict, afin d'accepter cet ajout de navigation voulu.
 _BASELINE_NAV_ITEMS: list[tuple[str, str]] = [
     ("Programme", "/programme"),
     ("Thèmes", "/themes"),
@@ -90,6 +98,20 @@ _BASELINE_NAV_ITEMS: list[tuple[str, str]] = [
     ("Assistant", "/assistant"),
     ("API", "/docs"),
 ]
+
+
+def _is_ordered_subsequence(
+    expected: list[tuple[str, str]], observed: list[tuple[str, str]]
+) -> bool:
+    """Vrai si ``expected`` apparaît comme sous-séquence ordonnée d'``observed``.
+
+    Chaque entrée d'``expected`` doit se retrouver dans ``observed`` dans le même
+    ordre relatif, mais des entrées supplémentaires (p. ex. « Réparer la loi »)
+    peuvent s'intercaler. C'est la garantie de préservation exacte : rien n'est
+    supprimé ni réordonné, seul un ajout est toléré.
+    """
+    it = iter(observed)
+    return all(item in it for item in expected)
 
 # Chemins RGPD publics (Exigence 3.2 — inclus dans l'échantillon SSR public).
 _RGPD_PATHS = ["/mentions-legales", "/confidentialite", "/cookies", "/conditions"]
@@ -371,42 +393,46 @@ def _header_links(html: str) -> list[tuple[str, str]]:
 # Exigence 3.1 — les huit entrées existantes et leur ordre sont préservés.     #
 # --------------------------------------------------------------------------- #
 def test_header_nav_baseline_eight_items_in_order() -> None:
-    """Ligne de base explicite : le ``<nav>`` d'en-tête liste les huit entrées ordonnées (Exigence 3.1).
+    """Ligne de base explicite : le ``<nav>`` d'en-tête préserve les huit entrées ordonnées (Exigence 3.1).
 
     Observé sur le code NON corrigé : les huit ``NAV_ITEMS`` (Programme … API)
-    apparaissent dans cet ordre exact. Le correctif doit préserver ces huit
-    entrées et leur ordre (la neuvième « Connexion » venant après).
+    apparaissent dans cet ordre. La feature « Réparer la loi » (tâche 11.1)
+    intercale une entrée additionnelle légitime ``/reparer-la-loi`` : les huit
+    entrées existantes restent donc présentes DANS LE MÊME ORDRE RELATIF
+    (sous-séquence ordonnée), sans suppression ni réordonnancement.
 
     _Requirements: 3.1_
     """
     html = _ssr_client().get("/programme").text
     links = _header_links(html)
 
-    # Les huit premières entrées observées doivent correspondre à la ligne de base.
-    assert links[: len(_BASELINE_NAV_ITEMS)] == _BASELINE_NAV_ITEMS, (
+    # Les huit entrées de la ligne de base doivent apparaître comme sous-séquence
+    # ordonnée du menu observé (un ajout comme « Réparer la loi » est toléré).
+    assert _is_ordered_subsequence(_BASELINE_NAV_ITEMS, links), (
         "Le <nav> d'en-tête doit préserver les huit entrées existantes dans "
-        f"l'ordre {_BASELINE_NAV_ITEMS!r} ; observé : {links!r}."
+        f"l'ordre relatif {_BASELINE_NAV_ITEMS!r} ; observé : {links!r}."
     )
 
 
 @settings(max_examples=25, suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(path=st.sampled_from(_PUBLIC_SSR_PATHS))
 def test_header_nav_order_preserved_on_all_ssr_paths(path: str) -> None:
-    """Property (ordre préservé) : sur tout chemin SSR public, les huit entrées gardent leur ordre (Exigence 3.1).
+    """Property (ordre préservé) : sur tout chemin SSR public, les huit entrées gardent leur ordre relatif (Exigence 3.1).
 
     Le menu étant piloté par la source de vérité unique ``NAV_ITEMS`` via
     ``ssr_context``, chaque page SSR expose la même séquence. On vérifie que les
-    huit entrées de la ligne de base apparaissent en tête, dans le même ordre,
-    quelle que soit la page — indépendamment d'un éventuel ajout ultérieur.
+    huit entrées de la ligne de base apparaissent dans le même ordre relatif
+    (sous-séquence ordonnée), quelle que soit la page — un ajout ultérieur voulu
+    comme « Réparer la loi » (tâche 11.1) pouvant s'intercaler sans les altérer.
 
     _Requirements: 3.1_
     """
     html = _ssr_client().get(path).text
     links = _header_links(html)
 
-    assert links[: len(_BASELINE_NAV_ITEMS)] == _BASELINE_NAV_ITEMS, (
+    assert _is_ordered_subsequence(_BASELINE_NAV_ITEMS, links), (
         f"Chemin {path} : les huit entrées d'en-tête doivent rester "
-        f"{_BASELINE_NAV_ITEMS!r} dans l'ordre ; observé : {links!r}."
+        f"{_BASELINE_NAV_ITEMS!r} dans l'ordre relatif ; observé : {links!r}."
     )
 
 

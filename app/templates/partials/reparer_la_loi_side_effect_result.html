@@ -1,0 +1,29 @@
+{#
+  Fragment HTMX « Réparer la loi » — accusé de réception d'un Signalement d'effet
+  secondaire.
+
+  Rendu par le point d'accès SSR
+  ``POST /reparer-la-loi/{slug}/reforms/{reform_id}/side-effects`` (Exigences 8.8,
+  8.9, 15.1, 16.4) après soumission du Signalement au Moteur_De_Modération.
+
+  Le statut restitué reflète la décision de modération : ``VISIBLE`` (acceptable,
+  publié) ou ``PENDING`` (douteux, placé en File_De_Modération sans publication).
+
+  Contexte attendu :
+    * ``report_status`` : statut de modération du Signalement (VISIBLE / PENDING).
+#}
+{% set is_visible = report_status == "VISIBLE" %}
+<div
+  class="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+  data-testid="side-effect-result"
+  data-report-status="{{ report_status }}"
+>
+  <p class="font-medium">Signalement enregistré.</p>
+  <p class="mt-1" data-testid="side-effect-result-message">
+    {% if is_visible %}
+      Votre signalement a été publié.
+    {% else %}
+      Votre signalement est en cours de modération et sera publié après vérification.
+    {% endif %}
+  </p>
+</div>

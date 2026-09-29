@@ -1,0 +1,17 @@
+{#
+  Fragment HTMX « Réparer la loi » — erreur d'action (contenu invalide).
+
+  Rendu par les points d'accès SSR d'action lorsqu'une contribution est invalide
+  (contenu vide ou trop long, position hors ensemble). Aucune mutation d'état n'est
+  effectuée. Le message reste générique, sans détail technique interne (Exigence 16.7).
+
+  Contexte attendu :
+    * ``message`` : message d'erreur affichable.
+#}
+<div
+  class="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"
+  data-testid="action-error"
+  role="alert"
+>
+  <p>{{ message or "L'action n'a pas pu être enregistrée." }}</p>
+</div>

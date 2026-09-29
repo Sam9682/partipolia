@@ -1,0 +1,31 @@
+{#
+  Fragment HTMX « Réparer la loi » — décomptes de Votes_Citoyens après action.
+
+  Rendu par les points d'accès SSR ``POST /reparer-la-loi/{slug}/reforms/{reform_id}/approve``
+  et ``.../reject`` (Exigences 8.1, 8.2, 8.10, 16.4) après un Vote_Citoyen UPSERT.
+
+  Le pourcentage de soutien est TOUJOURS accompagné du nombre absolu (Exigence 9.3),
+  où ``participation_count = support_count + oppose_count`` (Votes NEUTRE exclus —
+  Exigence 9.1).
+
+  Contexte attendu :
+    * ``votes`` : ``VoteCounts.model_dump()`` (support/oppose/participation) ;
+    * ``message`` : libellé de confirmation de l'action (facultatif).
+#}
+{% set support = votes.support_count or 0 %}
+{% set oppose = votes.oppose_count or 0 %}
+{% set participation = votes.participation_count or (support + oppose) %}
+{% set support_pct = ((support / participation * 100) | round(1)) if participation > 0 else 0 %}
+{% set oppose_pct = ((oppose / participation * 100) | round(1)) if participation > 0 else 0 %}
+<div
+  class="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"
+  data-testid="vote-result"
+>
+  {% if message %}
+    <p class="font-medium" data-testid="vote-result-message">{{ message }}</p>
+  {% endif %}
+  <p class="mt-1" data-testid="vote-result-summary">
+    Soutien : {{ support_pct }}% ({{ support }} sur {{ participation }}) ·
+    Opposition : {{ oppose_pct }}% ({{ oppose }} sur {{ participation }})
+  </p>
+</div>

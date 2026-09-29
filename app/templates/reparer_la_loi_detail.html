@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+
+{% block title %}{{ problem.title }} — Réparer la loi — PARTIPOLAI{% endblock %}
+
+{#
+  Page « Réparer la loi » — détail d'un Problème_Juridique (SSR, publique).
+
+  Exigences couvertes :
+    * 1.3  — résumé, textes de loi, jurisprudence, complexité, citoyens concernés ;
+    * 3.2 / 3.7 — Analyse_Juridique (problème réel vs Simplification_Médiatique)
+                  avec citations numérotées et Sources_Juridiques ;
+    * 4.4  — Réformes_Proposées comparées côte à côte, statu quo signalé ;
+    * 5.5  — marqueur d'estimation/hypothèse sur les valeurs projetées ;
+    * 9.3  — pourcentage de soutien TOUJOURS accompagné du nombre absolu ;
+    * 11.6 / 16.5 — marqueurs de catégorie (fait/estimation/opinion/hypothèse/désaccord) ;
+    * 12.5 — Sources_Juridiques avec liens Légifrance/jurisprudence ;
+    * 16.2 — toutes les sections attendues rendues côté serveur ;
+    * 16.3 — libellé « aucun contenu » pour chaque section vide ;
+    * 16.7 — message « contenu indisponible » sans détail technique interne ;
+    * 17.* — aucun accès aux fonctionnalités hors-périmètre (pas de tableau
+             budgétaire global, pas de « programme complet », pas d'agrégation
+             des Votes_Citoyens en décision unique).
+
+  Contexte reçu :
+    * ``problem`` : ``LegalProblemDetail.model_dump()`` (champs résumé + ``reforms``) ;
+    * ``legal_analysis`` : ``AnalysisResult | Unavailable`` (dump), analyse du
+      droit actuel ;
+    * ``reforms`` : liste de dicts
+        ``{"reform": ReformView.dump(),
+           "analyses": ReformAnalysisBundle.dump(),
+           "simulation": (SimulationResult | Unavailable).dump()}`` ;
+    * ``nav_items`` : menu de navigation (via ``base.html``).
+#}
+
+{% set complexity_labels = {
+  "FAIBLE": "Faible",
+  "MOYEN": "Moyen",
+  "ELEVE": "Élevé",
+} %}
+
+{% set marker_labels = {
+  "fait": "Fait",
+  "estimation": "Estimation",
+  "opinion": "Opinion",
+  "hypothese": "Hypothèse",
+  "desaccord": "Désaccord",
+} %}
+
+{% set marker_classes = {
+  "fait": "bg-emerald-100 text-emerald-800",
+  "estimation": "bg-amber-100 text-amber-800",
+  "opinion": "bg-sky-100 text-sky-800",
+  "hypothese": "bg-violet-100 text-violet-800",
+  "desaccord": "bg-rose-100 text-rose-800",
+} %}
+
+{# --- Macro : rendu d'un marqueur de catégorie (Exigences 5.5, 11.6, 16.5). --- #}
+{% macro render_marker(marker) -%}
+  {%- set cat = marker.category -%}
+  <span
+    class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium {{ marker_classes.get(cat, 'bg-slate-100 text-slate-700') }}"
+    data-testid="marker"
+    data-marker-category="{{ cat }}"
+  >{{ marker.label or marker_labels.get(cat, cat) }}</span>
+{%- endmacro %}
+
+{# --- Macro : liste des marqueurs de catégorie d'une analyse. --- #}
+{% macro render_markers(markers) -%}
+  {% if markers %}
+    <div class="mt-2 flex flex-wrap gap-1" data-testid="markers">
+      {% for marker in markers %}{{ render_marker(marker) }}{% endfor %}
+    </div>
+  {% endif %}
+{%- endmacro %}
+
+{# --- Macro : Sources_Juridiques citées, liens Légifrance/jurisprudence (Ex. 3.7, 12.5). --- #}
+{% macro render_sources(sources) -%}
+  <div class="mt-3" data-testid="sources">
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Sources juridiques</p>
+    {% if sources %}
+      <ol class="mt-1 space-y-1 text-sm text-slate-700">
+        {% for source in sources %}
+          <li data-testid="source" data-source-number="{{ source.number }}">
+            <span class="font-medium">[{{ source.number }}]</span>
+            {% if source.url %}
+              <a href="{{ source.url }}" class="text-sky-700 hover:underline" rel="noopener noreferrer" target="_blank">
+                {{ source.url }}
+              </a>
+            {% else %}
+              <span class="text-slate-500">Référence sans lien disponible</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="mt-1 text-sm italic text-slate-400" data-testid="sources-empty">Aucun contenu</p>
+    {% endif %}
+  </div>
+{%- endmacro %}
+
+{# --- Macro : message d'indisponibilité, sans détail technique (Exigence 16.7). --- #}
+{% macro render_unavailable(analysis) -%}
+  <p
+    class="rounded border border-slate-200 bg-slate-50 p-3 text-sm italic text-slate-500"
+    data-testid="unavailable"
+  >{{ analysis.reason or "Contenu indisponible." }}</p>
+{%- endmacro %}
+
+{# --- Macro : rendu d'une analyse d'agent (AnalysisResult | Unavailable). --- #}
+{% macro render_analysis(analysis) -%}
+  {% if analysis.status == "INDISPONIBLE" %}
+    {{ render_unavailable(analysis) }}
+  {% elif analysis.answer %}
+    <p class="whitespace-pre-line text-sm text-slate-700" data-testid="analysis-answer">{{ analysis.answer }}</p>
+    {{ render_markers(analysis.markers) }}
+    {{ render_sources(analysis.sources) }}
+  {% else %}
+    <p class="text-sm italic text-slate-400" data-testid="analysis-empty">Aucun contenu</p>
+  {% endif %}
+{%- endmacro %}
+
+{% block content %}
+  <p class="mb-4 text-sm">
+    <a href="/reparer-la-loi" class="text-slate-600 hover:underline">&larr; Retour à la liste</a>
+  </p>
+
+  {# --- En-tête du Problème_Juridique (Exigence 1.3). --- #}
+  <section class="mb-8" data-testid="problem-header">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <h1 class="text-2xl font-bold text-slate-900">{{ problem.title }}</h1>
+      <span
+        class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+        data-testid="complexity-level"
+      >
+        Complexité : {{ complexity_labels.get(problem.complexity_level, problem.complexity_level) }}
+      </span>
+    </div>
+
+    {% if problem.summary %}
+      <p class="mt-2 text-slate-600" data-testid="problem-summary">{{ problem.summary }}</p>
+    {% else %}
+      <p class="mt-2 italic text-slate-400" data-testid="problem-summary-empty">Aucun contenu</p>
+    {% endif %}
+
+    <dl class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3 text-sm">
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-slate-500">Citoyens concernés</dt>
+        <dd class="mt-1 font-medium text-slate-800" data-testid="affected-citizens">
+          {{ problem.affected_citizens_count }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-slate-500">Textes de loi concernés</dt>
+        <dd class="mt-1 text-slate-700" data-testid="concerned-legal-texts">
+          {% if problem.concerned_legal_texts %}
+            <ul class="list-disc space-y-0.5 pl-4">
+              {% for text in problem.concerned_legal_texts %}<li>{{ text }}</li>{% endfor %}
+            </ul>
+          {% else %}
+            <span class="italic text-slate-400">Aucun contenu</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs uppercase tracking-wide text-slate-500">Jurisprudence</dt>
+        <dd class="mt-1 text-slate-700" data-testid="jurisprudence-refs">
+          {% if problem.jurisprudence_refs %}
+            <ul class="list-disc space-y-0.5 pl-4">
+              {% for ref in problem.jurisprudence_refs %}<li>{{ ref }}</li>{% endfor %}
+            </ul>
+          {% else %}
+            <span class="italic text-slate-400">Aucun contenu</span>
+          {% endif %}
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  {# --- Section Analyse_Juridique du droit actuel (Exigences 3.2, 3.7). --- #}
+  <section class="mb-8 rounded-lg border border-slate-200 bg-white p-5" data-testid="legal-analysis">
+    <h2 class="text-lg font-semibold text-slate-900">Analyse juridique</h2>
+    <p class="mt-1 text-xs text-slate-500">
+      Distinction entre le problème réel et la Simplification_Médiatique, avec
+      citations numérotées ancrées dans les Sources_Juridiques.
+    </p>
+    <div class="mt-3">
+      {% if legal_analysis %}
+        {{ render_analysis(legal_analysis) }}
+      {% else %}
+        <p class="text-sm italic text-slate-400" data-testid="legal-analysis-empty">Aucun contenu</p>
+      {% endif %}
+    </div>
+  </section>
+
+  {# --- Section Réformes_Proposées comparées côte à côte (Exigence 4.4). --- #}
+  <section class="mb-8" data-testid="reforms">
+    <h2 class="mb-1 text-lg font-semibold text-slate-900">Réformes proposées</h2>
+    <p class="mb-4 text-xs text-slate-500">
+      Chaque Réforme_Proposée est délibérée séparément. Aucun classement ni
+      décision agrégée entre réformes.
+    </p>
+
+    {% if reforms %}
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2" data-testid="reform-grid">
+        {% for entry in reforms %}
+          {% set reform = entry.reform %}
+          {% set bundle = entry.analyses %}
+          {% set simulation = entry.simulation %}
+          {# Variables consommées par le partiel d'actions (Exigences 16.4, 8.10). #}
+          {% set problem_id = problem.id %}
+          {% set problem_slug = problem.slug %}
+          {% set reform_id = reform.reform_id %}
+          <article
+            class="flex flex-col rounded-lg border border-slate-200 bg-white p-5"
+            data-testid="reform"
+            data-reform-id="{{ reform.reform_id }}"
+          >
+            <header class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-100 pb-3">
+              <h3 class="text-base font-semibold text-slate-900">{{ reform.title }}</h3>
+              {% if reform.is_status_quo %}
+                <span
+                  class="inline-flex items-center rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-white"
+                  data-testid="status-quo-marker"
+                >Statu quo</span>
+              {% endif %}
+            </header>
+
+            {# --- Décomptes de Votes_Citoyens : pourcentage TOUJOURS avec le
+                   nombre absolu (Exigences 9.3, 16.2). Les décomptes ne sont
+                   affichés que s'ils sont présents dans le payload. --- #}
+            {% set votes = reform.votes if reform.votes is defined else none %}
+            <div class="mt-3" data-testid="vote-counts">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Votes citoyens</p>
+              {% if votes %}
+                {% set support = votes.support_count or 0 %}
+                {% set oppose = votes.oppose_count or 0 %}
+                {% set participation = votes.participation_count or (support + oppose) %}
+                {% set support_pct = ((support / participation * 100) | round(1)) if participation > 0 else 0 %}
+                {% set oppose_pct = ((oppose / participation * 100) | round(1)) if participation > 0 else 0 %}
+                <p class="mt-1 text-sm text-slate-700" data-testid="vote-summary">
+                  Soutien : {{ support_pct }}% ({{ support }} sur {{ participation }}) ·
+                  Opposition : {{ oppose_pct }}% ({{ oppose }} sur {{ participation }})
+                </p>
+              {% else %}
+                <p class="mt-1 text-sm italic text-slate-400" data-testid="vote-counts-empty">Aucun contenu</p>
+              {% endif %}
+            </div>
+
+            {# --- Agents_IA_Contradictoires : analyses par agent (Exigence 7). --- #}
+            <div class="mt-4" data-testid="reform-agents">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Agents IA contradictoires</p>
+              {% if bundle and bundle.analyses %}
+                <div class="mt-2 space-y-3">
+                  {% for analysis in bundle.analyses %}
+                    <div class="rounded border border-slate-100 p-3" data-testid="agent-analysis" data-agent-kind="{{ analysis.kind }}">
+                      <p class="text-xs font-semibold text-slate-600">{{ analysis.kind }}</p>
+                      <div class="mt-1">{{ render_analysis(analysis) }}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="mt-1 text-sm italic text-slate-400" data-testid="reform-agents-empty">Aucun contenu</p>
+              {% endif %}
+            </div>
+
+            {# --- Conclusion_Technique agrégée, non prescriptive (Exigences 4.7, 7.9). --- #}
+            <div class="mt-4" data-testid="technical-conclusion">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Conclusion technique</p>
+              {% if bundle and bundle.conclusion %}
+                {% set conclusion = bundle.conclusion %}
+                {% if conclusion.summary %}
+                  <p class="mt-1 whitespace-pre-line text-sm text-slate-700" data-testid="conclusion-summary">{{ conclusion.summary }}</p>
+                {% else %}
+                  <p class="mt-1 text-sm italic text-slate-400">Aucun contenu</p>
+                {% endif %}
+                {{ render_markers(conclusion.markers) }}
+                {% if conclusion.unavailable_roles %}
+                  <p class="mt-2 text-xs text-slate-500" data-testid="unavailable-roles">
+                    Rôles sans argument documenté : {{ conclusion.unavailable_roles | join(", ") }}
+                  </p>
+                {% endif %}
+                {{ render_sources(conclusion.sources) }}
+              {% else %}
+                <p class="mt-1 text-sm italic text-slate-400" data-testid="technical-conclusion-empty">Aucun contenu</p>
+              {% endif %}
+            </div>
+
+            {# --- Simulation_De_Conséquences : grille acteur × 1/5/10 ans (Exigence 5). --- #}
+            <div class="mt-4" data-testid="simulation">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Simulation des conséquences</p>
+              {% if simulation and simulation.status == "INDISPONIBLE" %}
+                <div class="mt-1">{{ render_unavailable(simulation) }}</div>
+              {% elif simulation and simulation.actors %}
+                <div class="mt-2 overflow-x-auto">
+                  <table class="w-full text-left text-sm" data-testid="simulation-grid">
+                    <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th scope="col" class="px-3 py-2">Acteur</th>
+                        <th scope="col" class="px-3 py-2">1 an</th>
+                        <th scope="col" class="px-3 py-2">5 ans</th>
+                        <th scope="col" class="px-3 py-2">10 ans</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                      {% for actor in simulation.actors %}
+                        {% set by_horizon = {} %}
+                        {% for h in actor.horizons %}{% set _ = by_horizon.update({h.horizon: h}) %}{% endfor %}
+                        <tr data-testid="simulation-row" data-actor="{{ actor.actor_category }}">
+                          <td class="px-3 py-2 font-medium text-slate-800">{{ actor.actor_category }}</td>
+                          {% for horizon in ["1_an", "5_ans", "10_ans"] %}
+                            {% set effect = by_horizon.get(horizon) %}
+                            <td class="px-3 py-2 text-slate-700" data-horizon="{{ horizon }}">
+                              {% if effect %}
+                                <span>{{ effect.effect }}</span>
+                                {% if effect.marker %}<div class="mt-1">{{ render_marker(effect.marker) }}</div>{% endif %}
+                              {% else %}
+                                <span class="italic text-slate-400">Aucun contenu</span>
+                              {% endif %}
+                            </td>
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {{ render_sources(simulation.sources) }}
+              {% else %}
+                <p class="mt-1 text-sm italic text-slate-400" data-testid="simulation-empty">Aucun contenu</p>
+              {% endif %}
+            </div>
+
+            {# --- Détection_D_Effets_Pervers : risque + contre-mesure + marqueur (Exigence 6). --- #}
+            <div class="mt-4" data-testid="side-effects">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Effets pervers</p>
+              {% if bundle and bundle.side_effects %}
+                <ul class="mt-2 space-y-3">
+                  {% for risk in bundle.side_effects %}
+                    <li class="rounded border border-slate-100 p-3" data-testid="risk">
+                      <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <p class="text-sm text-slate-700">{{ risk.description }}</p>
+                        <span
+                          class="inline-flex items-center rounded bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-800"
+                          data-testid="risk-marker"
+                        >{{ risk.marker or "risque identifié" }}</span>
+                      </div>
+                      <div class="mt-2">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Contre-mesures</p>
+                        {% if risk.countermeasures %}
+                          <ul class="mt-1 list-disc space-y-0.5 pl-4 text-sm text-slate-700" data-testid="countermeasures">
+                            {% for cm in risk.countermeasures %}<li>{{ cm }}</li>{% endfor %}
+                          </ul>
+                        {% else %}
+                          <p class="mt-1 text-sm italic text-slate-400">Aucun contenu</p>
+                        {% endif %}
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="mt-1 text-sm italic text-slate-400" data-testid="side-effects-empty">Aucun contenu</p>
+              {% endif %}
+            </div>
+
+            {# --- Actions citoyennes par Réforme_Proposée (Exigences 16.4, 8.10). ---
+                   Rendues via le partiel dédié : les cinq actions pour un
+                   Utilisateur_Authentifié, une invitation à s'authentifier (sans
+                   aucune requête modifiant l'état) pour un visiteur anonyme. --- #}
+            {% include "partials/reparer_la_loi_actions.html" with context %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="rounded-lg border border-slate-200 bg-white p-6 text-slate-600" data-testid="empty-reforms">
+        Aucun contenu
+      </p>
+    {% endif %}
+  </section>
+{% endblock %}

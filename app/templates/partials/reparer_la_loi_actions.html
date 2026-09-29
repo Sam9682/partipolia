@@ -1,0 +1,170 @@
+{#
+  Partiel « Réparer la loi » — actions citoyennes par Réforme_Proposée (SSR + HTMX).
+
+  Exigences couvertes :
+    * 16.4 — présenter, pour CHAQUE Réforme_Proposée, les actions : Approuver,
+             Rejeter, Proposer un amendement, Demander une explication et
+             Signaler un effet secondaire ;
+    * 8.10 — un Utilisateur non authentifié tentant une action se voit refuser
+             l'action, tout Vote_Citoyen existant reste inchangé et il est invité
+             à s'authentifier.
+
+  Les actions ciblent les points d'accès **SSR** de l'espace de noms
+  ``/reparer-la-loi/{slug}/reforms/{reform_id}/...`` (à distinguer des points d'accès
+  JSON ``/api/v1/legal-problems/...``). Chaque point d'accès renvoie un **fragment
+  HTML** que HTMX insère dans la zone de résultat propre à la Réforme
+  (``hx-target``/``hx-swap``). Les soumissions utilisent l'encodage par défaut de
+  HTMX (``application/x-www-form-urlencoded``), consommé côté serveur.
+
+  Double garantie sur l'Exigence 8.10 :
+    1. côté rendu, pour un visiteur anonyme (``is_authenticated`` faux) AUCUN
+       formulaire/déclencheur d'action n'est rendu — seule une invitation à
+       s'authentifier est affichée, donc aucune requête POST n'est émissible ;
+    2. côté serveur, les points d'accès SSR résolvent l'état de connexion en lecture
+       seule et retournent une invitation à s'authentifier **avant** toute mutation
+       si l'appel est anonyme (défense en profondeur).
+
+  Contexte attendu (fourni par la boucle du gabarit détail) :
+    * ``problem_slug``    : slug du Problème_Juridique (adresse SSR) ;
+    * ``reform_id``       : identifiant de la Réforme_Proposée (Proposal) ;
+    * ``is_authenticated``: booléen d'état de connexion (via le contexte SSR).
+#}
+
+{% set base = "/reparer-la-loi/" ~ problem_slug ~ "/reforms/" ~ reform_id %}
+
+<div class="mt-4 border-t border-slate-100 pt-4" data-testid="reform-actions" data-reform-id="{{ reform_id }}">
+  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</p>
+
+  {% if is_authenticated %}
+    <div data-testid="reform-actions-authenticated">
+      {# Zone de résultat propre à la Réforme, cible commune des actions HTMX. #}
+      <div
+        id="reform-action-result-{{ reform_id }}"
+        class="mb-3 text-sm"
+        role="status"
+        aria-live="polite"
+        data-testid="reform-action-result"
+      ></div>
+
+      {# --- Approuver (Vote_Citoyen +1) / Rejeter (Vote_Citoyen -1) (Exigences 8.1, 8.2). --- #}
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          class="rounded-md bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+          data-testid="action-approve"
+          hx-post="{{ base }}/approve"
+          hx-target="#reform-action-result-{{ reform_id }}"
+          hx-swap="innerHTML"
+        >Approuver</button>
+
+        <button
+          type="button"
+          class="rounded-md bg-rose-700 px-3 py-2 text-sm font-medium text-white hover:bg-rose-800 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+          data-testid="action-reject"
+          hx-post="{{ base }}/reject"
+          hx-target="#reform-action-result-{{ reform_id }}"
+          hx-swap="innerHTML"
+        >Rejeter</button>
+      </div>
+
+      {# --- Proposer un amendement (→ nouvelle Version_De_Proposition) (Exigence 8.7). --- #}
+      <form
+        class="mt-3 space-y-2"
+        data-testid="action-amendment-form"
+        hx-post="{{ base }}/amendments"
+        hx-target="#reform-action-result-{{ reform_id }}"
+        hx-swap="innerHTML"
+      >
+        <label class="block text-xs font-medium text-slate-600" for="amendment-{{ reform_id }}">
+          Proposer un amendement
+        </label>
+        <textarea
+          id="amendment-{{ reform_id }}"
+          name="content"
+          rows="2"
+          required
+          maxlength="5000"
+          class="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Texte proposé (1 à 5000 caractères)"
+        ></textarea>
+        <button
+          type="submit"
+          class="rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+        >Proposer l'amendement</button>
+      </form>
+
+      {# --- Demander une explication (Assistant_IA RAG cité) (Exigence 8.5). --- #}
+      <form
+        class="mt-3 space-y-2"
+        data-testid="action-explain-form"
+        hx-post="{{ base }}/explain"
+        hx-target="#reform-action-result-{{ reform_id }}"
+        hx-swap="innerHTML"
+      >
+        <label class="block text-xs font-medium text-slate-600" for="explain-{{ reform_id }}">
+          Demander une explication
+        </label>
+        <textarea
+          id="explain-{{ reform_id }}"
+          name="question"
+          rows="2"
+          required
+          maxlength="4000"
+          class="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Votre question sur cette réforme"
+        ></textarea>
+        <button
+          type="submit"
+          class="rounded-md bg-blue-700 px-3 py-2 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >Demander une explication</button>
+      </form>
+
+      {# --- Signaler un effet secondaire (→ modération) (Exigence 8.8). --- #}
+      <form
+        class="mt-3 space-y-2"
+        data-testid="action-side-effect-form"
+        hx-post="{{ base }}/side-effects"
+        hx-target="#reform-action-result-{{ reform_id }}"
+        hx-swap="innerHTML"
+      >
+        <label class="block text-xs font-medium text-slate-600" for="side-effect-{{ reform_id }}">
+          Signaler un effet secondaire
+        </label>
+        <textarea
+          id="side-effect-{{ reform_id }}"
+          name="content"
+          rows="2"
+          required
+          maxlength="5000"
+          class="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Effet secondaire potentiel (1 à 5000 caractères)"
+        ></textarea>
+        <button
+          type="submit"
+          class="rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+        >Signaler l'effet secondaire</button>
+      </form>
+    </div>
+  {% else %}
+    {#
+      Visiteur anonyme (Exigence 8.10) : AUCUNE action modifiant l'état n'est rendue
+      (ni bouton ``hx-post``, ni formulaire soumettable), de sorte qu'aucune requête
+      d'écriture n'est émissible et que tout Vote_Citoyen existant reste inchangé.
+      Seule une invitation à s'authentifier est affichée.
+    #}
+    <div
+      class="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600"
+      data-testid="auth-invitation"
+    >
+      <p>
+        Pour approuver, rejeter, proposer un amendement, demander une explication ou
+        signaler un effet secondaire, vous devez être connecté.
+      </p>
+      <p class="mt-2">
+        <a href="/login" class="font-medium text-blue-700 underline" data-testid="auth-invitation-link">
+          Se connecter pour agir
+        </a>
+      </p>
+    </div>
+  {% endif %}
+</div>

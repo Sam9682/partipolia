@@ -1,0 +1,31 @@
+{#
+  Fragment HTMX « Réparer la loi » — réponse à une demande d'explication (RAG cité).
+
+  Rendu par le point d'accès SSR
+  ``POST /reparer-la-loi/{slug}/reforms/{reform_id}/explain`` (Exigences 8.5, 8.6,
+  16.4). L'Assistant_IA documentaire répond en citant ses Sources ; en l'absence de
+  Source, un message d'absence est affiché SANS altérer le Vote_Citoyen existant
+  (lecture seule côté domaine — Exigence 8.6).
+
+  Contexte attendu :
+    * ``explanation`` : ``ChatResponse.model_dump()`` (answer, sources[], confidence).
+#}
+<div
+  class="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900"
+  data-testid="explanation-result"
+>
+  <p class="whitespace-pre-line" data-testid="explanation-answer">{{ explanation.answer }}</p>
+  {% if explanation.sources %}
+    <div class="mt-2" data-testid="explanation-sources">
+      <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Sources citées</p>
+      <ol class="mt-1 space-y-1">
+        {% for source in explanation.sources %}
+          <li data-testid="explanation-source" data-source-number="{{ source.number }}">
+            <span class="font-medium">[{{ source.number }}]</span>
+            {{ source.content }}
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+  {% endif %}
+</div>

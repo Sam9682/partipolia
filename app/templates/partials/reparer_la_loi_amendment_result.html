@@ -1,0 +1,26 @@
+{#
+  Fragment HTMX « Réparer la loi » — confirmation d'un Amendement.
+
+  Rendu par le point d'accès SSR
+  ``POST /reparer-la-loi/{slug}/reforms/{reform_id}/amendments`` (Exigences 8.7,
+  10.1–10.3, 16.4) après création d'une nouvelle Version_De_Proposition (l'historique
+  antérieur est préservé, jamais écrasé).
+
+  Contexte attendu :
+    * ``version`` : numéro de la nouvelle Version_De_Proposition créée ;
+    * ``change_summary`` : résumé facultatif de la modification.
+#}
+<div
+  class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"
+  data-testid="amendment-result"
+>
+  <p class="font-medium">Amendement enregistré.</p>
+  <p class="mt-1" data-testid="amendment-result-version">
+    Nouvelle version de la Réforme : v{{ version }}.
+  </p>
+  {% if change_summary %}
+    <p class="mt-1 text-slate-600" data-testid="amendment-result-summary">
+      {{ change_summary }}
+    </p>
+  {% endif %}
+</div>

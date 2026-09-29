@@ -143,9 +143,18 @@ class ModerationService:
     # ------------------------------------------------------------------ #
     # Filtre automatique + classification (Exigence 17.1)                #
     # ------------------------------------------------------------------ #
-    def _classify(
-        self, content: str
-    ) -> tuple[ModerationClassification, str | None]:
+    def classify(self, content: str) -> tuple[ModerationClassification, str | None]:
+        """Classe un contenu libre en ``conforme`` / ``douteux`` (Exigence 17.1).
+
+        Point d'entrée **public** du Moteur_De_Modération pour classer une
+        contribution libre (Commentaire, Amendement, Signalement_D_Effet_Secondaire)
+        sans la publier ni la persister. Réutilise le filtre automatique interne :
+        retourne la classification et, le cas échéant, le terme filtré ayant motivé
+        un classement ``douteux`` (``None`` si conforme).
+        """
+        return self._classify(content)
+
+    def _classify(self, content: str) -> tuple[ModerationClassification, str | None]:
         """Classe un contenu en ``conforme`` / ``douteux`` (Exigence 17.1).
 
         Applique le filtre automatique : le contenu est découpé en mots
