@@ -16,12 +16,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.economics.aggregate import aggregate_savings
 from app.economics.decimal_utils import ZERO, engine_context, pct_to_fraction
+from app.economics.defaults import bootstrap_snapshot
 from app.economics.engine import run_engine
 from app.economics.mobilisation import mobilisation_gap
 from app.economics.national import (
+    MissingPopulationError,
     NationalScenario,
     avoided_by_category,
     reference_population,
+    with_population_fallback,
 )
 from app.economics.types import ModelSnapshot
 from app.schemas.national_simulation import (
@@ -107,10 +110,15 @@ class NationalSimulationService:
     # ------------------------------------------------------------------ #
     async def _snapshot(self) -> ModelSnapshot:
         try:
-            return await self._provider.get_snapshot()
+            snapshot = await self._provider.get_snapshot()
         except Exception as exc:  # noqa: BLE001 - converted to a 503
             logger.warning("national_snapshot_unavailable", exc_info=True)
             raise ServiceUnavailableError("model snapshot unavailable") from exc
+        try:
+            return with_population_fallback(snapshot, bootstrap_snapshot())
+        except MissingPopulationError:
+            # Unusable fallback: keep the raw snapshot, the engine will raise (=> 503).
+            return snapshot
 
     async def calculate(self, scenario: NationalScenario) -> NationalScenarioResult:
         snapshot = await self._snapshot()
@@ -129,6 +137,18 @@ class NationalSimulationService:
         return [preset.model_copy(deep=True) for preset in _PRESETS]
 
     async def mobilisation(self, scenario_rate: Decimal) -> MobilisationGap:
+        """Mobilisation gap; any failure degrades to status ``unavailable``."""
+        try:
+            return await self._mobilisation(scenario_rate)
+        except Exception:  # noqa: BLE001 - degraded state, never fails the request
+            logger.warning("national_mobilisation_unavailable", exc_info=True)
+            return MobilisationGap(
+                status="unavailable",
+                scenario_rate=scenario_rate,
+                message="Mobilisation non disponible : données de référence inaccessibles.",
+            )
+
+    async def _mobilisation(self, scenario_rate: Decimal) -> MobilisationGap:
         row = await AggregationService(self._require_session()).latest()
         if row is None:
             return MobilisationGap(
@@ -242,7 +262,7 @@ class NationalSimulationService:
 
     async def _population_or_none(self) -> Decimal | None:
         try:
-            return reference_population(await self._provider.get_snapshot()).value
+            return reference_population(await self._snapshot()).value
         except Exception:  # noqa: BLE001 - absent population => "unavailable"
             return None
 

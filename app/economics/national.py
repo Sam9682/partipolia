@@ -12,13 +12,16 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal, localcontext
 from typing import Literal
 
+from app.core.logging import get_logger
 from app.economics.decimal_utils import ZERO, engine_context, money, pct_to_fraction
 from app.economics.types import Confidence, ModelSnapshot
+
+logger = get_logger(__name__)
 
 ConfidenceLabel = Literal["official", "provisional", "low"]
 Horizon = Literal["short", "medium", "long"]
@@ -93,6 +96,28 @@ def reference_population(snapshot: ModelSnapshot) -> ReferencePopulation:
     )
 
 
+def with_population_fallback(snapshot: ModelSnapshot, fallback: ModelSnapshot) -> ModelSnapshot:
+    """Complete a snapshot lacking a usable ``reference_population``.
+
+    The snapshot is returned unchanged when it already has a valid population.
+    Otherwise a copy is returned with the population of ``fallback`` (forced to
+    PROVISIONAL confidence so that a warning is always shown). The original
+    snapshot is never mutated. ``MissingPopulationError`` is raised if the
+    fallback itself has no usable population.
+    """
+    try:
+        reference_population(snapshot)
+    except MissingPopulationError:
+        pass
+    else:
+        return snapshot
+    reference_population(fallback)  # raises if the fallback is unusable too
+    key = (POPULATION_PARAMETER, None, POPULATION_KEY)
+    provisional = replace(fallback.parameters[key], confidence=Confidence.PROVISIONAL)
+    logger.warning("national_population_fallback", model_version=snapshot.model_version)
+    return replace(snapshot, parameters={**snapshot.parameters, key: provisional})
+
+
 def avoided_by_category(snapshot: ModelSnapshot, scenario: NationalScenario) -> dict[str, Decimal]:
     """Annual avoided spending (EUR, TTC) per category, rounded once to the cent.
 
@@ -123,4 +148,5 @@ __all__ = [
     "avoided_by_category",
     "confidence_label",
     "reference_population",
+    "with_population_fallback",
 ]

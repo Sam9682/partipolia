@@ -26,6 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.economics.defaults import bootstrap_snapshot
 from app.economics.national import NationalScenario as EngineScenario
+from app.economics.national import with_population_fallback
 from app.models.national_scenario import NationalScenario, ScenarioShareLink
 from app.models.user import User
 from app.schemas.national_simulation import NationalScenarioResult
@@ -246,6 +247,7 @@ class SavedScenarioService:
                 snapshot = await EconomicDataService(self._session).get_snapshot(
                     row.model_version_id
                 )
+            snapshot = with_population_fallback(snapshot, bootstrap_snapshot())
             return NationalSimulationService.calculate_with_snapshot(
                 snapshot, _deserialize(row.parameters)
             )
