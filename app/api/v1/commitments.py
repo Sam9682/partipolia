@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +14,7 @@ from app.api.deps import get_current_user
 from app.core.database import get_session
 from app.core.logging import get_logger
 from app.core.rate_limit import default_rate_limit
+from app.economics.categories import CATEGORY_CODES
 from app.models.simulation import EconomicSimulation
 from app.schemas.auth import UserPublic
 from app.schemas.commitment import (
@@ -36,7 +39,11 @@ from app.services.commitment_service import (
     reductions_of,
     validate_profile_region,
 )
-from app.services.simulation_service import DatabaseSnapshotProvider, SimulationService
+from app.services.simulation_service import (
+    DatabaseSnapshotProvider,
+    SimulationService,
+    UnknownCategoryError,
+)
 
 logger = get_logger(__name__)
 
@@ -74,17 +81,62 @@ async def create_commitment(
         raise _http(exc) from exc
 
 
+ReferenceOverridesParam = Annotated[
+    str | None,
+    Query(
+        max_length=4096,
+        description='JSON object {"<category_code>": "<amount>"}; amounts are decimal strings.',
+    ),
+]
+
+
+def _parse_reference_overrides(raw: str | None) -> dict[str, str]:
+    """Parse the query parameter. Raises HTTPException(400) on any malformed input."""
+    if raw is None:
+        return {}
+    try:
+        data = json.loads(raw)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "reference_overrides illisible.") from exc
+    if not isinstance(data, dict) or not all(
+        isinstance(k, str) and isinstance(v, str) for k, v in data.items()
+    ):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "reference_overrides doit être un objet {code: montant}.",
+        )
+    return data
+
+
 @router.get("/me", response_model=MyCommitments, summary="Mes engagements et leur impact estimé")
-async def my_commitments(session: Session, user: CurrentUser) -> MyCommitments:
+async def my_commitments(
+    session: Session, user: CurrentUser, reference_overrides: ReferenceOverridesParam = None
+) -> MyCommitments:
+    overrides = _parse_reference_overrides(reference_overrides)
+    if any(code not in CATEGORY_CODES for code in overrides):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Catégorie inconnue.")
     commitments = await CommitmentService(session).list_for(user.id)
     account = await get_profile(session, user.id)
     reductions = reductions_of(commitments)
+    try:
+        # Built even without commitments so an invalid parameter always yields 400.
+        request = SimulationRequest(
+            reductions=reductions,
+            reference_overrides=overrides,  # type: ignore[arg-type]
+            adults=account.household_adults,
+            save=False,  # Requirement 6.5: overrides are never stored
+        )
+    except ValidationError as exc:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, "reference_overrides invalide."
+        ) from exc
     simulation = None
     if reductions:
         service = SimulationService(DatabaseSnapshotProvider(session), session)
-        simulation = await service.calculate(
-            SimulationRequest(reductions=reductions, adults=account.household_adults), user.id
-        )
+        try:
+            simulation = await service.calculate(request, user.id)
+        except UnknownCategoryError as exc:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Catégorie inconnue.") from exc
     return MyCommitments(
         commitments=commitments,
         consent_aggregation=consent_of(account),

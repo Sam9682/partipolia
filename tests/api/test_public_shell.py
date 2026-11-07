@@ -19,7 +19,7 @@ EXPECTED_NAV = [
     ("Revendications citoyennes", "/revendications"),
     ("Consultations", "/consultations"),
     ("Méthodologie", "/methodologie"),
-    ("Rejoindre", "/rejoindre"),
+    ("Participer", "/participer"),
 ]
 
 # Pages adossées à la base de données : exclues de l'échantillon sans PostgreSQL
@@ -118,7 +118,7 @@ def test_landing_page_content(client: TestClient) -> None:
         "Votre argent. Votre pouvoir. Votre décision.",
     ):
         assert text in html, text
-    assert 'href="/rejoindre"' in html and 'href="/simulateur"' in html
+    assert 'href="/participer"' in html and 'href="/simulateur"' in html
 
 
 def test_landing_page_sections_and_categories(client: TestClient) -> None:
@@ -132,7 +132,7 @@ def test_landing_page_sections_and_categories(client: TestClient) -> None:
         "recettes",
         "revendications",
         "transparence",
-        "rejoindre",
+        "participer",
     ):
         assert f'id="{section_id}"' in html, section_id
     assert html.count("data-category=") == 6

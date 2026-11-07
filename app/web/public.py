@@ -62,7 +62,7 @@ NAV_ITEMS: list[dict[str, str]] = [
     {"label": "Revendications citoyennes", "href": "/revendications"},
     {"label": "Consultations", "href": "/consultations"},
     {"label": "Méthodologie", "href": "/methodologie"},
-    {"label": "Rejoindre", "href": "/rejoindre"},
+    {"label": "Participer", "href": "/participer"},
 ]
 
 POLICY_DEMANDS: list[str] = [
@@ -247,10 +247,18 @@ async def methodology(request: Request) -> HTMLResponse:
 
 
 @public_router.get(
-    "/rejoindre", response_class=HTMLResponse, name="rejoindre", include_in_schema=False
+    "/participer", response_class=HTMLResponse, name="participer", include_in_schema=False
 )
 async def join(request: Request) -> HTMLResponse:
-    categories = [{"code": c.code, "name": c.name} for c in DEFAULT_CATEGORIES]
+    categories = [
+        {
+            "code": c.code,
+            "name": c.name,
+            "reference": str(c.reference_annual_expenditure),
+            "reference_fr": format_eur_fr(c.reference_annual_expenditure),
+        }
+        for c in DEFAULT_CATEGORIES
+    ]
     return templates.TemplateResponse(
         request, "public/join.html", page_context(request, categories=categories)
     )

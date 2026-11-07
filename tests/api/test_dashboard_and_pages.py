@@ -112,7 +112,7 @@ def test_national_page(site: TestClient) -> None:
 
 
 def test_join_page_has_explicit_consent_and_declared_notice(site: TestClient) -> None:
-    html = site.get("/rejoindre").text
+    html = site.get("/participer").text
     assert 'data-testid="join"' in html
     assert "anonyme" in html and "agrégée" in html  # explicit aggregation consent
     assert "déclaratifs" in html
