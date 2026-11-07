@@ -1,0 +1,8 @@
+{# Mentions obligatoires : hypothèse, estimation modélisée, version du modèle, date de calcul, Seuil_Minimal. #}
+<div class="disclaimer space-y-1" data-testid="national-mentions">
+  <p><strong>Hypothèse, non prévision.</strong> Ce scénario est une hypothèse : il ne prédit ni la mobilisation réelle ni les engagements effectivement déclarés.</p>
+  <p><strong>Estimation modélisée.</strong> Les montants sont des estimations modélisées et non des recettes fiscales mesurées.</p>
+  {% if model_version %}<p data-testid="model-version">Version du modèle : {{ model_version }}{% if dataset_versions %} · jeux de données : {{ dataset_versions | join(', ') }}{% endif %}</p>{% endif %}
+  <p data-testid="calculated-on">Date de calcul : {{ calculated_on | date_fr }}</p>
+  <p>Seuil minimal de publication : {{ min_cohort }} participants. En dessous, aucun chiffre n'est publié (statut « retenue »).</p>
+</div>

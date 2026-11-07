@@ -265,7 +265,9 @@ class _FakeAuthService:
     def __init__(self, *, known_emails: dict[str, str] | None = None) -> None:
         self._known = {e.lower(): p for e, p in (known_emails or {}).items()}
 
-    async def authenticate(self, email: str, password: str) -> TokenPair:
+    async def authenticate(
+        self, email: str, password: str, *, ip_hash: str | None = None
+    ) -> TokenPair:
         normalized = email.strip().lower()
         expected = self._known.get(normalized)
         if expected is None or expected != password:

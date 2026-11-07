@@ -53,9 +53,28 @@
       </tbody></table></div>
   </section>
 
+  <section class="card" data-testid="methodology-national">
+    <h2 class="font-bold text-navy-900">Scénarios nationaux</h2>
+    <p class="mt-2 text-sm text-slate-700">Le <a class="underline" href="/simulateur-national">simulateur national</a> applique le même moteur à un scénario d'hypothèse : un taux de participation de la population adulte de référence et un pourcentage de réduction par catégorie de consommation. Le nombre de participants est le taux multiplié par la population de référence, issue d'un jeu de données versionné. Chaque résultat est une fourchette (basse, centrale, haute) et indique la version du modèle utilisée.</p>
+    <p class="mt-2 text-sm text-slate-700">Le taux de participation déclaré, issu des engagements consentis, est comparé au taux du scénario. L'écart est exprimé en points de pourcentage. Un scénario n'est ni une prévision ni une promesse.</p>
+  </section>
+
+  <section class="card" data-testid="methodology-regional">
+    <h2 class="font-bold text-navy-900">Répartition régionale</h2>
+    <p class="mt-2 text-sm text-slate-700">Les engagements des citoyens ayant consenti à l'agrégation sont regroupés par <a class="underline" href="/regions">région</a> administrative (code INSEE), puis recalculés chaque heure. Seuls des totaux sont publiés : aucun engagement individuel, aucun identifiant.</p>
+  </section>
+
+  <section class="card" data-testid="methodology-threshold">
+    <h2 class="font-bold text-navy-900">Seuil minimal de publication</h2>
+    <p class="mt-2 text-sm text-slate-700">Aucune valeur agrégée n'est publiée lorsque la cohorte compte moins de <strong>20 participants</strong> : nationale, régionale, par catégorie ou résultat de consultation. Une valeur retenue peut entraîner la retenue d'une valeur voisine, afin qu'elle ne puisse pas être déduite par différence entre un total et ses parties.</p>
+  </section>
+
   <section class="card">
     <h2 class="font-bold text-navy-900">Limites connues</h2>
     <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+      <li>Les scénarios nationaux sont des hypothèses : la participation réelle est déclarative, non vérifiée, et non représentative de la population française.</li>
+      <li>Les chiffres régionaux dépendent du nombre de participants consentants de chaque région et sont souvent retenus lorsque la cohorte est trop petite.</li>
+      <li>Les consultations ne sont ni des élections ni des référendums juridiquement contraignants.</li>
       <li>Les fourchettes ne traduisent que l'incertitude des paramètres, pas celle du modèle.</li>
       <li>La répartition entre État, collectivités et Sécurité sociale est simplifiée.</li>
       <li>Les économies redépensées ne récupèrent que la TVA : l'activité qu'elles créent n'est pas modélisée.</li>

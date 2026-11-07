@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.economics.decimal_utils import HUNDRED, ZERO
+from app.reference.regions import is_valid_region
 from app.schemas.simulation import SimulationResponse
 
 DurationMonths = Literal[1, 3, 6, 12]
@@ -111,3 +112,10 @@ class ProfileUpdate(BaseModel):
     region: str | None = Field(default=None, pattern=r"^[0-9A-Z]{2,3}$")
     household_adults: int | None = Field(default=None, ge=1, le=10)
     consent_aggregation: bool | None = None
+
+    @field_validator("region")
+    @classmethod
+    def _region_in_reference_list(cls, value: str | None) -> str | None:
+        if value is not None and not is_valid_region(value):
+            raise ValueError("region must be a code of the versioned Region list")
+        return value

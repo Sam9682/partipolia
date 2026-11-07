@@ -30,7 +30,9 @@ from typing import Annotated, Final
 from fastapi import Depends, Request, status
 from fastapi.exceptions import HTTPException
 
+from app.core.audit_events import ACTION_ADMIN_ACCESS_DENIED, request_ip_hash
 from app.core.database import get_session
+from app.services.audit_service import AuditService
 from app.models.roles import Role, has_role
 from app.services.auth_service import AuthError, AuthService
 from app.schemas.auth import UserPublic
@@ -109,7 +111,19 @@ async def get_current_user(
         ) from exc
 
 
+async def _audit_admin_denied(request: Request, user: UserPublic) -> None:
+    """Consigne un refus 403 d'administration en session isolée (Exigences 15.7, 15.8)."""
+    await AuditService(None).record_isolated(  # type: ignore[arg-type]
+        action=ACTION_ADMIN_ACCESS_DENIED,
+        entity_type="endpoint",
+        new_data={"method": request.method, "path": request.url.path},
+        ip_hash=request_ip_hash(request),
+        actor_id=user.id,
+    )
+
+
 async def require_admin(
+    request: Request,
     current_user: Annotated[UserPublic, Depends(get_current_user)],
 ) -> UserPublic:
     """Exige un Administrateur (``is_admin``), sinon ``403`` ``FORBIDDEN``.
@@ -118,6 +132,7 @@ async def require_admin(
     aux actions réservées à l'administration.
     """
     if not current_user.is_admin:
+        await _audit_admin_denied(request, current_user)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=_FORBIDDEN_MESSAGE,
@@ -133,9 +148,11 @@ def require_roles(*allowed: Role):  # type: ignore[no-untyped-def]
     """
 
     async def _guard(
+        request: Request,
         current_user: Annotated[UserPublic, Depends(get_current_user)],
     ) -> UserPublic:
         if not has_role(current_user.role, *allowed):
+            await _audit_admin_denied(request, current_user)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=_FORBIDDEN_MESSAGE,

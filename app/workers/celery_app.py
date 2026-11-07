@@ -33,6 +33,7 @@ _TASK_MODULES: tuple[str, ...] = (
     "app.workers.statistics",
     "app.workers.legal_analysis",
     "app.workers.dashboard_refresh",
+    "app.workers.consultations",
 )
 
 
@@ -65,7 +66,12 @@ def create_celery_app() -> Celery:
             "refresh-national-dashboard": {
                 "task": "app.workers.dashboard_refresh.refresh_dashboard",
                 "schedule": 3600.0,  # every hour; one snapshot row per day is kept
-            }
+            },
+            # Exigence 9.9 : clôture des consultations échues en ≤ 60 s.
+            "close-expired-consultations": {
+                "task": "app.workers.consultations.close_expired_consultations",
+                "schedule": 30.0,
+            },
         },
     )
 

@@ -20,11 +20,13 @@ from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import Numeric, cast, distinct, func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.economics.aggregate import aggregate_savings
 from app.economics.decimal_utils import ZERO, money
 from app.economics.engine import run_engine
-from app.economics.types import CategorySavings, ModelSnapshot, PersonalSavings
+from app.economics.types import ModelSnapshot, PersonalSavings
 from app.models.aggregation import AggregatedImpact
 from app.models.citizen_commitment import CitizenCommitment
 from app.models.consumption_category import ConsumptionCategory
@@ -51,33 +53,6 @@ class AggregateInputs:
     participants: int
     active_commitments: int
     avoided_by_category: dict[str, Decimal]  # EUR per year, TTC
-
-
-def aggregate_savings(snapshot: ModelSnapshot, avoided: dict[str, Decimal]) -> PersonalSavings:
-    """Wrap summed avoided spending into the structure the engine consumes."""
-    rows = []
-    for category in snapshot.categories:
-        value = money(avoided.get(category.code, ZERO))
-        rows.append(
-            CategorySavings(
-                code=category.code,
-                reduction_percentage=ZERO,  # not meaningful for an aggregate
-                original_expenditure=value,
-                avoided_expenditure=value,
-                remaining_expenditure=ZERO,
-                annual_savings=value,
-            )
-        )
-    total = sum((r.annual_savings for r in rows), ZERO)
-    return PersonalSavings(
-        adults=1,
-        categories=tuple(rows),
-        original_expenditure=total,
-        avoided_expenditure=total,
-        remaining_expenditure=ZERO,
-        annual_savings=total,
-        monthly_savings=money(total / MONTHS_PER_YEAR),
-    )
 
 
 def _scale(r: MoneyRange, divisor: Decimal) -> MoneyRange:
@@ -145,17 +120,6 @@ class AggregationService:
         today = today or date.today()
         inputs = await self.collect(today)
         savings, fiscal = await self.compute(snapshot, inputs)
-        start_of_day = datetime(today.year, today.month, today.day, tzinfo=UTC)
-        row = await self._session.scalar(
-            select(AggregatedImpact)
-            .where(
-                AggregatedImpact.aggregation_period == "daily",
-                AggregatedImpact.geographical_level == "national",
-                AggregatedImpact.calculated_at >= start_of_day,
-            )
-            .order_by(AggregatedImpact.id.desc())
-            .limit(1)
-        )
         details: dict[str, Any] = {
             "fiscal": fiscal.model_dump(mode="json"),
             "dataset_versions": list(snapshot.dataset_versions),
@@ -173,18 +137,23 @@ class AggregationService:
             "details": details,
             "calculated_at": datetime.now(UTC),
         }
-        if row is None:
-            row = AggregatedImpact(
-                aggregation_period="daily",
-                geographical_level="national",
-                geographical_code="FR",
-                **values,
-            )
-            self._session.add(row)
-        else:
-            for key, value in values.items():
-                setattr(row, key, value)
-        await self._session.flush()
+        key = {
+            "aggregation_period": "daily",
+            "geographical_level": "national",
+            "geographical_code": "FR",
+            "snapshot_date": today,
+        }
+        stmt = pg_insert(AggregatedImpact).values(**key, **values)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=list(key), set_={k: stmt.excluded[k] for k in values}
+        )
+        await self._session.execute(stmt)
+        row = await self._session.scalar(
+            select(AggregatedImpact)
+            .where(*(getattr(AggregatedImpact, k) == v for k, v in key.items()))
+            .execution_options(populate_existing=True)
+        )
+        assert row is not None
         return row
 
     # ------------------------------------------------------------------ #

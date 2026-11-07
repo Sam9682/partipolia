@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.database import get_session
+from app.core.logging import get_logger
 from app.core.rate_limit import default_rate_limit
 from app.models.simulation import EconomicSimulation
 from app.schemas.auth import UserPublic
@@ -33,8 +34,11 @@ from app.services.commitment_service import (
     consent_of,
     get_profile,
     reductions_of,
+    validate_profile_region,
 )
 from app.services.simulation_service import DatabaseSnapshotProvider, SimulationService
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 profile_router = APIRouter()
@@ -118,6 +122,16 @@ async def delete_commitment(commitment_id: int, session: Session, user: CurrentU
 
 
 # --------------------------------------------------------------------- profile
+def _emit_dashboard_refresh() -> None:
+    """Emit ``refresh_dashboard`` (lazy import; a broker failure never breaks the API)."""
+    try:
+        from app.workers.dashboard_refresh import refresh_dashboard
+
+        refresh_dashboard.delay()
+    except Exception:
+        logger.exception("dashboard_refresh_enqueue_failed")
+
+
 def _profile(account) -> ProfileOut:  # type: ignore[no-untyped-def]
     return ProfileOut(
         country=account.country,
@@ -169,7 +183,16 @@ async def export_my_data(session: Session, user: CurrentUser) -> CitizenExport:
     dependencies=[Limit],
     summary="Modifier mon profil et mon consentement à l'agrégation",
 )
-async def update_profile(payload: ProfileUpdate, session: Session, user: CurrentUser) -> ProfileOut:
+async def update_profile(
+    payload: ProfileUpdate,
+    session: Session,
+    user: CurrentUser,
+    background_tasks: BackgroundTasks,
+) -> ProfileOut:
+    try:
+        validate_profile_region(payload.region)
+    except CommitmentError as exc:
+        raise _http(exc) from exc
     account = await get_profile(session, user.id)
     if payload.country is not None:
         account.country = payload.country
@@ -178,6 +201,10 @@ async def update_profile(payload: ProfileUpdate, session: Session, user: Current
     if payload.household_adults is not None:
         account.household_adults = payload.household_adults
     if payload.consent_aggregation is not None:
+        if consent_of(account) and not payload.consent_aggregation:
+            # Consent withdrawn: refresh aggregates once the request transaction has
+            # committed (background tasks run after get_session's commit).
+            background_tasks.add_task(_emit_dashboard_refresh)
         # Reassign the dict so SQLAlchemy detects the JSONB change.
         account.consents = {**(account.consents or {}), CONSENT_KEY: payload.consent_aggregation}
     await session.flush()

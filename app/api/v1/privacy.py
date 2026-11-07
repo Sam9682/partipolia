@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,6 +31,11 @@ from app.api.deps import (
     ACCESS_TOKEN_COOKIE_NAME,
     REFRESH_TOKEN_COOKIE_NAME,
     get_current_user,
+)
+from app.core.audit_events import (
+    ACTION_PRIVACY_DELETE_REQUESTED,
+    ACTION_PRIVACY_EXPORT_REQUESTED,
+    request_ip_hash,
 )
 from app.core.database import get_session
 from app.schemas.auth import UserPublic
@@ -41,12 +46,30 @@ from app.schemas.privacy import (
     DataExport,
     RetentionPolicy,
 )
+from app.services.audit_service import AuditService
 from app.services.privacy_service import PrivacyError, PrivacyService
 
 router = APIRouter()
 
 # Attribut « path » des cookies d'authentification (cf. app/api/v1/auth.py).
 _COOKIE_PATH = "/"
+
+
+async def _audit_privacy_request(
+    request: Request, action: str, user: UserPublic
+) -> None:
+    """Consigne une demande d'export / suppression en session isolée (Exigence 15.7).
+
+    ``actor_id`` n'est pas renseigné : la clé étrangère disparaîtrait avec le compte
+    supprimé ; l'identifiant est consigné dans ``new_data``.
+    """
+    await AuditService(None).record_isolated(  # type: ignore[arg-type]
+        action=action,
+        entity_type="user",
+        entity_id=user.id,
+        new_data={"user_id": user.id},
+        ip_hash=request_ip_hash(request),
+    )
 
 
 def get_privacy_service(
@@ -73,10 +96,12 @@ async def retention() -> RetentionPolicy:
     responses={status.HTTP_401_UNAUTHORIZED: {"description": "Authentification requise"}},
 )
 async def export_data(
+    request: Request,
     current_user: Annotated[UserPublic, Depends(get_current_user)],
     service: Annotated[PrivacyService, Depends(get_privacy_service)],
 ) -> DataExport:
     """Exporte les données personnelles du compte courant (Exigence 28.4)."""
+    await _audit_privacy_request(request, ACTION_PRIVACY_EXPORT_REQUESTED, current_user)
     try:
         return await service.export_user_data(current_user.id)
     except PrivacyError as exc:
@@ -134,11 +159,14 @@ async def update_consents(
     responses={status.HTTP_401_UNAUTHORIZED: {"description": "Authentification requise"}},
 )
 async def delete_account(
+    request: Request,
     response: Response,
     current_user: Annotated[UserPublic, Depends(get_current_user)],
     service: Annotated[PrivacyService, Depends(get_privacy_service)],
 ) -> AccountDeletionResult:
     """Supprime le compte courant et efface ses cookies d'authentification (Exigence 28.4)."""
+    # Audité avant la suppression : l'acteur n'existera plus ensuite (D8).
+    await _audit_privacy_request(request, ACTION_PRIVACY_DELETE_REQUESTED, current_user)
     try:
         result = await service.delete_account(current_user.id)
     except PrivacyError as exc:

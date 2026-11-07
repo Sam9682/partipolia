@@ -1,0 +1,74 @@
+{% set f = result.fiscal %}
+<div class="space-y-4" data-testid="national-result">
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div class="card">
+      <p class="kpi-value" data-testid="national-net">{{ f.net_public_impact.central | eur }}</p>
+      <p class="kpi-label mt-1">Impact net estimé sur les finances publiques (par an)</p>
+      <p class="text-sm text-slate-600">Fourchette : {{ f.net_public_impact.low | eur }} à {{ f.net_public_impact.high | eur }}</p>
+    </div>
+    <div class="card">
+      <p class="kpi-value" data-testid="participants">{{ result.participants | num }}</p>
+      <p class="kpi-label mt-1">Participants supposés (hypothèse)</p>
+      <p class="text-sm text-slate-600">Taux de participation : {{ result.scenario.participation_rate | pct }} de {{ result.population.value | num }} personnes ({{ result.population.source }}{% if result.population.as_of %}, {{ result.population.as_of | date_fr }}{% endif %})</p>
+    </div>
+  </div>
+
+  {% if result.confidence_warning %}
+  <p class="rounded bg-red-50 px-3 py-2 text-xs text-slate-800" data-testid="confidence-warning">{{ result.confidence_warning }}</p>
+  {% endif %}
+
+  {% if mobilisation %}
+  <div class="card" data-testid="mobilisation">
+    <h2 class="font-bold text-navy-900">Écart avec la mobilisation déclarée</h2>
+    {% if mobilisation.status == 'ok' %}
+    <p class="mt-1 text-sm">Mobilisation déclarée : {{ mobilisation.declared_rate | pct }} · écart : {{ mobilisation.gap_pp | num(2) }} points de pourcentage.</p>
+    {% endif %}
+    <p class="mt-1 text-xs text-slate-600">{{ mobilisation.message }}</p>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2 class="font-bold text-navy-900">Composantes de l'impact (euros par an)</h2>
+    <ul class="mt-3 space-y-2" aria-hidden="true">
+      {% for row in components %}
+      <li>
+        <div class="text-xs text-slate-600">{{ row.label }}</div>
+        <div class="h-3 rounded bg-slate-100"><div class="h-3 rounded {% if row.strong %}bg-brand-red{% else %}bg-navy-700{% endif %}" style="width: {{ row.width }}%"></div></div>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">Tableau équivalent au graphique : composantes de l'impact estimé, fourchettes basse, centrale et haute, en euros par an</caption>
+        <thead><tr class="border-b text-xs uppercase text-slate-500"><th scope="col" class="py-1 pr-2">Composante</th><th scope="col" class="py-1 pr-2 text-right">Bas</th><th scope="col" class="py-1 pr-2 text-right">Central</th><th scope="col" class="py-1 text-right">Haut</th></tr></thead>
+        <tbody>
+          {% for row in components %}
+          <tr class="border-b {% if row.strong %}font-bold{% endif %}"><th scope="row" class="py-1 pr-2 font-normal">{{ row.label }}</th><td class="py-1 pr-2 text-right">{{ row.low | eur }}</td><td class="py-1 pr-2 text-right">{{ row.central | eur }}</td><td class="py-1 text-right">{{ row.high | eur }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="font-bold text-navy-900">Dépense évitée par catégorie</h2>
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">Réduction supposée et dépense annuelle évitée, par catégorie</caption>
+        <thead><tr class="border-b text-xs uppercase text-slate-500"><th scope="col" class="py-1 pr-2">Catégorie</th><th scope="col" class="py-1 pr-2 text-right">Réduction</th><th scope="col" class="py-1 text-right">Dépense évitée (par an)</th></tr></thead>
+        <tbody>
+          {% for code, avoided in result.avoided_by_category.items() %}
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">{{ category_names.get(code, code) }}</th><td class="py-1 pr-2 text-right">{{ (result.scenario.reductions.get(code)) | pct }}</td><td class="py-1 text-right">{{ avoided | eur }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% set model_version = result.model_version %}
+  {% set dataset_versions = result.dataset_versions %}
+  {% include "public/partials/national_mentions.html" %}
+  <div class="disclaimer space-y-1">
+    {% for d in result.disclaimers %}<p>{{ d }}</p>{% endfor %}
+  </div>
+</div>

@@ -21,7 +21,7 @@ fournies ou produites par l'Utilisateur lui-même.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -87,6 +87,53 @@ class ExportedComment(BaseModel):
     created_at: datetime
 
 
+class ExportedScenario(BaseModel):
+    """Scénario national enregistré par l'Utilisateur (Exigence 2.11).
+
+    Le jeton de partage (ou son hachage) n'est jamais exporté.
+    """
+
+    id: int
+    name: str
+    parameters: dict[str, Any] = Field(default_factory=dict)
+    model_version: str
+    dataset_version: str
+    created_at: datetime
+
+
+class ExportedClaim(BaseModel):
+    """Revendication rédigée par l'Utilisateur (Exigence 6.8)."""
+
+    id: int
+    title: str
+    body: str
+    status: str
+    category_id: int | None
+    published_at: datetime | None
+    created_at: datetime
+
+
+class ExportedClaimComment(BaseModel):
+    """Commentaire de revendication rédigé par l'Utilisateur (Exigence 6.8)."""
+
+    id: int
+    claim_id: int
+    body: str
+    status: str
+    created_at: datetime
+
+
+class ExportedConsultationParticipation(BaseModel):
+    """Participation à une consultation : titre et date seulement (Exigence 10.11).
+
+    Le contenu des réponses n'est jamais exporté : il n'est pas relié au compte.
+    """
+
+    consultation_id: int
+    title: str
+    participated_on: date
+
+
 class ExportedAccount(BaseModel):
     """Données du compte incluses à l'export — jamais ``password_hash`` (Exigence 28.4)."""
 
@@ -117,6 +164,12 @@ class DataExport(BaseModel):
     votes: list[ExportedVote] = Field(default_factory=list)
     arguments: list[ExportedArgument] = Field(default_factory=list)
     comments: list[ExportedComment] = Field(default_factory=list)
+    saved_scenarios: list[ExportedScenario] = Field(default_factory=list)
+    claims: list[ExportedClaim] = Field(default_factory=list)
+    claim_comments: list[ExportedClaimComment] = Field(default_factory=list)
+    consultation_participations: list[ExportedConsultationParticipation] = Field(
+        default_factory=list
+    )
 
 
 class AccountDeletionResult(BaseModel):
@@ -133,6 +186,12 @@ class AccountDeletionResult(BaseModel):
     deleted_votes: int = Field(ge=0)
     deleted_arguments: int = Field(ge=0)
     deleted_comments: int = Field(ge=0)
+    deleted_scenarios: int = Field(default=0, ge=0)
+    deleted_claims: int = Field(default=0, ge=0)
+    deleted_claim_comments: int = Field(default=0, ge=0)
+    deleted_claim_supports: int = Field(default=0, ge=0)
+    deleted_content_reports: int = Field(default=0, ge=0)
+    deleted_consultation_participations: int = Field(default=0, ge=0)
 
 
 class RetentionRule(BaseModel):

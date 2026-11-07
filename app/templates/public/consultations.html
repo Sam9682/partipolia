@@ -1,0 +1,30 @@
+{% extends "public/base.html" %}
+{% block title %}Consultations — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Consultations</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Des questions posées aux citoyens. La participation est volontaire et les réponses sont anonymes.</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-6xl px-4 pt-8" data-testid="consultations">
+  {% if not items %}
+  <p class="card text-sm text-slate-600" data-testid="empty">Aucune consultation publiée pour le moment.</p>
+  {% else %}
+  <ul class="space-y-4">
+    {% for c in items %}
+    <li class="card" data-testid="consultation-item">
+      <h2 class="text-lg font-bold text-navy-900"><a href="/consultations/{{ c.id }}" class="underline">{{ c.title }}</a></h2>
+      <p class="mt-1 text-sm text-slate-700">
+        <span data-testid="consultation-status">{{ status_labels.get(c.status, c.status) }}</span>
+        · du {{ c.opens_at | datetime_fr }} au {{ c.closes_at | datetime_fr }} (UTC)
+      </p>
+      {% if c.status == 'closed' %}<p class="mt-2 text-sm"><a href="/consultations/{{ c.id }}/resultats" class="underline">Voir les résultats</a></p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endblock %}

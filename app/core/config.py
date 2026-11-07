@@ -29,6 +29,34 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 ProviderName = Literal["openai", "anthropic", "local"]
 
 
+# Valeurs par défaut connues (en minuscules) refusées en production (Exigence 13.9).
+_KNOWN_DEFAULT_SECRETS = frozenset(
+    {
+        "change-me-in-production",
+        "change-me",
+        "changeme",
+        "secret",
+        "password",
+        "partipolia",
+        "postgres",
+        "admin",
+        "test",
+        "default",
+    }
+)
+
+
+def _database_password(url: str) -> str | None:
+    """Extrait le mot de passe d'une URL de base ; ``None`` s'il est absent/illisible."""
+    from urllib.parse import unquote, urlsplit
+
+    try:
+        password = urlsplit(url).password
+    except ValueError:
+        return None
+    return unquote(password) if password is not None else None
+
+
 class Settings(BaseSettings):
     """Paramètres applicatifs chargés depuis l'environnement / le fichier ``.env``."""
 
@@ -78,6 +106,23 @@ class Settings(BaseSettings):
     # Seuil renforcé du point d'accès ``POST /api/v1/chat`` (protection accrue
     # contre les abus — Exigence 26.5) : volontairement plus bas que le défaut.
     rate_limit_chat_max: int = Field(default=10, ge=1, alias="RATE_LIMIT_CHAT_MAX")
+    # Seuils explicites des points d'accès de la simulation nationale et des
+    # consultations (Exigences 2.16, 10.13, 14.9) — requêtes par fenêtre.
+    rate_limit_national_calc_max: int = Field(
+        default=20, ge=1, alias="RATE_LIMIT_NATIONAL_CALC_MAX"
+    )
+    rate_limit_scenario_save_max: int = Field(
+        default=10, ge=1, alias="RATE_LIMIT_SCENARIO_SAVE_MAX"
+    )
+    rate_limit_claim_create_max: int = Field(
+        default=10, ge=1, alias="RATE_LIMIT_CLAIM_CREATE_MAX"
+    )
+    rate_limit_claim_support_max: int = Field(
+        default=30, ge=1, alias="RATE_LIMIT_CLAIM_SUPPORT_MAX"
+    )
+    rate_limit_consultation_respond_max: int = Field(
+        default=20, ge=1, alias="RATE_LIMIT_CONSULTATION_RESPOND_MAX"
+    )
 
     # --- JWT (authentification) --------------------------------------------
     # Aucun secret par défaut : doit être fourni par l'environnement (Exigence 28.6).
@@ -188,10 +233,35 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _check_secrets_in_production(self) -> "Settings":
-        """Interdit les secrets vides ou factices en production (Exigence 28.6)."""
-        if self.app_env == "production" and not self.jwt_secret_key.get_secret_value():
+        """Interdit les secrets vides ou par défaut en production (Exigences 28.6, 13.9).
+
+        Tous les paramètres fautifs sont nommés dans le message ; aucune valeur
+        n'y figure.
+        """
+        if self.app_env != "production":
+            return self
+
+        def _is_bad(value: str) -> bool:
+            return not value.strip() or value.strip().lower() in _KNOWN_DEFAULT_SECRETS
+
+        secrets = {
+            "JWT_SECRET_KEY": self.jwt_secret_key.get_secret_value(),
+            "LLM_API_KEY": self.llm_api_key.get_secret_value(),
+            "EMBEDDING_API_KEY": self.embedding_api_key.get_secret_value(),
+            "SMTP_PASSWORD": self.smtp_password.get_secret_value(),
+        }
+        offending = [name for name, value in secrets.items() if _is_bad(value)]
+
+        # Mot de passe embarqué dans l'URL de base de données.
+        db_password = _database_password(self.database_url)
+        if db_password is None or _is_bad(db_password):
+            offending.append("DATABASE_URL")
+
+        if offending:
             raise ValueError(
-                "JWT_SECRET_KEY doit être défini via l'environnement en production."
+                "Secrets vides ou par défaut interdits en production : "
+                + ", ".join(offending)
+                + "."
             )
         return self
 

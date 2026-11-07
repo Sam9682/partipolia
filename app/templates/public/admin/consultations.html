@@ -1,0 +1,35 @@
+{% extends "public/base.html" %}
+{% block title %}Administration des consultations — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Administration des consultations</h1>
+    {% if can_edit %}<p class="mt-4 text-sm"><a href="/admin/consultations/nouvelle" class="btn-primary">Créer une consultation</a></p>{% endif %}
+  </div>
+</section>
+
+<div class="mx-auto max-w-6xl px-4 pt-8" data-testid="admin-consultations">
+  {% if info %}<p class="mb-4 rounded-md bg-slate-100 p-3 text-sm text-slate-800" role="status">{{ info }}</p>{% endif %}
+  {% if not items %}
+  <p class="card text-sm text-slate-600" data-testid="empty">Aucune consultation.</p>
+  {% else %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <caption class="sr-only">Liste des consultations avec leur statut effectif et leurs dates</caption>
+      <thead><tr class="border-b text-xs uppercase text-slate-500"><th scope="col" class="py-1 pr-2">Titre</th><th scope="col" class="py-1 pr-2">Statut</th><th scope="col" class="py-1 pr-2">Ouverture (UTC)</th><th scope="col" class="py-1">Clôture (UTC)</th></tr></thead>
+      <tbody>
+        {% for c in items %}
+        <tr class="border-b" data-testid="admin-consultation-row">
+          <th scope="row" class="py-1 pr-2 font-normal"><a href="/admin/consultations/{{ c.id }}" class="underline">{{ c.title }}</a></th>
+          <td class="py-1 pr-2">{{ status_labels.get(c.status, c.status) }}</td>
+          <td class="py-1 pr-2">{{ c.opens_at | datetime_fr }}</td>
+          <td class="py-1">{{ c.closes_at | datetime_fr }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

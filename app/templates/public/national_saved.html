@@ -1,0 +1,46 @@
+{% extends "public/base.html" %}
+{% block title %}Mes scénarios — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Mes scénarios</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Vos hypothèses enregistrées (50 au maximum). Chaque relecture est recalculée avec la version du modèle utilisée à l'enregistrement.</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-6xl px-4 pt-8" data-testid="national-saved">
+  {% if not authenticated %}
+  {% include "public/partials/national_login_required.html" %}
+  {% elif not scenarios %}
+  <p class="card text-sm text-slate-600" data-testid="empty">Aucun scénario enregistré. <a href="/simulateur-national" class="underline">Créer un scénario</a>.</p>
+  {% else %}
+  <div class="card overflow-x-auto" id="saved-list" aria-live="polite">
+    <table class="w-full text-left text-sm">
+      <caption class="sr-only">Scénarios enregistrés : nom, date, impact net central estimé et version du modèle</caption>
+      <thead><tr class="border-b text-xs uppercase text-slate-500"><th scope="col" class="py-1 pr-2">Nom</th><th scope="col" class="py-1 pr-2">Date</th><th scope="col" class="py-1 pr-2 text-right">Impact net central (par an)</th><th scope="col" class="py-1 pr-2">Version du modèle</th><th scope="col" class="py-1">Actions</th></tr></thead>
+      <tbody>
+        {% for s in scenarios %}
+        <tr class="border-b" id="scenario-{{ s.id }}">
+          <th scope="row" class="py-1 pr-2 font-normal">{{ s.name }}</th>
+          <td class="py-1 pr-2">{{ s.created_at | date_fr }}</td>
+          <td class="py-1 pr-2 text-right">{{ s.net_impact_central | eur }}</td>
+          <td class="py-1 pr-2">{{ s.model_version }}</td>
+          <td class="py-1 space-x-2">
+            <button type="button" class="underline" hx-get="/mes-scenarios/{{ s.id }}/resultat" hx-target="#detail" hx-swap="innerHTML">Relire</button>
+            <button type="button" class="underline" hx-post="/mes-scenarios/{{ s.id }}/partager" hx-target="#detail" hx-swap="innerHTML">Partager</button>
+            <button type="button" class="underline" hx-post="/mes-scenarios/{{ s.id }}/revoquer" hx-target="#detail" hx-swap="innerHTML">Révoquer le lien</button>
+            <button type="button" class="underline text-red-700" hx-post="/mes-scenarios/{{ s.id }}/supprimer" hx-confirm="Supprimer ce scénario ?" hx-target="#scenario-{{ s.id }}" hx-swap="outerHTML">Supprimer</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div id="detail" class="mt-6" aria-live="polite" data-testid="detail"></div>
+  {% endif %}
+  <p class="mt-6 text-sm"><a href="/simulateur-national" class="underline">Retour au simulateur national</a></p>
+</div>
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/national.js" defer></script>{% endblock %}

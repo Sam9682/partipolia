@@ -1,0 +1,15 @@
+{# Bloc compteur + bouton de soutien. Remplacé en entier par HTMX (outerHTML) ; repli : formulaire classique. #}
+<div id="support-{{ claim_id }}" class="flex flex-wrap items-center gap-3" aria-live="polite" data-testid="support-block">
+  <span class="text-sm font-semibold text-navy-900" data-testid="support-count">{{ count }} soutien{{ 's' if count > 1 else '' }}</span>
+  {% if authenticated %}
+  <form id="support-form-{{ claim_id }}" method="post" action="/revendications/{{ claim_id }}/soutien"
+        data-error-target="support-error-{{ claim_id }}"
+        hx-post="/revendications/{{ claim_id }}/soutien" hx-target="#support-{{ claim_id }}" hx-swap="outerHTML" hx-disabled-elt="find button">
+    <input type="hidden" name="operation" value="{{ 'retirer' if supported else 'soutenir' }}" />
+    <button type="submit" class="btn-outline" aria-pressed="{{ 'true' if supported else 'false' }}">{{ 'Retirer mon soutien' if supported else 'Soutenir' }}</button>
+  </form>
+  {% else %}
+  <a href="/login" class="text-sm underline">Connectez-vous pour soutenir</a>
+  {% endif %}
+  <p id="support-error-{{ claim_id }}" class="w-full text-xs"></p>
+</div>

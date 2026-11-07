@@ -12,7 +12,26 @@ Ce module importe et ré-exporte l'ensemble des modèles ORM du paquet afin que
 
 from app.models.argument import ARGUMENT_POSITIONS, Argument
 from app.models.audit import AuditLog
+from app.models.claim import (
+    CLAIM_COMMENT_STATUSES,
+    CLAIM_STATUSES,
+    REPORT_REASONS,
+    Claim,
+    ClaimComment,
+    ClaimSupport,
+    ContentReport,
+)
 from app.models.comment import COMMENT_STATUSES, Comment
+from app.models.consultation import (
+    CONSULTATION_STATUSES,
+    QUESTION_TYPES,
+    TEXT_REVIEW_STATUSES,
+    Consultation,
+    ConsultationAnswer,
+    ConsultationParticipation,
+    ConsultationQuestion,
+    ConsultationResponse,
+)
 from app.models.consumption_category import ConsumptionCategory
 from app.models.document import Document, DocumentChunk
 from app.models.economic_dataset import (
@@ -29,6 +48,7 @@ from app.models.legal_problem import LegalProblem
 from app.models.legal_problem_reform import LegalProblemReform
 from app.models.mandate import COMMITMENT_STATUSES, Commitment, Indicator
 from app.models.mixins import CreatedAtMixin, TimestampMixin
+from app.models.national_scenario import NationalScenario, ScenarioShareLink
 from app.models.program import Program, ProgramProposal
 from app.models.proposal import PROPOSAL_STATUSES, Proposal, ProposalVersion
 from app.models.side_effect_report import (
@@ -87,6 +107,25 @@ __all__ = [
     "SimulationResult",
     "AggregatedImpact",
     "CitizenCommitment",
+    "NationalScenario",
+    "ScenarioShareLink",
+    # Revendications citoyennes
+    "Claim",
+    "ClaimSupport",
+    "ClaimComment",
+    "ContentReport",
+    "CLAIM_STATUSES",
+    "CLAIM_COMMENT_STATUSES",
+    "REPORT_REASONS",
+    # Consultations
+    "Consultation",
+    "ConsultationQuestion",
+    "ConsultationParticipation",
+    "ConsultationResponse",
+    "ConsultationAnswer",
+    "CONSULTATION_STATUSES",
+    "QUESTION_TYPES",
+    "TEXT_REVIEW_STATUSES",
     # Audit
     "AuditLog",
     # Réparer la loi

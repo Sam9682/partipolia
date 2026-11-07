@@ -1,0 +1,22 @@
+{# Champs d'un scénario national ; ``prefix`` distingue les scénarios d'une comparaison. #}
+{% macro scenario_fields(categories, prefix="") %}
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <label for="{{ prefix }}participation_rate" class="text-sm font-semibold text-navy-900">Taux de participation supposé (%)</label>
+  <input id="{{ prefix }}participation_rate" name="{{ prefix }}participation_rate" type="text" inputmode="decimal" autocomplete="off" aria-describedby="{{ prefix }}participation_help" class="w-24 rounded-md border border-slate-300 px-2 py-1 text-right" />
+</div>
+<p id="{{ prefix }}participation_help" class="text-xs text-slate-500">Hypothèse entre 0 et 100, deux décimales au plus.</p>
+{% for c in categories %}
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <label for="{{ prefix }}red_{{ c.code }}" class="text-sm text-navy-900">{{ c.name }} : réduction (%)</label>
+  <input id="{{ prefix }}red_{{ c.code }}" name="{{ prefix }}red_{{ c.code }}" type="text" inputmode="decimal" autocomplete="off" class="w-24 rounded-md border border-slate-300 px-2 py-1 text-right" />
+</div>
+{% endfor %}
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <label for="{{ prefix }}horizon" class="text-sm text-navy-900">Horizon</label>
+  <select id="{{ prefix }}horizon" name="{{ prefix }}horizon" class="rounded-md border border-slate-300 px-2 py-1 text-sm">
+    <option value="short">court terme</option>
+    <option value="medium" selected>moyen terme</option>
+    <option value="long">long terme</option>
+  </select>
+</div>
+{% endmacro %}

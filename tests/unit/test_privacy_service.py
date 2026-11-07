@@ -81,6 +81,13 @@ _TABLE_TO_MODEL = {
     "votes": "Vote",
     "arguments": "Argument",
     "comments": "Comment",
+    "national_scenarios": "NationalScenario",
+    "scenario_share_links": "ScenarioShareLink",
+    "claims": "Claim",
+    "claim_supports": "ClaimSupport",
+    "claim_comments": "ClaimComment",
+    "content_reports": "ContentReport",
+    "consultation_participations": "ConsultationParticipation",
 }
 
 
@@ -318,3 +325,87 @@ async def test_delete_missing_account_raises() -> None:
     session = _FakeSession({"User": []})
     with pytest.raises(PrivacyError):
         await PrivacyService(session).delete_account(404)  # type: ignore[arg-type]
+
+
+# --------------------------------------------------------------------------- #
+# Scénarios nationaux enregistrés (Exigences 2.11, 2.12)                       #
+# --------------------------------------------------------------------------- #
+def _scenario(scenario_id: int, user_id: int) -> _Obj:
+    return _Obj(
+        id=scenario_id,
+        user_id=user_id,
+        name=f"Scénario {scenario_id}",
+        parameters={"vat_reduction_pct": "10"},
+        model_version="v1",
+        dataset_version="2024",
+        created_at=_NOW,
+    )
+
+
+async def test_export_includes_saved_scenarios_without_share_token() -> None:
+    """L'export restitue uniquement les scénarios du compte, sans jeton (Exigence 2.11)."""
+    session = _FakeSession(
+        {
+            "User": [_user(1)],
+            "NationalScenario": [_scenario(1, 1), _scenario(2, 2)],
+            "ScenarioShareLink": [_Obj(scenario_id=1, token_hash="h" * 64)],
+        }
+    )
+
+    export = await PrivacyService(session).export_user_data(1)  # type: ignore[arg-type]
+
+    assert [s.id for s in export.saved_scenarios] == [1]
+    assert export.saved_scenarios[0].parameters == {"vat_reduction_pct": "10"}
+    assert "token" not in export.model_dump_json()
+
+
+async def test_delete_account_removes_scenarios_and_share_links() -> None:
+    """La suppression retire scénarios et liens de partage du compte (Exigence 2.12)."""
+    session = _FakeSession(
+        {
+            "User": [_user(1)],
+            "NationalScenario": [_scenario(1, 1), _scenario(2, 2)],
+            "ScenarioShareLink": [
+                _Obj(scenario_id=1, token_hash="a" * 64),
+                _Obj(scenario_id=2, token_hash="b" * 64),
+            ],
+        }
+    )
+
+    result = await PrivacyService(session).delete_account(1)  # type: ignore[arg-type]
+
+    assert result.deleted_scenarios == 1
+    assert [s.id for s in session.tables["NationalScenario"]] == [2]
+    assert [link.scenario_id for link in session.tables["ScenarioShareLink"]] == [2]
+
+
+# --------------------------------------------------------------------------- #
+# Participations aux consultations (Exigences 10.11, 10.12)                    #
+# --------------------------------------------------------------------------- #
+async def test_export_and_delete_consultation_participations() -> None:
+    """Export : titre + date sans contenu ; suppression : participations retirées, réponses conservées."""
+    from datetime import date
+
+    participation = _Obj(consultation_id=7, user_id=1, participated_on=date(2024, 3, 5))
+    other = _Obj(consultation_id=7, user_id=2, participated_on=date(2024, 3, 6))
+    response = _Obj(id="r1", consultation_id=7)
+    session = _FakeSession(
+        {
+            "User": [_user(1)],
+            "Consultation": [_Obj(id=7, title="Transports")],
+            "ConsultationParticipation": [participation, other],
+            "ConsultationResponse": [response],
+        }
+    )
+    service = PrivacyService(session)  # type: ignore[arg-type]
+
+    export = await service.export_user_data(1)
+    assert [(p.consultation_id, p.title, p.participated_on) for p in export.consultation_participations] == [
+        (7, "Transports", date(2024, 3, 5))
+    ]
+    assert "answer" not in export.model_dump_json().lower()
+
+    result = await service.delete_account(1)
+    assert result.deleted_consultation_participations == 1
+    assert session.tables["ConsultationParticipation"] == [other]
+    assert session.tables["ConsultationResponse"] == [response]

@@ -1,0 +1,104 @@
+{% extends "public/base.html" %}
+{% block title %}{{ claim.title }} — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-3xl px-4 py-10" data-testid="claim-detail">
+  {% if info %}<p class="mb-4 rounded-md bg-slate-100 p-3 text-sm text-slate-800" role="status">{{ info }}</p>{% endif %}
+
+  <article class="card">
+    <h1 class="text-2xl font-extrabold text-navy-900">{{ claim.title }}</h1>
+    <p class="mt-1 text-xs text-slate-600">
+      Par <span data-testid="claim-author">{{ claim.author_pseudonym or 'Citoyen' }}</span>
+      {% if claim.published_at %}· publiée le {{ claim.published_at | date_fr }}{% endif %}
+      {% if claim.category_label %}· {{ claim.category_label }}{% endif %}
+      {% if claim.status != 'published' %}· <strong>{{ status_labels.get(claim.status, claim.status) }}</strong>{% endif %}
+    </p>
+    {% if claim.moderation_reason %}<p class="mt-2 text-sm text-red-800">Motif de modération : {{ claim.moderation_reason }}</p>{% endif %}
+    <p class="mt-4 whitespace-pre-line text-sm">{{ claim.body }}</p>
+    <p class="mt-3 text-xs italic text-slate-600" data-testid="claim-mention">À titre personnel, aucune position de la Plateforme.</p>
+
+    {% if claim.status == 'published' %}
+    <div class="mt-4">
+      {% with claim_id=claim.id, supported=claim.supported_by_me, count=claim.support_count %}{% include "public/partials/claim_support.html" %}{% endwith %}
+    </div>
+    {% endif %}
+  </article>
+
+  {% if claim.category_code %}
+  <section class="card mt-6" aria-labelledby="impact-titre" data-testid="category-impact">
+    <h2 id="impact-titre" class="font-bold text-navy-900">Impact de la catégorie « {{ claim.category_label }} »</h2>
+    {% if impact %}
+    <dl class="mt-2 grid gap-2 text-sm sm:grid-cols-3">
+      <div><dt class="text-xs text-slate-600">Participants</dt><dd>{{ impact.participants | num }}</dd></div>
+      <div><dt class="text-xs text-slate-600">Dépenses évitées (par an)</dt><dd>{{ impact.avoided | eur }}</dd></div>
+      <div><dt class="text-xs text-slate-600">Impact net sur les finances publiques (par an)</dt><dd>{{ impact.net | eur }}</dd></div>
+    </dl>
+    <p class="mt-2 text-xs text-slate-600">Estimation modélisée issue du dernier agrégat national ({{ impact.snapshot_date | date_fr }}), et non une mesure de recettes réelles.</p>
+    {% else %}
+    <p class="mt-2 text-sm text-slate-600" data-testid="impact-withheld">Impact non publié : moins de {{ min_cohort }} participants pour cette catégorie.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if claim.status == 'published' %}
+  <section class="card mt-6" aria-labelledby="signaler-titre">
+    <h2 id="signaler-titre" class="font-bold text-navy-900">Signaler cette revendication</h2>
+    {% if authenticated %}
+    <form method="post" action="/revendications/{{ claim.id }}/signaler" class="mt-2 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="report-reason" class="block text-sm">Motif</label>
+        <select id="report-reason" name="reason" required class="rounded-md border border-slate-300 px-2 py-1">
+          {% for key, label in reasons.items() %}<option value="{{ key }}">{{ label | capitalize }}</option>{% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn-outline">Signaler</button>
+    </form>
+    {% else %}
+    <p class="mt-2 text-sm"><a href="/login" class="underline">Connectez-vous</a> pour signaler un contenu.</p>
+    {% endif %}
+  </section>
+
+  <section class="mt-6" aria-labelledby="commentaires-titre">
+    <h2 id="commentaires-titre" class="text-lg font-bold text-navy-900">Commentaires</h2>
+    {% if not comments %}<p class="mt-2 text-sm text-slate-600" data-testid="no-comments">Aucun commentaire pour le moment.</p>{% endif %}
+    <ul class="mt-2 space-y-3">
+      {% for cm in comments %}
+      <li class="card" id="commentaire-{{ cm.id }}" data-testid="comment">
+        <p class="text-xs text-slate-600">Par <span data-testid="comment-author">{{ cm.author_pseudonym or 'Citoyen' }}</span>{% if cm.created_at %} · le {{ cm.created_at | date_fr }}{% endif %}</p>
+        <p class="mt-1 whitespace-pre-line text-sm">{{ cm.body }}</p>
+        {% if authenticated %}
+        <details class="mt-2 text-xs">
+          <summary class="cursor-pointer underline">Signaler ce commentaire</summary>
+          <form method="post" action="/revendications/{{ claim.id }}/commentaires/{{ cm.id }}/signaler" class="mt-2 flex flex-wrap items-end gap-2">
+            <div>
+              <label for="report-comment-{{ cm.id }}" class="block">Motif</label>
+              <select id="report-comment-{{ cm.id }}" name="reason" required class="rounded-md border border-slate-300 px-2 py-1">
+                {% for key, label in reasons.items() %}<option value="{{ key }}">{{ label | capitalize }}</option>{% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn-outline">Signaler</button>
+          </form>
+        </details>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+
+    {% if authenticated %}
+    <form method="post" action="/revendications/{{ claim.id }}/commentaires" class="card mt-4 space-y-2">
+      <label for="comment-body" class="block text-sm font-semibold text-navy-900">Votre commentaire (1 à 1000 caractères)</label>
+      <textarea id="comment-body" name="body" rows="4" minlength="1" maxlength="1000" required class="w-full rounded-md border border-slate-300 px-2 py-1"></textarea>
+      <p class="text-xs italic text-slate-600">Votre commentaire est publié sous votre pseudonyme, à titre personnel : aucune position de la Plateforme.</p>
+      <button type="submit" class="btn-primary">Publier le commentaire</button>
+    </form>
+    {% else %}
+    <p class="mt-4 text-sm"><a href="/login" class="underline">Connectez-vous</a> pour commenter.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <p class="mt-6 text-sm"><a href="/revendications" class="underline">Retour au catalogue</a> · <a href="/charte-de-moderation" class="underline">Charte de modération</a></p>
+</div>
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/claims.js" defer></script>{% endblock %}

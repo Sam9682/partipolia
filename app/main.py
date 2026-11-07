@@ -44,6 +44,9 @@ from app.core.middleware import (
 )
 from app.core.redis import close_redis, get_redis
 from app.web.admin import admin_web_router
+from app.web.claims import claims_web_router
+from app.web.consultations import consultations_web_router
+from app.web.national import national_web_router
 from app.web.public import TEMPLATES_DIR, public_router
 
 # Répertoire des fichiers statiques (``app/static``), voisin des gabarits.
@@ -180,3 +183,6 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 # reste importable mais n'est plus monté.
 app.include_router(public_router)
 app.include_router(admin_web_router)
+app.include_router(national_web_router)
+app.include_router(claims_web_router)
+app.include_router(consultations_web_router)

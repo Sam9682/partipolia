@@ -1,0 +1,36 @@
+<div class="space-y-4" data-testid="compare-result">
+  <div class="card">
+    <h2 class="font-bold text-navy-900">Impact net central par scénario (euros par an)</h2>
+    <ul class="mt-3 space-y-2" aria-hidden="true">
+      {% for row in chart %}
+      <li>
+        <div class="text-xs text-slate-600">{{ row.label }}</div>
+        <div class="h-3 rounded bg-slate-100"><div class="h-3 rounded bg-navy-700" style="width: {{ row.width }}%"></div></div>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">Tableau équivalent au graphique : comparaison des scénarios, en euros par an</caption>
+        <thead>
+          <tr class="border-b text-xs uppercase text-slate-500">
+            <th scope="col" class="py-1 pr-2">Indicateur</th>
+            {% for c in columns %}<th scope="col" class="py-1 pr-2 text-right">{{ c.label }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Taux de participation</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.scenario.participation_rate | pct }}</td>{% endfor %}</tr>
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Participants supposés</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.participants | num }}</td>{% endfor %}</tr>
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Pertes de recettes brutes (central)</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.fiscal.gross_revenue_loss.central | eur }}</td>{% endfor %}</tr>
+          <tr class="border-b font-bold"><th scope="row" class="py-1 pr-2">Impact net (bas)</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.fiscal.net_public_impact.low | eur }}</td>{% endfor %}</tr>
+          <tr class="border-b font-bold"><th scope="row" class="py-1 pr-2">Impact net (central)</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.fiscal.net_public_impact.central | eur }}</td>{% endfor %}</tr>
+          <tr class="border-b font-bold"><th scope="row" class="py-1 pr-2">Impact net (haut)</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.fiscal.net_public_impact.high | eur }}</td>{% endfor %}</tr>
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Niveau de confiance</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.confidence }}</td>{% endfor %}</tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% set model_version = columns[0].result.model_version %}
+  {% set dataset_versions = columns[0].result.dataset_versions %}
+  {% include "public/partials/national_mentions.html" %}
+</div>

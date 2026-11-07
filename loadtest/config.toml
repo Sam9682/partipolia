@@ -1,0 +1,8 @@
+# Garde-fou des tests de charge (Exigence 16.11).
+# Seules les origines listées ici (schéma + hôte + port) peuvent être ciblées.
+# Toute autre URL : aucune requête émise, code de sortie non nul.
+allowed_urls = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://nginx:8080",
+]

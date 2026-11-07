@@ -29,7 +29,8 @@
       <template x-if="mode === 'register'">
         <div class="space-y-4">
           <div><label for="j-pseudo" class="block text-sm font-medium">Pseudonyme (facultatif)</label>
-            <input id="j-pseudo" type="text" maxlength="120" x-model="form.pseudonym" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" /></div>
+            <input id="j-pseudo" type="text" maxlength="120" x-model="form.pseudonym" aria-describedby="j-pseudo-help" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+            <p id="j-pseudo-help" class="mt-1 text-xs text-slate-600" data-testid="pseudonym-notice">Votre pseudonyme est public : il est affiché à côté de vos revendications et de vos commentaires, à titre personnel. N'utilisez pas votre nom réel si vous souhaitez rester anonyme. Votre adresse e-mail n'est jamais affichée.</p></div>
           <div class="grid gap-4 sm:grid-cols-2">
             <div><label for="j-adults" class="block text-sm font-medium">Adultes dans le foyer (facultatif)</label>
               <input id="j-adults" type="number" min="1" max="10" x-model.number="form.adults" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" /></div>

@@ -92,7 +92,9 @@ class _FakeAuthService:
         self._next_id += 1
         return user
 
-    async def authenticate(self, email: str, password: str) -> TokenPair:
+    async def authenticate(
+        self, email: str, password: str, *, ip_hash: str | None = None
+    ) -> TokenPair:
         normalized = email.strip().lower()
         expected = self._known.get(normalized)
         # Message identique que l'email soit inconnu ou le mot de passe erroné (Exigence 1.9).

@@ -1,0 +1,110 @@
+{% extends "public/base.html" %}
+{% block title %}{{ view.label }} — Impact par Région — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">{{ view.label }}</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Engagements déclarés, agrégés de façon anonyme. Estimation modélisée, non vérifiée.</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-6xl px-4 pt-8 space-y-6" data-testid="region-detail">
+  {% if view.status != 'published' %}
+  <div class="disclaimer" data-testid="region-withheld" role="status">
+    <p><strong>Région retenue.</strong> Moins de {{ min_cohort }} participants (seuil minimal) : aucun chiffre n'est publié pour protéger l'anonymat.</p>
+  </div>
+  {% else %}
+  <div class="grid gap-4 sm:grid-cols-3" aria-live="polite">
+    <div class="card"><p class="kpi-value">{{ view.participants | num }}</p><p class="kpi-label mt-1">Participants</p></div>
+    <div class="card"><p class="kpi-value">{{ view.active_commitments | num }}</p><p class="kpi-label mt-1">Engagements actifs (déclaratifs)</p></div>
+    <div class="card"><p class="kpi-value" data-testid="region-net">{{ view.fiscal.net_public_impact.central | eur if view.fiscal else '—' }}</p><p class="kpi-label mt-1">Impact net central estimé (par an)</p></div>
+  </div>
+
+  {% if components %}
+  <div class="card">
+    <h2 class="font-bold text-navy-900">Composantes de l'impact (euros par an)</h2>
+    <ul class="mt-3 space-y-2" aria-hidden="true">
+      {% for row in components %}
+      <li>
+        <div class="text-xs text-slate-600">{{ row.label }}</div>
+        <div class="h-3 rounded bg-slate-100"><div class="h-3 rounded bg-navy-700" style="width: {{ row.width }}%"></div></div>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">Tableau équivalent au graphique : composantes de l'impact estimé de la Région, en euros par an</caption>
+        <thead><tr class="border-b text-xs uppercase text-slate-500"><th scope="col" class="py-1 pr-2">Composante</th><th scope="col" class="py-1 pr-2 text-right">Bas</th><th scope="col" class="py-1 pr-2 text-right">Central</th><th scope="col" class="py-1 text-right">Haut</th></tr></thead>
+        <tbody>
+          {% for row in components %}
+          <tr class="border-b {% if row.strong %}font-bold{% endif %}"><th scope="row" class="py-1 pr-2 font-normal">{{ row.label }}</th><td class="py-1 pr-2 text-right">{{ row.low | eur }}</td><td class="py-1 pr-2 text-right">{{ row.central | eur }}</td><td class="py-1 text-right">{{ row.high | eur }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if categories %}
+  <div class="card">
+    <h2 class="font-bold text-navy-900">Dépense évitée par catégorie (euros par an)</h2>
+    <ul class="mt-3 space-y-2" aria-hidden="true">
+      {% for row in categories %}
+      <li>
+        <div class="text-xs text-slate-600">{{ row.label }}</div>
+        <div class="h-3 rounded bg-slate-100"><div class="h-3 rounded bg-brand-red" style="width: {{ row.width }}%"></div></div>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">Tableau équivalent au graphique : dépense annuelle évitée par catégorie dans la Région</caption>
+        <thead><tr class="border-b text-xs uppercase text-slate-500"><th scope="col" class="py-1 pr-2">Catégorie</th><th scope="col" class="py-1 pr-2 text-right">Participants</th><th scope="col" class="py-1 text-right">Dépense évitée</th></tr></thead>
+        <tbody>
+          {% for row in categories %}
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">{{ row.label }}</th><td class="py-1 pr-2 text-right">{{ row.participants | num if row.participants is not none else '—' }}</td><td class="py-1 text-right">{{ row.central | eur }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2 class="font-bold text-navy-900">Évolution de l'impact net central (euros par an)</h2>
+    {% if points %}
+    <ul class="mt-3 space-y-2" aria-hidden="true">
+      {% for p in points %}
+      <li>
+        <div class="text-xs text-slate-600">{{ p.date | date_fr }}</div>
+        <div class="h-3 rounded bg-slate-100"><div class="h-3 rounded bg-navy-700" style="width: {{ p.width }}%"></div></div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="mt-2 text-sm text-slate-600">L'historique apparaîtra une fois le seuil minimal atteint ; les jours en dessous du seuil ne sont pas publiés.</p>
+    {% endif %}
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">Tableau équivalent au graphique : historique de la Région (participants, impact net central, économies personnelles)</caption>
+        <thead><tr class="border-b text-xs uppercase text-slate-500"><th scope="col" class="py-1 pr-2">Date</th><th scope="col" class="py-1 pr-2 text-right">Participants</th><th scope="col" class="py-1 pr-2 text-right">Impact net central</th><th scope="col" class="py-1 text-right">Économies personnelles</th></tr></thead>
+        <tbody>
+          {% for p in points %}
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">{{ p.date | date_fr }}</th><td class="py-1 pr-2 text-right">{{ p.participants | num }}</td><td class="py-1 pr-2 text-right">{{ p.central | eur }}</td><td class="py-1 text-right">{{ p.personal_savings | eur }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="disclaimer space-y-1" data-testid="region-mentions">
+    <p><strong>Estimation modélisée.</strong> {{ view.methodology }}</p>
+    <p>Version du modèle : {{ view.model_version or '—' }} · date de calcul : {{ view.calculated_at | date_fr }}</p>
+    <p>Seuil minimal de publication : {{ min_cohort }} participants.</p>
+    {% for d in view.disclaimers %}<p>{{ d }}</p>{% endfor %}
+  </div>
+  {% endif %}
+  <p class="text-sm"><a href="/regions" class="underline">Toutes les Régions</a></p>
+</div>
+{% endblock %}

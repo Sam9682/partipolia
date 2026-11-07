@@ -40,3 +40,6 @@ conf/conf.d/
 
 # --- Partipolia : binaire Tailwind autonome (non versionné, CSS compilé versionné) ---
 tools/tailwindcss
+
+# Rapports de sécurité générés par `make security`
+reports/

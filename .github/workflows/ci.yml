@@ -77,3 +77,142 @@ jobs:
 
       - name: Tests (pytest)
         run: uv run pytest
+
+  # Sécurité (Exigences 13.5–13.8, 14.10) : audit des dépendances, analyse statique,
+  # détection de secrets et tests de sécurité. Échoue sur toute découverte non justifiée.
+  security:
+    name: Sécurité
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: partipolia
+          POSTGRES_PASSWORD: partipolia
+          POSTGRES_DB: partipolia
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U partipolia"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+psycopg://partipolia:partipolia@localhost:5432/partipolia
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: ci-test-secret-not-for-production
+      APP_ENV: test
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v4
+
+      - name: Installation de uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Installation de Python 3.13
+        run: uv python install 3.13
+
+      - name: Installation des dépendances (runtime + extras + dev)
+        run: uv sync --all-extras --dev
+
+      - name: Outillage de sécurité (make security)
+        run: make security
+
+      - name: Rapports de sécurité
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: reports/security/
+          if-no-files-found: ignore
+
+  # Test de charge « fumée » (Exigences 18.1–18.5, 18.7) : 20 utilisateurs virtuels pendant 60 s
+  # sur l'environnement de référence Docker Compose, à chaque demande de fusion.
+  # Échoue si p95 > 1000 ms ou erreurs ≥ 1 % (loadtest.check_thresholds) ou si l'environnement
+  # n'est pas prêt en 120 s (« test non exécuté »). Le rapport est publié en artefact.
+  loadtest-smoke:
+    name: Test de charge (fumée)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    env:
+      GIT_REVISION: ${{ github.sha }}
+      COMPOSE: docker compose -f docker-compose.yml -f docker-compose.loadtest.yml
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v4
+
+      - name: Installation de uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Installation de Python 3.13
+        run: uv python install 3.13
+
+      - name: Installation des dépendances (runtime + extras + dev)
+        run: uv sync --all-extras --dev
+
+      - name: Configuration de l'environnement de référence (aucun secret réel)
+        run: |
+          cp .env.example .env
+          echo "JWT_SECRET_KEY=ci-loadtest-secret-not-for-production" >> .env
+
+      - name: Démarrage de l'environnement de référence
+        run: $COMPOSE up -d --build web worker postgres redis
+
+      - name: Attente de disponibilité (120 s max)
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/ready > /dev/null 2>&1; then
+              echo "Environnement prêt après ~$((i * 2)) s."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "test non exécuté : environnement non prêt après 120 s" >&2
+          $COMPOSE ps >&2 || true
+          $COMPOSE logs --tail=100 web >&2 || true
+          exit 1
+
+      - name: Migrations et jeu de départ
+        run: |
+          $COMPOSE exec -T web alembic upgrade head
+          $COMPOSE exec -T web python -m scripts.seed
+          $COMPOSE exec -T web python -m scripts.seed_economic_model
+
+      # `--check` applique loadtest.check_thresholds : écart avec docs/perf/reference.json affiché,
+      # échec avec point d'accès / valeur / seuil si p95 > 1000 ms ou erreurs ≥ 1 %.
+      - name: Profil fumée (make loadtest-smoke)
+        run: make loadtest-smoke
+
+      - name: Rapport de charge
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: loadtest-smoke-report
+          path: reports/loadtest/
+          if-no-files-found: ignore
+
+      - name: Journaux des services en cas d'échec
+        if: failure()
+        run: $COMPOSE logs --tail=200 || true
+
+      - name: Arrêt de l'environnement
+        if: always()
+        run: $COMPOSE down -v || true

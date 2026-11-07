@@ -1,0 +1,44 @@
+{% extends "public/base.html" %}
+{% block title %}Charte de modération — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Charte de modération</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Des règles simples pour garder un espace de débat respectueux et conforme à la loi.</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-3xl space-y-6 px-4 pt-8" data-testid="moderation-charter">
+  <section class="card" aria-labelledby="c-principes">
+    <h2 id="c-principes" class="font-bold text-navy-900">Principes</h2>
+    <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+      <li>Chaque revendication et chaque commentaire est publié à titre personnel : aucune position de la Plateforme.</li>
+      <li>Seul le pseudonyme de l'auteur est affiché.</li>
+      <li>Le débat porte sur la consommation et le pouvoir d'achat, dans un cadre non violent et indépendant des partis.</li>
+      <li>Sont interdits : les contenus illégaux, la haine et le harcèlement, les contenus hors sujet, les doublons, ainsi que l'incitation à la fraude ou au non-paiement des impôts obligatoires.</li>
+    </ul>
+  </section>
+
+  <section class="card" aria-labelledby="c-signalement">
+    <h2 id="c-signalement" class="font-bold text-navy-900">Signalements</h2>
+    <p class="mt-2 text-sm">Tout citoyen connecté peut signaler un contenu qui n'est pas le sien, une seule fois, avec l'un des motifs suivants :</p>
+    <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+      {% for label in reasons.values() %}<li>{{ label | capitalize }}</li>{% endfor %}
+    </ul>
+    <p class="mt-2 text-sm">Lorsqu'un contenu reçoit 3 signalements distincts, il est masqué et placé dans la file de modération.</p>
+  </section>
+
+  <section class="card" aria-labelledby="c-moderation">
+    <h2 id="c-moderation" class="font-bold text-navy-900">Décisions de modération</h2>
+    <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+      <li>Un modérateur peut masquer, rétablir ou clore une revendication, toujours avec un motif écrit de 10 à 500 caractères.</li>
+      <li>Chaque décision est consignée dans un journal d'audit (acteur, action, contenu, motif, horodatage).</li>
+      <li>L'auteur d'une revendication masquée voit le motif du masquage dans « Mes revendications ».</li>
+      <li>Une revendication rétablie repart avec un compteur de signalements à zéro.</li>
+    </ul>
+  </section>
+
+  <p class="text-sm"><a href="/revendications" class="underline">Retour au catalogue</a> · <a href="/revendications/nouvelle" class="underline">Proposer une revendication</a></p>
+</div>
+{% endblock %}

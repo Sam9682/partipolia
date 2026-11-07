@@ -6,11 +6,11 @@ Only aggregates are stored here, never anything about an individual participant.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import DateTime, Integer, Numeric, String, func
+from sqlalchemy import Date, DateTime, Index, Integer, Numeric, String, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -19,6 +19,22 @@ from app.core.database import Base
 
 class AggregatedImpact(Base):
     __tablename__ = "aggregated_impacts"
+    __table_args__ = (
+        Index(
+            "uq_aggregated_impacts_snapshot",
+            "aggregation_period",
+            "geographical_level",
+            "geographical_code",
+            "snapshot_date",
+            unique=True,
+        ),
+        Index(
+            "ix_aggregated_impacts_level_code_date",
+            "geographical_level",
+            "geographical_code",
+            text("snapshot_date DESC"),
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     aggregation_period: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
@@ -32,6 +48,11 @@ class AggregatedImpact(Base):
     indirect_fiscal_impact: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
     induced_fiscal_impact: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
     net_fiscal_impact: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
+    snapshot_date: Mapped[date] = mapped_column(
+        Date,
+        nullable=False,
+        default=lambda: datetime.now(UTC).date(),
+    )
     model_version: Mapped[str] = mapped_column(String(64), nullable=False)
     details: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     calculated_at: Mapped[datetime] = mapped_column(

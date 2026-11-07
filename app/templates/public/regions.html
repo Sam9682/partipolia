@@ -1,0 +1,56 @@
+{% extends "public/base.html" %}
+{% block title %}Impact par Région — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Impact par Région</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Engagements déclarés des participants, agrégés par Région de façon anonyme. Les montants sont des estimations modélisées.</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-6xl px-4 pt-8 space-y-6" data-testid="regions">
+  <div class="disclaimer" data-testid="region-threshold">
+    <p><strong>Seuil minimal : {{ min_cohort }} participants.</strong> En dessous, la Région est « retenue » : aucun chiffre n'est publié, pour protéger l'anonymat.{% if withheld_count %} {{ withheld_count }} Région(s) retenue(s) actuellement.{% endif %}</p>
+  </div>
+
+  <div class="card" aria-live="polite">
+    <h2 class="font-bold text-navy-900">Impact net central estimé, par Région (euros par an)</h2>
+    {% if chart %}
+    <ul class="mt-3 space-y-2" aria-hidden="true">
+      {% for row in chart %}
+      <li>
+        <div class="text-xs text-slate-600">{{ row.label }}</div>
+        <div class="h-3 rounded bg-slate-100"><div class="h-3 rounded bg-navy-700" style="width: {{ row.width }}%"></div></div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="mt-2 text-sm text-slate-600">Aucune Région n'atteint encore le seuil minimal de publication.</p>
+    {% endif %}
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">Tableau équivalent au graphique : statut, participants et impact net central estimé par Région</caption>
+        <thead><tr class="border-b text-xs uppercase text-slate-500"><th scope="col" class="py-1 pr-2">Région</th><th scope="col" class="py-1 pr-2">Statut</th><th scope="col" class="py-1 pr-2 text-right">Participants</th><th scope="col" class="py-1 text-right">Impact net central (par an)</th></tr></thead>
+        <tbody>
+          {% for r in rows %}
+          <tr class="border-b">
+            <th scope="row" class="py-1 pr-2 font-normal"><a href="/regions/{{ r.code }}" class="underline">{{ r.label }}</a></th>
+            {% if r.published %}
+            <td class="py-1 pr-2">publiée</td>
+            <td class="py-1 pr-2 text-right">{{ r.participants | num }}</td>
+            <td class="py-1 text-right">{{ r.central | eur }}</td>
+            {% else %}
+            <td class="py-1 pr-2">retenue (moins de {{ min_cohort }} participants)</td>
+            <td class="py-1 pr-2 text-right">—</td>
+            <td class="py-1 text-right">—</td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-sm"><a href="/impact-national" class="underline">Impact national</a> · <a href="/simulateur-national" class="underline">Simulateur national</a></p>
+</div>
+{% endblock %}

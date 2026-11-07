@@ -42,6 +42,7 @@ Employer contribution rates by branch are *derived* from these INSEE tables
 | `fuel_excise_per_l` | **Current excise per litre.** The tax was renamed "accise sur les produits energetiques (ex-TICPE)"; the schedule could not be retrieved and verified | douane.gouv.fr, impots.gouv.fr |
 | `car_share`, `km_per_trip`, `trips_per_1000_eur` (per category) | Mobility behaviour linked to each type of spending | SDES mobility surveys (ENTD / EMP) |
 
+| `reference_population` (key `adults`, `provisional`) | Number of adults (18+) living in France, used by the national simulation. Shipped as an order of magnitude (low 53 M, central 54 M, high 55 M); the INSEE figure was not retrieved and verified | INSEE, estimations de population par age (bilan demographique) |
 ## Known modelling limits (also shown on the methodology page)
 
 * Estimates, not measured tax revenue; ranges reflect parameter uncertainty only.

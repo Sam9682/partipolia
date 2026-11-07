@@ -82,6 +82,9 @@ PARAMETER_TYPES: dict[str, ParameterTypeSpec] = {
     "car_share": _CATEGORY,
     "km_per_trip": _CATEGORY,
     "trips_per_1000_eur": _CATEGORY,
+    # National simulation: adult reference population (key = "adults", unit persons).
+    # Optional: absent from past model versions; not part of any MODULE_REQUIREMENTS.
+    "reference_population": _NATIONAL,
 }
 
 #: Types whose shares must add up to exactly 1 for each category and scenario.

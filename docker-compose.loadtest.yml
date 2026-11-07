@@ -1,0 +1,44 @@
+# ---------------------------------------------------------------------------
+# PARTIPOLAI — Environnement de référence des tests de charge (Exigences 16.3, 18.10)
+#
+# Surcharge de docker-compose.yml avec des limites de ressources explicites.
+# Démarrage : voir docs/perf/environment.md
+#   docker compose -f docker-compose.yml -f docker-compose.loadtest.yml up -d --build
+#
+# Le service `web` est publié directement sur http://localhost:8080 (origine autorisée par
+# loadtest/config.toml) ; nginx (redirection HTTPS) n'est pas démarré dans ce profil.
+# ---------------------------------------------------------------------------
+services:
+  web:
+    ports:
+      - "8080:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+  worker:
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g
+  postgres:
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512m
+  nginx:
+    profiles: ["edge"]
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m

@@ -53,3 +53,4 @@ electronics,trips_per_1000_eur,*,5,7,9,trips,provisional,"Avoided trips per 1000
 digital_subscriptions,car_share,*,0,0,0,share,high,"No physical trip is associated with a digital subscription."
 digital_subscriptions,km_per_trip,*,0,0,0,km,high,"No physical trip."
 digital_subscriptions,trips_per_1000_eur,*,0,0,0,trips,high,"No physical trip."
+,reference_population,adults,53000000,54000000,55000000,persons,provisional,"Adults (18+) in France, order of magnitude (INSEE estimate to be verified). Used by the national simulation only."

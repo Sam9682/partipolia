@@ -45,9 +45,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, settings as default_settings
+from app.core.audit_events import ACTION_LOGIN_FAILED
+from app.core.login_throttle import LoginThrottle, identifier_hash
 from app.core.redis import get_redis
 from app.models.user import User
 from app.schemas.auth import AccessToken, TokenPair, UserPublic
+from app.services.audit_service import AuditService
 
 # --- Messages d'erreur génériques (Exigences 1.2, 1.9) ---------------------
 # Volontairement identiques et neutres : ils ne révèlent jamais si un email
@@ -55,6 +58,7 @@ from app.schemas.auth import AccessToken, TokenPair, UserPublic
 GENERIC_REGISTRATION_ERROR: Final = "Inscription impossible avec ces informations."
 GENERIC_CREDENTIALS_ERROR: Final = "Identifiants invalides."
 INVALID_TOKEN_ERROR: Final = "Jeton invalide ou expiré."
+LOGIN_LOCKED_ERROR: Final = "Trop de tentatives de connexion. Veuillez réessayer plus tard."
 
 # --- Types de jetons JWT (claim ``type``) ----------------------------------
 _TOKEN_TYPE_ACCESS: Final = "access"
@@ -73,6 +77,14 @@ class AuthError(Exception):
     Elle ne contient jamais d'information permettant de distinguer les cas
     (email déjà pris, mot de passe erroné, compte inexistant, etc.).
     """
+
+
+class LoginLockedError(AuthError):
+    """Identifiant temporairement verrouillé (Exigence 15.9) ⇒ 429 + ``Retry-After``."""
+
+    def __init__(self, retry_after: int) -> None:
+        super().__init__(LOGIN_LOCKED_ERROR)
+        self.retry_after = retry_after
 
 
 class AuthService:
@@ -94,6 +106,9 @@ class AuthService:
         self._settings = config if config is not None else default_settings
         # Hacheur argon2 avec paramètres par défaut robustes de argon2-cffi.
         self._hasher = PasswordHasher()
+        self._throttle = LoginThrottle(
+            redis=self._redis, audit=AuditService(session)
+        )
 
     # ------------------------------------------------------------------ #
     # Hachage de mot de passe (Exigence 1.3)                             #
@@ -175,7 +190,9 @@ class AuthService:
     # ------------------------------------------------------------------ #
     # Connexion (Exigences 1.4, 1.9)                                     #
     # ------------------------------------------------------------------ #
-    async def authenticate(self, email: str, password: str) -> TokenPair:
+    async def authenticate(
+        self, email: str, password: str, *, ip_hash: str | None = None
+    ) -> TokenPair:
         """Vérifie les identifiants et émet un couple access + refresh (Exigence 1.4).
 
         Identifiants invalides ⇒ ``AuthError`` générique (Exigence 1.9). Une
@@ -183,6 +200,12 @@ class AuthService:
         les temps de réponse (protection contre l'énumération temporelle).
         """
         normalized_email = self._normalize_email(email)
+
+        # Verrou fondé sur l'identifiant saisi, pas sur le compte (Exigences 15.9, 15.10).
+        retry_after = await self._throttle.is_locked(normalized_email)
+        if retry_after is not None:
+            raise LoginLockedError(retry_after)
+
         user = await self._session.scalar(
             select(User).where(User.email == normalized_email)
         )
@@ -190,12 +213,31 @@ class AuthService:
         if user is None:
             # Vérification factice pour un temps de réponse comparable au cas nominal.
             self._dummy_verify()
+            await self._record_login_failure(normalized_email, None, ip_hash)
             raise AuthError(GENERIC_CREDENTIALS_ERROR)
 
         if not user.is_active or not self.verify_password(password, user.password_hash):
+            await self._record_login_failure(normalized_email, user.id, ip_hash)
             raise AuthError(GENERIC_CREDENTIALS_ERROR)
 
         return self._issue_token_pair(user)
+
+    async def _record_login_failure(
+        self, normalized_email: str, user_id: int | None, ip_hash: str | None
+    ) -> None:
+        """Audite l'échec (session isolée) puis le comptabilise (Exigences 15.7, 15.8).
+
+        Ni mot de passe ni jeton ne sont consignés ; le compte visé est désigné par
+        l'empreinte de l'identifiant saisi.
+        """
+        await AuditService(self._session).record_isolated(
+            action=ACTION_LOGIN_FAILED,
+            entity_type="auth",
+            new_data={"identifier_hash": identifier_hash(normalized_email)},
+            ip_hash=ip_hash,
+            actor_id=user_id,
+        )
+        await self._throttle.register_failure(normalized_email, ip_hash=ip_hash)
 
     def _dummy_verify(self) -> None:
         """Vérifie un hachage factice pour uniformiser les temps de réponse."""

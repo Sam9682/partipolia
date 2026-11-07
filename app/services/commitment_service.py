@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.citizen_commitment import CitizenCommitment
 from app.models.consumption_category import ConsumptionCategory
 from app.models.user import User
+from app.reference.regions import is_valid_region
 from app.schemas.commitment import CommitmentCreate, CommitmentOut, CommitmentUpdate
 
 CONSENT_KEY = "aggregate_commitments"
@@ -176,6 +177,13 @@ def _span_months(commitment: CitizenCommitment) -> int:
         commitment.end_date.month - commitment.start_date.month
     )
     return max(1, months)
+
+
+def validate_profile_region(region: str | None) -> str | None:
+    """Return `region` if null or in the versioned Region list, else raise (field `region`)."""
+    if region is not None and not is_valid_region(region):
+        raise CommitmentInvalidError("region : code de Région inconnu.")
+    return region
 
 
 async def get_profile(session: AsyncSession, user_id: int) -> User:

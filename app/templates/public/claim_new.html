@@ -1,0 +1,47 @@
+{% extends "public/base.html" %}
+{% block title %}Proposer une revendication — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Proposer une revendication</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Votre revendication est exprimée à titre personnel, sous votre pseudonyme : aucune position de la Plateforme.</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-3xl px-4 pt-8" data-testid="claim-new">
+  {% if not authenticated %}
+  <p class="rounded-md bg-slate-100 p-3 text-sm text-slate-800" role="status" data-testid="login-required">Cette action est réservée aux comptes citoyens. <a href="/login" class="underline">Connectez-vous</a> pour proposer une revendication.</p>
+  {% else %}
+  {% if banner %}<p class="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800" role="alert">{{ banner }}</p>{% endif %}
+  <form method="post" action="/revendications/nouvelle" class="card space-y-4" aria-label="Nouvelle revendication" novalidate>
+    <div>
+      <label for="claim-title" class="block text-sm font-semibold text-navy-900">Titre (5 à 120 caractères)</label>
+      <input id="claim-title" name="title" type="text" minlength="5" maxlength="120" required value="{{ values.get('title', '') }}"
+             class="w-full rounded-md border border-slate-300 px-2 py-1"{% if errors.get('title') %} aria-invalid="true" aria-describedby="err-title"{% endif %} />
+      {% if errors.get('title') %}<p id="err-title" class="mt-1 text-sm text-red-800" role="alert">{{ errors['title'] }}</p>{% endif %}
+    </div>
+    <div>
+      <label for="claim-body" class="block text-sm font-semibold text-navy-900">Texte (20 à 2000 caractères)</label>
+      <textarea id="claim-body" name="body" rows="8" minlength="20" maxlength="2000" required
+                class="w-full rounded-md border border-slate-300 px-2 py-1"{% if errors.get('body') %} aria-invalid="true" aria-describedby="err-body"{% endif %}>{{ values.get('body', '') }}</textarea>
+      {% if errors.get('body') %}<p id="err-body" class="mt-1 text-sm text-red-800" role="alert">{{ errors['body'] }}</p>{% endif %}
+    </div>
+    <div>
+      <label for="claim-category" class="block text-sm font-semibold text-navy-900">Catégorie de consommation (facultatif)</label>
+      <select id="claim-category" name="category_code" class="w-full rounded-md border border-slate-300 px-2 py-1"{% if errors.get('category_code') %} aria-invalid="true" aria-describedby="err-category"{% endif %}>
+        <option value="">Aucune</option>
+        {% for c in categories %}<option value="{{ c.code }}"{% if values.get('category_code') == c.code %} selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+      {% if errors.get('category_code') %}<p id="err-category" class="mt-1 text-sm text-red-800" role="alert">{{ errors['category_code'] }}</p>{% endif %}
+    </div>
+    <p class="text-sm">En soumettant, vous acceptez la <a href="/charte-de-moderation" class="underline" data-testid="charter-link">charte de modération</a>.</p>
+    <div class="flex flex-wrap gap-3">
+      <button type="submit" name="action" value="brouillon" class="btn-outline">Enregistrer le brouillon</button>
+      <button type="submit" name="action" value="publier" class="btn-primary">Publier</button>
+    </div>
+  </form>
+  {% endif %}
+  <p class="mt-6 text-sm"><a href="/revendications" class="underline">Retour au catalogue</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "public/base.html" %}
+{% block title %}{{ consultation.title }} — Administration — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">{{ consultation.title }}</h1>
+    <p class="mt-3 text-navy-100" data-testid="admin-consultation-status">{{ status_labels.get(state, state) }} · du {{ consultation.opens_at | datetime_fr }} au {{ consultation.closes_at | datetime_fr }} (UTC)</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-4xl px-4 pt-8 space-y-6" data-testid="admin-consultation-detail">
+  {% if info %}<p class="rounded-md bg-slate-100 p-3 text-sm text-slate-800" role="status">{{ info }}</p>{% endif %}
+  <p class="whitespace-pre-line text-sm">{{ consultation.description }}</p>
+
+  <section class="card" aria-label="Questions">
+    <h2 class="font-bold text-navy-900">Questions</h2>
+    <ol class="mt-2 list-decimal space-y-1 pl-5 text-sm">
+      {% for q in questions %}<li>{{ q.prompt }} <span class="text-slate-600">({{ type_labels.get(q.question_type, q.question_type) }}, {{ 'obligatoire' if q.required else 'facultative' }})</span></li>{% endfor %}
+    </ol>
+  </section>
+
+  {% if can_edit %}
+  <section class="card flex flex-wrap items-center gap-3" aria-label="Actions">
+    {% if consultation.status == 'draft' %}
+    <a href="/admin/consultations/{{ consultation.id }}/modifier" class="btn-outline">Modifier</a>
+    <form method="post" action="/admin/consultations/{{ consultation.id }}/publier"><button type="submit" class="btn-primary">Publier</button></form>
+    {% elif consultation.status == 'published' and state != 'closed' %}
+    <a href="/admin/consultations/{{ consultation.id }}/modifier" class="btn-outline">Modifier (impossible après la première réponse)</a>
+    <form method="post" action="/admin/consultations/{{ consultation.id }}/cloturer"><button type="submit" class="btn-outline">Clôturer maintenant</button></form>
+    {% endif %}
+    {% if state == 'closed' %}
+    <a href="/consultations/{{ consultation.id }}/resultats" class="underline">Résultats publics</a>
+    <a href="/api/v1/consultations/{{ consultation.id }}/results.csv" class="underline" download>Exporter les résultats (CSV)</a>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if state == 'closed' %}
+  <section class="card" aria-live="polite" aria-label="Textes libres en attente de modération" data-testid="pending-texts">
+    <h2 class="font-bold text-navy-900">Textes libres en attente de modération</h2>
+    {% if not pending %}
+    <p class="mt-2 text-sm text-slate-600">Aucun texte en attente.</p>
+    {% else %}
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">Textes libres à approuver ou rejeter ; un texte rejeté reste compté dans le nombre de réponses</caption>
+        <thead><tr class="border-b text-xs uppercase text-slate-500"><th scope="col" class="py-1 pr-2">Question</th><th scope="col" class="py-1 pr-2">Texte</th><th scope="col" class="py-1">Décision</th></tr></thead>
+        <tbody>
+          {% for t in pending %}
+          <tr class="border-b align-top">
+            <th scope="row" class="py-1 pr-2 font-normal">{{ t.prompt }}</th>
+            <td class="py-1 pr-2 whitespace-pre-line">{{ t.text }}</td>
+            <td class="py-1">
+              <form method="post" action="/admin/consultations/{{ consultation.id }}/textes/{{ t.answer_id }}/approuver" class="inline"><button type="submit" class="btn-outline">Approuver</button></form>
+              <form method="post" action="/admin/consultations/{{ consultation.id }}/textes/{{ t.answer_id }}/rejeter" class="inline"><button type="submit" class="btn-outline">Rejeter</button></form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+  {% endif %}
+  <p class="text-sm"><a href="/admin/consultations" class="underline">Retour à la liste</a></p>
+</div>
+{% endblock %}

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import Integer, String
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -40,6 +40,10 @@ class AuditLog(CreatedAtMixin, Base):
     new_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     # Empreinte hachée de l'IP — jamais l'adresse brute (Exigence 29.2).
     ip_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    # Auteur de l'action (NULL si anonyme ou utilisateur supprimé).
+    actor_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     def __repr__(self) -> str:  # pragma: no cover - aide au débogage
         return (

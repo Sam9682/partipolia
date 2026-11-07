@@ -28,10 +28,8 @@ plus montées (voir [`ARCHITECTURE_ASSESSMENT.md`](ARCHITECTURE_ASSESSMENT.md)).
   consentement explicite à l'agrégation, export et suppression des données (RGPD).
 - **Tableau de bord national** agrégé et anonyme, avec seuil minimal de participants.
 - **Rôles** : super administrateur, administrateur de données, de contenu, modérateur, citoyen.
-
-Hors périmètre de cette version : simulateur de scénarios nationaux, agrégation par région,
-revendications interactives et consultations (phases 4 et 5), audit de sécurité et tests de
-charge (phase 6).
+- **Simulateur national** (scénarios, comparaison, enregistrement et partage), **agrégation
+  par région**, **revendications interactives** modérées et **consultations**.
 
 ## Stack
 

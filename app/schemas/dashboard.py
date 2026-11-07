@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -48,6 +49,52 @@ class HistoryPoint(BaseModel):
 class DashboardHistory(BaseModel):
     min_cohort: int
     points: list[HistoryPoint]
+
+
+class RegionCategory(BaseModel):
+    """Publishable region x category cell; ``other`` merges withheld cells."""
+
+    code: str
+    participants: int | None = None  # None for the "other categories" bucket
+    avoided_expenditure: Decimal
+
+
+class RegionalView(BaseModel):
+    """Regional dashboard entry. A ``suppressed`` view carries no figure (None, never 0)."""
+
+    code: str
+    label: str
+    status: Literal["published", "suppressed"]
+    participants: int | None = None
+    active_commitments: int | None = None
+    consumption_reduction: Decimal | None = None
+    personal_savings: Decimal | None = None
+    fiscal: FiscalResult | None = None
+    categories: list[RegionCategory] = []
+    model_version: str | None = None
+    calculated_at: datetime | None = None
+    min_cohort: int
+    disclaimers: list[str]
+    methodology: str
+
+
+class RegionalList(BaseModel):
+    min_cohort: int
+    regions: list[RegionalView]
+
+
+class RegionalHistoryPoint(BaseModel):
+    date: date
+    participants: int
+    net_public_impact: Decimal
+    personal_savings: Decimal
+
+
+class RegionalHistory(BaseModel):
+    code: str
+    label: str
+    min_cohort: int
+    points: list[RegionalHistoryPoint]
 
 
 class DashboardSectors(BaseModel):

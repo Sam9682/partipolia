@@ -34,6 +34,7 @@ from app.api.deps import (
     get_access_token,
     get_current_user,
 )
+from app.core.audit_events import request_ip_hash
 from app.core.config import settings
 from app.core.database import get_session
 from app.core.rate_limit import default_rate_limit
@@ -48,6 +49,7 @@ from app.services.auth_service import (
     GENERIC_CREDENTIALS_ERROR,
     AuthError,
     AuthService,
+    LoginLockedError,
 )
 
 router = APIRouter()
@@ -170,6 +172,7 @@ async def register(
 )
 async def login(
     payload: LoginRequest,
+    request: Request,
     response: Response,
     service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> TokenPair:
@@ -178,7 +181,15 @@ async def login(
         tokens = await service.authenticate(
             email=payload.email,
             password=payload.password,
+            ip_hash=request_ip_hash(request),
         )
+    except LoginLockedError as exc:
+        # Identifiant verrouillé : 429 + Retry-After, identique que le compte existe ou non (15.9, 15.10).
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(exc),
+            headers={"Retry-After": str(exc.retry_after)},
+        ) from exc
     except AuthError as exc:
         # Message générique : ne distingue pas email inconnu et mot de passe erroné (Exigence 1.9).
         raise HTTPException(

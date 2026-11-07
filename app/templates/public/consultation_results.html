@@ -1,0 +1,64 @@
+{% extends "public/base.html" %}
+{% block title %}Résultats : {{ consultation.title }} — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Résultats : {{ consultation.title }}</h1>
+    <p class="mt-3 text-navy-100">Consultation clôturée le {{ consultation.closes_at | datetime_fr }} (UTC).</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-4xl px-4 pt-8 space-y-6" data-testid="consultation-results">
+  <div class="disclaimer" data-testid="representativity-notice">
+    <p><strong>{{ notice | capitalize }}.</strong> Ces résultats reflètent uniquement les personnes qui ont choisi de répondre.</p>
+  </div>
+
+  <p class="text-sm" data-testid="respondent-count">{{ results.respondent_count | num }} répondant{{ 's' if results.respondent_count > 1 else '' }}.</p>
+
+  {% if results.withheld %}
+  <p class="card text-sm" role="status" data-testid="results-withheld">Résultats retenus : moins de 20 répondants. Aucun chiffre n'est publié, pour protéger l'anonymat.</p>
+  {% else %}
+  {% for q in questions %}
+  <section class="card" aria-live="polite" data-testid="question-result">
+    <h2 class="font-bold text-navy-900">{{ q.position }}. {{ q.prompt }}</h2>
+    <p class="mt-1 text-xs text-slate-600">{{ type_labels[q.question_type] }}{% if not q.withheld %} · {{ q.answer_count | num }} réponse{{ 's' if q.answer_count > 1 else '' }}{% endif %}</p>
+    {% if q.withheld %}
+    <p class="mt-2 text-sm" role="status" data-testid="question-withheld">Résultat retenu : moins de 20 réponses à cette question.</p>
+    {% elif q.has_counts %}
+    <ul class="mt-3 space-y-2" aria-hidden="true">
+      {% for c in q.counts %}
+      <li>
+        <div class="text-xs text-slate-600">{{ c.option }}</div>
+        <div class="h-3 rounded bg-slate-100"><div class="h-3 rounded bg-navy-700" style="width: {{ c.width }}%"></div></div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if q.mean is not none %}<p class="mt-2 text-sm" data-testid="scale-mean">Moyenne : {{ q.mean }} sur 5.</p>{% endif %}
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <caption class="sr-only">Tableau équivalent au graphique : décompte des réponses à la question {{ q.position }}</caption>
+        <thead><tr class="border-b text-xs uppercase text-slate-500"><th scope="col" class="py-1 pr-2">{{ 'Valeur' if q.question_type == 'scale' else 'Option' }}</th><th scope="col" class="py-1 text-right">Réponses</th></tr></thead>
+        <tbody>
+          {% for c in q.counts %}
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">{{ c.option }}</th><td class="py-1 text-right">{{ c.central | num }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    {% if q.texts %}
+    <ul class="mt-3 list-disc space-y-2 pl-5 text-sm" data-testid="approved-texts">
+      {% for t in q.texts %}<li class="whitespace-pre-line">{{ t }}</li>{% endfor %}
+    </ul>
+    <p class="mt-2 text-xs text-slate-600">Seuls les textes approuvés par la modération sont publiés.</p>
+    {% else %}
+    <p class="mt-2 text-sm text-slate-600">Aucun texte approuvé à publier.</p>
+    {% endif %}
+    {% endif %}
+  </section>
+  {% endfor %}
+  {% endif %}
+  <p class="text-sm"><a href="/consultations/{{ consultation.id }}" class="underline">Retour à la consultation</a> · <a href="/consultations" class="underline">Toutes les consultations</a></p>
+</div>
+{% endblock %}

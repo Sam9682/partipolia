@@ -32,10 +32,12 @@ service prime sur une limitation basique), l'incident étant journalisé.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from typing import Final
 
 from fastapi import Request, status
 from fastapi.exceptions import HTTPException
+from jose import jwt
 from redis.asyncio import Redis
 
 from app.core.config import Settings, get_settings
@@ -47,6 +49,11 @@ __all__ = [
     "rate_limiter_dependency",
     "default_rate_limit",
     "chat_rate_limit",
+    "national_calc_rate_limit",
+    "scenario_save_rate_limit",
+    "claim_create_rate_limit",
+    "claim_support_rate_limit",
+    "consultation_respond_rate_limit",
 ]
 
 logger = get_logger(__name__)
@@ -146,6 +153,36 @@ class RateLimiter:
         return max(1, int(remaining) + (1 if remaining % 1 else 0))
 
 
+def _user_id_from_token(request: Request) -> str | None:
+    """Extrait (best-effort, signature vérifiée) l'id utilisateur du jeton d'accès.
+
+    Les dépendances de route s'exécutent avant la garde d'authentification : on
+    lit donc le JWT directement (Bearer ou cookie), sans accès base. Tout jeton
+    absent ou invalide retourne ``None`` (repli sur l'IP).
+    """
+    token: str | None = None
+    authorization = request.headers.get("Authorization")
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization[len("Bearer "):].strip() or None
+    if token is None:
+        token = (request.cookies.get("access_token") or "").strip() or None
+    if token is None:
+        return None
+    try:
+        settings = get_settings()
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret_key.get_secret_value(),
+            algorithms=[settings.jwt_algorithm],
+        )
+    except Exception:  # noqa: BLE001 — jeton illisible : repli sur l'IP.
+        return None
+    if payload.get("type") not in (None, "access"):
+        return None
+    sub = payload.get("sub")
+    return str(sub) if sub else None
+
+
 def _client_identity(request: Request) -> str:
     """Dérive l'identité du client soumis à la limitation de débit.
 
@@ -157,6 +194,8 @@ def _client_identity(request: Request) -> str:
     """
     user = getattr(request.state, "user", None)
     user_id = getattr(user, "id", None)
+    if user_id is None:
+        user_id = _user_id_from_token(request)
     if user_id is not None:
         return f"user:{user_id}"
 
@@ -175,6 +214,8 @@ def _client_identity(request: Request) -> str:
 
 def rate_limiter_dependency(
     scope: str,
+    max_requests: int | Callable[[Settings], int] | None = None,
+    window_seconds: int | None = None,
     *,
     reinforced: bool = False,
 ):
@@ -182,6 +223,10 @@ def rate_limiter_dependency(
 
     :param scope: identifiant logique du point d'accès (``"login"``, ``"chat"``…),
         servant de préfixe aux compteurs Redis pour isoler les budgets.
+    :param max_requests: seuil explicite (entier, ou fonction des réglages lue à
+        chaque requête). À défaut, seuil par défaut / renforcé selon ``reinforced``.
+    :param window_seconds: durée de fenêtre explicite ; à défaut
+        ``RATE_LIMIT_WINDOW_SECONDS``.
     :param reinforced: si vrai, applique le seuil renforcé du chat
         (``RATE_LIMIT_CHAT_MAX``) plutôt que le seuil par défaut
         (``RATE_LIMIT_DEFAULT_MAX``) — protection accrue de ``POST /api/v1/chat``
@@ -195,15 +240,24 @@ def rate_limiter_dependency(
         settings: Settings = get_settings()
         if not settings.rate_limit_enabled:
             return
-        max_requests = (
-            settings.rate_limit_chat_max
-            if reinforced
-            else settings.rate_limit_default_max
-        )
+        if max_requests is None:
+            limit = (
+                settings.rate_limit_chat_max
+                if reinforced
+                else settings.rate_limit_default_max
+            )
+        elif callable(max_requests):
+            limit = max_requests(settings)
+        else:
+            limit = max_requests
         limiter = RateLimiter(
             scope=scope,
-            max_requests=max_requests,
-            window_seconds=settings.rate_limit_window_seconds,
+            max_requests=limit,
+            window_seconds=(
+                window_seconds
+                if window_seconds is not None
+                else settings.rate_limit_window_seconds
+            ),
         )
         await limiter.check(_client_identity(request))
 
@@ -221,3 +275,21 @@ def default_rate_limit(scope: str):
 
 # Dépendance renforcée dédiée au chat (Exigence 26.5).
 chat_rate_limit = rate_limiter_dependency("chat", reinforced=True)
+
+# Dépendances de la simulation nationale et des consultations
+# (Exigences 2.16, 10.13, 14.9) : seuils explicites lus dans les réglages.
+national_calc_rate_limit = rate_limiter_dependency(
+    "national-calc", lambda s: s.rate_limit_national_calc_max
+)
+scenario_save_rate_limit = rate_limiter_dependency(
+    "scenario-save", lambda s: s.rate_limit_scenario_save_max
+)
+claim_create_rate_limit = rate_limiter_dependency(
+    "claim-create", lambda s: s.rate_limit_claim_create_max
+)
+claim_support_rate_limit = rate_limiter_dependency(
+    "claim-support", lambda s: s.rate_limit_claim_support_max
+)
+consultation_respond_rate_limit = rate_limiter_dependency(
+    "consultation-respond", lambda s: s.rate_limit_consultation_respond_max
+)

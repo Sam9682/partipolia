@@ -13,13 +13,21 @@ EXPECTED_NAV = [
     ("Accueil", "/"),
     ("Comprendre", "/comprendre"),
     ("Simulateur", "/simulateur"),
+    ("Simulateur national", "/simulateur-national"),
     ("Impact national", "/impact-national"),
+    ("Régions", "/regions"),
     ("Nos revendications", "/nos-revendications"),
+    ("Revendications citoyennes", "/revendications"),
+    ("Consultations", "/consultations"),
     ("Méthodologie", "/methodologie"),
     ("Rejoindre", "/rejoindre"),
 ]
 
-PUBLIC_PATHS = [href for _, href in EXPECTED_NAV] + [
+# Pages adossées à la base de données : exclues de l'échantillon sans PostgreSQL
+# (leurs liens de menu restent vérifiés par ``test_navigation_items_and_order``).
+DB_BACKED_PATHS = {"/regions", "/revendications", "/consultations"}
+
+PUBLIC_PATHS = [href for _, href in EXPECTED_NAV if href not in DB_BACKED_PATHS] + [
     "/login",
     "/mentions-legales",
     "/confidentialite",

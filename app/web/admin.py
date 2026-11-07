@@ -18,7 +18,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user_optional
+from app.api.deps import _audit_admin_denied, get_current_user_optional
 from app.core.database import get_session
 from app.models.audit import AuditLog
 from app.models.roles import Role, has_role
@@ -43,6 +43,7 @@ async def admin_dashboard(
     can_data = has_role(current_user.role, Role.DATA_ADMIN)
     is_super = has_role(current_user.role, Role.SUPER_ADMIN)
     if not (can_data or is_super):
+        await _audit_admin_denied(request, current_user)
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Action non autorisée.")
 
     service = EconomicDataService(session)

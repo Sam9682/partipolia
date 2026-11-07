@@ -1,0 +1,43 @@
+{% extends "public/base.html" %}
+{% block title %}Mes revendications — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Mes revendications</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Vos brouillons et vos revendications publiées. Le motif d'un masquage est indiqué ici.</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-6xl px-4 pt-8" data-testid="claims-mine">
+  {% if info %}<p class="mb-4 rounded-md bg-slate-100 p-3 text-sm text-slate-800" role="status">{{ info }}</p>{% endif %}
+  {% if not authenticated %}
+  <p class="rounded-md bg-slate-100 p-3 text-sm text-slate-800" role="status" data-testid="login-required">Cette page est réservée aux comptes citoyens. <a href="/login" class="underline">Connectez-vous</a> pour retrouver vos revendications.</p>
+  {% elif not claims %}
+  <p class="card text-sm text-slate-600" data-testid="empty">Vous n'avez encore aucune revendication. <a href="/revendications/nouvelle" class="underline">Proposer une revendication</a>.</p>
+  {% else %}
+  <ul class="space-y-4">
+    {% for c in claims %}
+    <li class="card" id="revendication-{{ c.id }}" data-testid="claim-item">
+      <h2 class="text-lg font-bold text-navy-900">{% if c.status == 'published' %}<a href="/revendications/{{ c.id }}" class="underline">{{ c.title }}</a>{% else %}{{ c.title }}{% endif %}</h2>
+      <p class="mt-1 text-xs text-slate-600">
+        <strong data-testid="claim-status">{{ status_labels.get(c.status, c.status) }}</strong>
+        {% if c.category_code %}· {{ category_names.get(c.category_code, 'Autres catégories') }}{% endif %}
+        {% if c.status == 'published' %}· {{ c.support_count }} soutien{{ 's' if c.support_count > 1 else '' }}{% endif %}
+      </p>
+      {% if c.moderation_reason %}<p class="mt-2 text-sm text-red-800" data-testid="moderation-reason">Motif du masquage : {{ c.moderation_reason }}</p>{% endif %}
+      <p class="mt-2 whitespace-pre-line text-sm">{{ c.body | truncate(300) }}</p>
+      <p class="mt-2 text-xs italic text-slate-600">À titre personnel, aucune position de la Plateforme.</p>
+      <div class="mt-3 flex flex-wrap gap-3">
+        {% if c.status == 'draft' %}
+        <form method="post" action="/revendications/{{ c.id }}/publier"><button type="submit" class="btn-primary">Publier</button></form>
+        {% endif %}
+        <form method="post" action="/revendications/{{ c.id }}/supprimer"><button type="submit" class="btn-outline text-red-700">Supprimer</button></form>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <p class="mt-6 text-sm"><a href="/revendications" class="underline">Retour au catalogue</a> · <a href="/revendications/nouvelle" class="underline">Proposer une revendication</a></p>
+</div>
+{% endblock %}

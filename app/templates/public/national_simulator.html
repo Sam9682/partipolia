@@ -1,0 +1,45 @@
+{% extends "public/base.html" %}
+{% from "public/_national_macros.html" import scenario_fields %}
+{% block title %}Simulateur national — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Simulateur national</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Testez une hypothèse : quelle part de la population participe, et de combien réduit-elle ses dépenses ? Le résultat est une estimation modélisée, pas une prévision.</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-6xl px-4 pt-8" data-testid="national-simulator">
+  <div class="grid gap-8 lg:grid-cols-2">
+    <div class="space-y-4">
+      <form id="form-scenario" class="card space-y-4" aria-label="Paramètres du scénario national"
+            hx-post="/simulateur-national/calcul" hx-target="#resultat" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">
+        <h2 class="font-bold text-navy-900">Votre hypothèse</h2>
+        <div class="flex flex-wrap gap-2" role="group" aria-label="Présélections">
+          {% for p in presets %}
+          <button type="button" class="btn-outline text-xs" data-form="form-scenario" data-preset='{{ p | tojson | forceescape }}' title="{{ p.description }}">{{ p.label }}</button>
+          {% endfor %}
+        </div>
+        {{ scenario_fields(categories) }}
+        <button type="submit" class="btn-primary">Calculer</button>
+      </form>
+
+      <form class="card space-y-3" aria-label="Enregistrer ce scénario"
+            hx-post="/simulateur-national/enregistrer" hx-include="#form-scenario" hx-target="#enregistrement" hx-swap="innerHTML">
+        <label for="scenario-name" class="text-sm font-semibold text-navy-900">Nom du scénario (1 à 100 caractères)</label>
+        <input id="scenario-name" name="name" type="text" minlength="1" maxlength="100" required class="w-full rounded-md border border-slate-300 px-2 py-1" />
+        <button type="submit" class="btn-outline">Enregistrer</button>
+        <div id="enregistrement" aria-live="polite"></div>
+      </form>
+      <p class="text-sm"><a href="/simulateur-national/comparer" class="underline">Comparer 2 à 4 scénarios</a> · <a href="/mes-scenarios" class="underline">Mes scénarios</a> · <a href="/regions" class="underline">Impact par Région</a></p>
+    </div>
+
+    <div id="resultat" aria-live="polite" data-testid="resultat">
+      <p class="card text-sm text-slate-600">Renseignez le taux de participation et au moins une réduction, puis lancez le calcul.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/national.js" defer></script>{% endblock %}

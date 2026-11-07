@@ -58,6 +58,11 @@ dev = [
     "mypy>=1.11",
     "types-python-jose>=3.3",
     "asgi-lifespan>=2.1",
+    # Tests de charge (loadtest/)
+    "locust==2.32.5",
+    "pip-audit==2.9.0",
+    "bandit==1.8.6",
+    "detect-secrets==1.5.0",
 ]
 
 [build-system]
@@ -126,8 +131,9 @@ disallow_untyped_defs = false
 minversion = "8.0"
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "-ra -q"
+addopts = "-ra -q -m 'not perf'"
 markers = [
+    "perf: tests de performance d'agrégation (exclus par défaut ; `make perf-test`)",
     "unit: tests unitaires de logique métier pure",
     "integration: tests d'intégration (base, Redis, Docker)",
     "api: tests des points d'accès HTTP",
