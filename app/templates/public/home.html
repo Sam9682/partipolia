@@ -1,0 +1,115 @@
+{% extends "public/base.html" %}
+
+{% block content %}
+{# 0. Hero #}
+<section class="bg-navy-900 text-white" data-testid="hero">
+  <div class="mx-auto max-w-6xl px-4 py-16 sm:py-24">
+    <h1 class="text-4xl font-extrabold tracking-widest sm:text-6xl">PARTI<span class="text-brand-red">POLIA</span></h1>
+    <p class="mt-6 text-2xl font-bold sm:text-3xl">La reprise en main par les citoyens.</p>
+    <p class="mt-2 text-lg text-navy-100">Après l'échec des élites politiques.</p>
+    <p class="mt-6 max-w-2xl text-xl font-semibold text-white">Modifiez la trajectoire ou vous n'aurez plus un rond :)</p>
+    <p class="mt-3 text-sm uppercase tracking-wider text-navy-100">Votre argent. Votre pouvoir. Votre décision.</p>
+    <div class="mt-10 flex flex-col gap-4 sm:flex-row">
+      <a href="/rejoindre" class="btn-primary" data-testid="cta-primary">JE REPRENDS LE CONTRÔLE</a>
+      <a href="/simulateur" class="btn-secondary" data-testid="cta-secondary">CALCULER MON IMPACT</a>
+    </div>
+  </div>
+</section>
+
+{# 1. Pourquoi le mouvement existe #}
+<section id="pourquoi" class="mx-auto max-w-6xl px-4 pt-16">
+  <h2 class="text-2xl font-extrabold text-navy-900 sm:text-3xl">Pourquoi ce mouvement existe</h2>
+  <p class="mt-4 max-w-3xl text-lg text-slate-700">
+    Les citoyens financent l'action publique par leurs impôts et leur consommation, mais ont rarement les moyens de
+    mesurer collectivement leur poids économique. PARTIPOLIA donne un outil simple, chiffré et transparent pour
+    le faire, de façon pacifique et démocratique.
+  </p>
+</section>
+
+{# 2. Comment fonctionne la mobilisation #}
+<section id="comment" class="mx-auto max-w-6xl px-4 pt-16">
+  <h2 class="text-2xl font-extrabold text-navy-900 sm:text-3xl">Comment fonctionne la mobilisation économique</h2>
+  <ol class="mt-6 grid gap-4 sm:grid-cols-3">
+    <li class="card"><span class="kpi-label">Étape 1</span><p class="mt-2 font-semibold">Simulez, sans inscription</p><p class="mt-1 text-sm text-slate-600">Choisissez de réduire volontairement certaines dépenses non essentielles.</p></li>
+    <li class="card"><span class="kpi-label">Étape 2</span><p class="mt-2 font-semibold">Engagez-vous librement</p><p class="mt-1 text-sm text-slate-600">Créez un compte pour enregistrer votre engagement déclaratif et le suivre.</p></li>
+    <li class="card"><span class="kpi-label">Étape 3</span><p class="mt-2 font-semibold">Mesurez ensemble</p><p class="mt-1 text-sm text-slate-600">Les engagements sont agrégés de façon anonyme pour estimer le poids collectif.</p></li>
+  </ol>
+</section>
+
+{# 3. Six catégories #}
+<section id="categories" class="mx-auto max-w-6xl px-4 pt-16">
+  <h2 class="text-2xl font-extrabold text-navy-900 sm:text-3xl">Six catégories de consommation</h2>
+  <p class="mt-3 text-sm text-slate-600">Budgets annuels de référence par adulte : hypothèses initiales configurables, ce ne sont pas des moyennes nationales officielles.</p>
+  <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="categories">
+    {% for c in categories %}
+    <li class="card" data-category="{{ c.code }}">
+      <p class="font-semibold text-navy-900">{{ c.name }}</p>
+      <p class="mt-1 text-sm text-slate-600">{{ c.description }}</p>
+      <p class="mt-3 text-2xl font-extrabold text-navy-900">{{ c.reference_annual_expenditure_fr }} <span class="text-sm font-medium text-slate-500">/ an</span></p>
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="mt-4 text-right text-sm font-semibold text-navy-900">Total de référence : {{ total_fr }} / an / adulte</p>
+</section>
+
+{# 4. Impact personnel #}
+<section id="impact-personnel" class="mx-auto max-w-6xl px-4 pt-16">
+  <h2 class="text-2xl font-extrabold text-navy-900 sm:text-3xl">Votre impact personnel</h2>
+  <p class="mt-4 max-w-3xl text-slate-700">
+    Pour chaque catégorie, choisissez un pourcentage de réduction de 0 % à 100 %. Le simulateur calcule vos économies
+    annuelles et mensuelles, ainsi que l'impact fiscal estimé de votre décision.
+  </p>
+  <a href="/simulateur" class="btn-outline mt-6">Ouvrir le simulateur</a>
+</section>
+
+{# 5. Impact national agrégé #}
+<section id="impact-national" class="mx-auto max-w-6xl px-4 pt-16" data-testid="national-preview">
+  <h2 class="text-2xl font-extrabold text-navy-900 sm:text-3xl">Impact national agrégé</h2>
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="card"><p class="kpi-value">—</p><p class="kpi-label mt-1">Participants inscrits</p></div>
+    <div class="card"><p class="kpi-value">—</p><p class="kpi-label mt-1">Engagements actifs</p></div>
+    <div class="card"><p class="kpi-value">—</p><p class="kpi-label mt-1">Réduction annuelle de consommation</p></div>
+    <div class="card"><p class="kpi-value">—</p><p class="kpi-label mt-1">Économies personnelles estimées</p></div>
+  </div>
+  <p class="disclaimer mt-4">Indicateurs en cours de collecte. Les valeurs seront affichées lorsque le seuil minimal de participants sera atteint, afin de protéger l'anonymat.</p>
+  <a href="/impact-national" class="btn-outline mt-6">Voir le tableau de bord national</a>
+</section>
+
+{# 6. Impact sur les recettes publiques #}
+<section id="recettes" class="mx-auto max-w-6xl px-4 pt-16">
+  <h2 class="text-2xl font-extrabold text-navy-900 sm:text-3xl">Impact sur les recettes publiques</h2>
+  <p class="mt-4 max-w-3xl text-slate-700">
+    Trois niveaux sont distingués : l'impact <strong>direct</strong> (TVA et taxes sur les achats évités),
+    l'impact <strong>indirect</strong> (chaîne de fournisseurs) et l'impact <strong>induit</strong> (emploi et revenus).
+    Ce sont des <strong>estimations modélisées avec fourchettes d'incertitude</strong>, jamais des pertes de recettes constatées.
+  </p>
+</section>
+
+{# 7. Revendications #}
+<section id="revendications" class="mx-auto max-w-6xl px-4 pt-16">
+  <h2 class="text-2xl font-extrabold text-navy-900 sm:text-3xl">Nos revendications</h2>
+  <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+    {% for d in demands %}<li class="card text-sm font-medium">{{ loop.index }}. {{ d }}</li>{% endfor %}
+  </ul>
+  <a href="/nos-revendications" class="btn-outline mt-6">Détail des revendications</a>
+</section>
+
+{# 8. Transparence et méthodologie #}
+<section id="transparence" class="mx-auto max-w-6xl px-4 pt-16">
+  <h2 class="text-2xl font-extrabold text-navy-900 sm:text-3xl">Transparence et méthodologie</h2>
+  <p class="mt-4 max-w-3xl text-slate-700">
+    Chaque résultat indique la version du modèle et des jeux de données utilisés, la période, la monnaie et un niveau de confiance.
+    Les paramètres sont issus de sources officielles lorsqu'elles existent ; sinon l'hypothèse provisoire est signalée.
+  </p>
+  <a href="/methodologie" class="btn-outline mt-6">Lire la méthodologie</a>
+</section>
+
+{# 9. Rejoindre #}
+<section id="rejoindre" class="mx-auto mt-16 max-w-6xl px-4">
+  <div class="rounded-lg bg-navy-900 p-8 text-white sm:p-12">
+    <h2 class="text-2xl font-extrabold sm:text-3xl">Rejoignez le mouvement</h2>
+    <p class="mt-3 max-w-2xl text-navy-100">Aucune vérification d'identité. Un e-mail, un mot de passe, et vous choisissez ce que vous partagez.</p>
+    <a href="/rejoindre" class="btn-primary mt-6">JE REPRENDS LE CONTRÔLE</a>
+  </div>
+</section>
+{% endblock %}

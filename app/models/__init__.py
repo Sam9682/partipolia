@@ -13,7 +13,17 @@ Ce module importe et ré-exporte l'ensemble des modèles ORM du paquet afin que
 from app.models.argument import ARGUMENT_POSITIONS, Argument
 from app.models.audit import AuditLog
 from app.models.comment import COMMENT_STATUSES, Comment
+from app.models.consumption_category import ConsumptionCategory
 from app.models.document import Document, DocumentChunk
+from app.models.economic_dataset import (
+    EconomicDataset,
+    FiscalParameter,
+    ModelVersion,
+    model_version_datasets,
+)
+from app.models.simulation import EconomicSimulation, SimulationResult
+from app.models.aggregation import AggregatedImpact
+from app.models.citizen_commitment import CitizenCommitment
 from app.models.legal_analysis import LegalAnalysis
 from app.models.legal_problem import LegalProblem
 from app.models.legal_problem_reform import LegalProblemReform
@@ -67,6 +77,16 @@ __all__ = [
     "Commitment",
     "Indicator",
     "COMMITMENT_STATUSES",
+    # Partipolia — économie citoyenne
+    "ConsumptionCategory",
+    "EconomicDataset",
+    "FiscalParameter",
+    "ModelVersion",
+    "model_version_datasets",
+    "EconomicSimulation",
+    "SimulationResult",
+    "AggregatedImpact",
+    "CitizenCommitment",
     # Audit
     "AuditLog",
     # Réparer la loi

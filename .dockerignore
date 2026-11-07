@@ -46,3 +46,6 @@ docker-compose.yml
 .idea/
 .vscode/
 .DS_Store
+
+# Tailwind standalone binary (build-time tool, not needed in the image)
+tools/tailwindcss

@@ -114,56 +114,56 @@ def ssr_context(**extra: Any) -> dict[str, Any]:
 
 
 def get_program_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> ProgramService:
     """Dépendance fournissant un :class:`ProgramService` lié à la session de requête."""
     return ProgramService(session)
 
 
 def get_theme_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> ThemeService:
     """Dépendance fournissant un :class:`ThemeService` lié à la session de requête."""
     return ThemeService(session)
 
 
 def get_proposal_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> ProposalService:
     """Dépendance fournissant un :class:`ProposalService` lié à la session de requête."""
     return ProposalService(session)
 
 
 def get_statistics_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> StatisticsService:
     """Dépendance fournissant un :class:`StatisticsService` lié à la session de requête."""
     return StatisticsService(session)
 
 
 def get_team_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> TeamService:
     """Dépendance fournissant un :class:`TeamService` lié à la session de requête."""
     return TeamService(session)
 
 
 def get_mandate_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> MandateService:
     """Dépendance fournissant un :class:`MandateService` lié à la session de requête."""
     return MandateService(session)
 
 
 def get_legal_reform_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> LegalReformService:
     """Dépendance fournissant un :class:`LegalReformService` lié à la session de requête."""
     return LegalReformService(session)
 
 
 def get_legal_analysis_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
     pipeline: Annotated[RagPipeline, Depends(get_rag_pipeline)],
 ) -> LegalAnalysisService:
     """Dépendance fournissant un :class:`LegalAnalysisService` lié à la requête.

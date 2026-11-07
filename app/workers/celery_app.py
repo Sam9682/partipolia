@@ -32,6 +32,7 @@ _TASK_MODULES: tuple[str, ...] = (
     "app.workers.ingestion",
     "app.workers.statistics",
     "app.workers.legal_analysis",
+    "app.workers.dashboard_refresh",
 )
 
 
@@ -59,6 +60,13 @@ def create_celery_app() -> Celery:
         worker_prefetch_multiplier=1,
         # Conserve les résultats une heure (suffisant pour le suivi d'ingestion).
         result_expires=3600,
+        # Planification (nécessite ``celery beat`` ou ``worker -B``) : agrégat national.
+        beat_schedule={
+            "refresh-national-dashboard": {
+                "task": "app.workers.dashboard_refresh.refresh_dashboard",
+                "schedule": 3600.0,  # every hour; one snapshot row per day is kept
+            }
+        },
     )
 
     return app

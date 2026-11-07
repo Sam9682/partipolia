@@ -59,7 +59,7 @@ _COOKIE_SAMESITE = "lax"
 
 
 def get_auth_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> AuthService:
     """Dépendance fournissant un :class:`AuthService` lié à la session de requête."""
     return AuthService(session)

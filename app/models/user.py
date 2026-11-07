@@ -8,12 +8,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, String
+from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 from app.models.mixins import TimestampMixin
+from app.models.roles import Role
 
 if TYPE_CHECKING:  # pragma: no cover - imports pour l'annotation de type uniquement
     from app.models.proposal import Proposal
@@ -34,7 +35,24 @@ class User(TimestampMixin, Base):
     display_name: Mapped[str] = mapped_column(String(120), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # Optional, minimal profile data (Partipolia). No identity verification.
+    country: Mapped[str] = mapped_column(
+        String(2), nullable=False, default="FR", server_default="FR"
+    )
+    region: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    household_adults: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, server_default="1"
+    )
+
+    # Legacy flag kept for the archived political modules; ``role`` is authoritative.
     is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    role: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default=Role.CITIZEN.value,
+        server_default=Role.CITIZEN.value,
+        index=True,
+    )
 
     # Gestion du consentement RGPD (Exigence 28.4). Dictionnaire jsonb
     # ``{clé_de_consentement: bool}`` : la Plateforme n'y stocke que des choix

@@ -12,5 +12,11 @@ set -euo pipefail
 echo "[entrypoint] Application des migrations Alembic (upgrade head)…"
 alembic upgrade head
 
+# Partipolia : publie la version initiale du modèle économique (idempotent). Un
+# échec n'empêche pas le démarrage : le simulateur retombe alors sur le jeu de
+# données embarqué et indique la version de modèle réellement utilisée.
+echo "[entrypoint] Publication du modèle économique initial (si absent)…"
+python -m scripts.seed_economic_model || echo "[entrypoint] AVERTISSEMENT : seed du modèle économique non appliqué"
+
 echo "[entrypoint] Démarrage du serveur : $*"
 exec "$@"

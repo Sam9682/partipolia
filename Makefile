@@ -2,7 +2,7 @@
 # Cibles : install, lint, type, test, migrate, seed, up, down
 
 .DEFAULT_GOAL := help
-.PHONY: help install lint type test migrate seed up down fmt revision downgrade
+.PHONY: help install lint type test migrate seed seed-model css up down fmt revision downgrade
 
 ## install : installe les dépendances (runtime + dev) via uv
 install:
@@ -38,9 +38,17 @@ revision:
 downgrade:
 	uv run alembic downgrade -1
 
-## seed : amorce les 25 Thèmes, un programme initial et un administrateur
+## seed : amorce les données historiques (thèmes, programme, administrateur)
 seed:
 	uv run python -m scripts.seed
+
+## seed-model : publie la version initiale du modèle économique Partipolia (idempotent)
+seed-model:
+	uv run python -m scripts.seed_economic_model
+
+## css : recompile la feuille de style Tailwind (binaire autonome dans tools/)
+css:
+	./tools/tailwindcss -i tools/tailwind.input.css -o app/static/css/partipolia.css --minify
 
 ## up : démarre l'ensemble des services (docker compose)
 up:

@@ -1,0 +1,45 @@
+"""French short labels of the INSEE A38 branches (NAF rév. 2 aggregation)."""
+
+from __future__ import annotations
+
+from typing import Final
+
+SECTOR_LABELS: Final[dict[str, str]] = {
+    "AZ": "Agriculture, sylviculture et pêche",
+    "BZ": "Industries extractives",
+    "CA": "Industrie agroalimentaire",
+    "CB": "Textile, habillement, cuir et chaussure",
+    "CC": "Bois, papier et imprimerie",
+    "CD": "Cokéfaction et raffinage",
+    "CE": "Industrie chimique",
+    "CF": "Industrie pharmaceutique",
+    "CG": "Caoutchouc, plastique et minéraux non métalliques",
+    "CH": "Métallurgie et produits métalliques",
+    "CI": "Produits informatiques, électroniques et optiques",
+    "CJ": "Équipements électriques",
+    "CK": "Machines et équipements",
+    "CL": "Matériels de transport",
+    "CM": "Autres industries manufacturières",
+    "DZ": "Électricité, gaz, vapeur",
+    "EZ": "Eau, assainissement, déchets",
+    "FZ": "Construction",
+    "GZ": "Commerce",
+    "HZ": "Transports et entreposage",
+    "IZ": "Hébergement et restauration",
+    "JA": "Édition, audiovisuel et diffusion",
+    "JB": "Télécommunications",
+    "JC": "Informatique et services d'information",
+    "KZ": "Finance et assurance",
+    "LZ": "Immobilier",
+    "MA": "Services juridiques, comptables, ingénierie",
+    "MB": "Recherche-développement",
+    "MC": "Autres activités spécialisées et techniques",
+    "NZ": "Services administratifs et de soutien",
+    "OZ": "Administration publique",
+    "PZ": "Enseignement",
+    "QA": "Santé humaine",
+    "QB": "Hébergement médico-social et action sociale",
+    "RZ": "Arts, spectacles et activités récréatives",
+    "SZ": "Autres activités de services",
+    "TZ": "Activités des ménages employeurs",
+}

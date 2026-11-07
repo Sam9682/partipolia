@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 # Type de jeton porteur normalisé (OAuth2 « bearer »).
 TOKEN_TYPE_BEARER = "bearer"
@@ -68,5 +68,12 @@ class UserPublic(BaseModel):
     is_active: bool
     is_verified: bool
     is_admin: bool
+    role: str = "citizen"
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("role", mode="before")
+    @classmethod
+    def _default_role(cls, value: object) -> object:
+        """A ``User`` not yet flushed has ``role=None``: it is a plain citizen."""
+        return "citizen" if value is None else value

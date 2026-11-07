@@ -31,6 +31,7 @@ from fastapi import Depends, Request, status
 from fastapi.exceptions import HTTPException
 
 from app.core.database import get_session
+from app.models.roles import Role, has_role
 from app.services.auth_service import AuthError, AuthService
 from app.schemas.auth import UserPublic
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -88,7 +89,7 @@ def get_access_token(request: Request) -> str:
 
 async def get_current_user(
     access_token: Annotated[str, Depends(get_access_token)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> UserPublic:
     """Résout l'Utilisateur courant à partir de l'access token (Exigences 1.8, 1.10).
 
@@ -124,9 +125,29 @@ async def require_admin(
     return current_user
 
 
+def require_roles(*allowed: Role):  # type: ignore[no-untyped-def]
+    """Dependency factory: require one of ``allowed`` roles (``super_admin`` always passes).
+
+    Unauthenticated callers receive ``401`` (via :func:`get_current_user`); an
+    authenticated caller without a sufficient role receives a generic ``403``.
+    """
+
+    async def _guard(
+        current_user: Annotated[UserPublic, Depends(get_current_user)],
+    ) -> UserPublic:
+        if not has_role(current_user.role, *allowed):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=_FORBIDDEN_MESSAGE,
+            )
+        return current_user
+
+    return _guard
+
+
 async def get_current_user_optional(
     request: Request,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> UserPublic | None:
     """Variante optionnelle : retourne l'Utilisateur courant ou ``None``.
 

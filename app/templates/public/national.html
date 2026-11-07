@@ -1,0 +1,120 @@
+{% extends "public/base.html" %}
+{% block title %}Impact national — PARTIPOLIA{% endblock %}
+{% block head_extra %}<script src="/static/js/chart.umd.min.js" defer></script>{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Impact national</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Engagements déclarés des participants, agrégés de façon anonyme. Aucun profil individuel n'est jamais affiché.</p>
+  </div>
+</section>
+
+<script type="application/json" id="sector-labels">{{ sector_labels | tojson }}</script>
+<div class="mx-auto max-w-6xl px-4 pt-8" x-data="dashboard()" x-init="init()" data-testid="dashboard">
+  <p class="text-sm text-slate-500" x-show="loading">Chargement…</p>
+  <p class="text-sm text-red-700" role="alert" x-show="error" x-text="error" x-cloak></p>
+
+  <div class="disclaimer" x-show="data && data.suppressed" x-cloak data-testid="suppressed">
+    <p><strong>Indicateurs en cours de collecte.</strong> Pour protéger l'anonymat, aucun chiffre n'est publié tant que le nombre de participants est inférieur à <span x-text="data ? data.min_cohort : ''"></span>.</p>
+    <p class="mt-1">Participants : <span x-text="data ? data.participants_label : ''"></span></p>
+  </div>
+
+  <div x-show="data && !data.suppressed" x-cloak>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="card"><p class="kpi-value" x-text="data && data.participants !== null ? data.participants : '—'"></p><p class="kpi-label mt-1">Participants inscrits</p></div>
+      <div class="card"><p class="kpi-value" x-text="data && data.active_commitments !== null ? data.active_commitments : '—'"></p><p class="kpi-label mt-1">Engagements actifs (déclaratifs)</p></div>
+      <div class="card"><p class="kpi-value" x-text="data && data.consumption_reduction ? eur(data.consumption_reduction) : '—'"></p><p class="kpi-label mt-1">Réduction annuelle de consommation</p></div>
+      <div class="card"><p class="kpi-value" x-text="data && data.personal_savings ? eur(data.personal_savings) : '—'"></p><p class="kpi-label mt-1">Économies personnelles estimées</p></div>
+    </div>
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-3">
+      <div class="card lg:col-span-1">
+        <p class="kpi-label">Impact net estimé sur les finances publiques</p>
+        <p class="kpi-value mt-2" data-testid="national-net" x-text="data && data.fiscal ? eur(data.fiscal.net_public_impact.central) : '—'"></p>
+        <p class="text-sm text-slate-600" x-text="data && data.fiscal ? 'Fourchette : ' + eur(data.fiscal.net_public_impact.low) + ' à ' + eur(data.fiscal.net_public_impact.high) + ' par an (EUR)' : ''"></p>
+        <p class="mt-2 text-xs text-slate-500" x-text="data && data.net_public_impact_monthly ? 'Soit environ ' + eur(data.net_public_impact_monthly.central) + ' par mois, ' + eur(data.net_public_impact_daily.central) + ' par jour' : ''"></p>
+        <p class="mt-3 rounded bg-red-50 px-3 py-2 text-xs text-slate-800" x-show="data && data.confidence === 'provisional'">Niveau de confiance : <strong>provisoire</strong> (hypothèses en attente de données officielles).</p>
+        <p class="mt-3 text-xs text-slate-500" x-text="data ? 'Calculé le ' + date(data.calculated_at) + ' · modèle ' + data.model_version : ''"></p>
+        <p class="text-xs text-slate-500" x-text="data && data.dataset_versions ? 'Jeux de données : ' + data.dataset_versions.join(', ') : ''"></p>
+      </div>
+      <div class="card lg:col-span-2">
+        <h2 class="font-bold text-navy-900">Composantes de l'impact (fourchettes)</h2>
+        <div class="relative h-64"><canvas id="chart-components" role="img" aria-label="Composantes de l'impact estimé avec fourchettes basse, centrale et haute"></canvas></div>
+      </div>
+    </div>
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-2">
+      <div class="card"><h2 class="font-bold text-navy-900">Évolution</h2>
+        <div class="relative h-64"><canvas id="chart-history" role="img" aria-label="Évolution du nombre de participants"></canvas></div>
+        <p class="mt-2 text-xs text-slate-500" x-show="!history.length">L'historique apparaîtra au fil des jours.</p>
+      </div>
+      <div class="card"><h2 class="font-bold text-navy-900">Secteurs les plus touchés (chiffre d'affaires réduit)</h2>
+        <div class="relative h-64"><canvas id="chart-sectors" role="img" aria-label="Secteurs les plus touchés"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card mt-4" x-show="data && data.fiscal" x-cloak>
+      <h2 class="font-bold text-navy-900">Répartition simplifiée par administration</h2>
+      <p class="mt-2 text-sm text-slate-700" x-text="data && data.fiscal ? 'État : ' + eur(data.fiscal.by_public_sector.central.central) + ' · Collectivités locales : ' + eur(data.fiscal.by_public_sector.local.central) + ' · Sécurité sociale : ' + eur(data.fiscal.by_public_sector.social_security.central) : ''"></p>
+      <p class="mt-1 text-xs text-slate-500">Les recettes de l'État, des collectivités et de la Sécurité sociale ne sont pas fusionnées. La répartition est simplifiée (voir la méthodologie).</p>
+    </div>
+  </div>
+
+  <div class="disclaimer mt-6 space-y-1" data-testid="dashboard-disclaimers">
+    <template x-for="d in (data ? data.disclaimers : [])" :key="d"><p x-text="d"></p></template>
+  </div>
+  <p class="mt-3 text-xs text-slate-500" x-text="data ? data.methodology : ''"></p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('dashboard', () => ({
+      data: null, history: [], sectors: [], loading: true, error: '', charts: {},
+      labels: JSON.parse(document.getElementById('sector-labels').textContent),
+      eur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v)); },
+      date(v) { return v ? new Date(v).toLocaleDateString('fr-FR') : ''; },
+      async init() {
+        try {
+          const [n, h, s] = await Promise.all([
+            fetch('/api/v1/dashboard/national').then(r => r.json()),
+            fetch('/api/v1/dashboard/history').then(r => r.json()),
+            fetch('/api/v1/dashboard/sectors').then(r => r.json()),
+          ]);
+          this.data = n; this.history = h.points; this.sectors = s.sectors;
+          this.loading = false;
+          if (!n.suppressed) { await this.$nextTick(); this.draw(); }
+        } catch (e) { this.loading = false; this.error = 'Les indicateurs sont momentanément indisponibles.'; }
+      },
+      draw() {
+        if (typeof Chart === 'undefined') { return; }
+        const navy = '#0f1b3d', red = '#c8202f', grey = '#94a3b8';
+        const f = this.data.fiscal;
+        const comps = [['Direct', f.direct], ['Indirect', f.indirect], ['Induit', f.induced], ['Dépenses supp.', f.additional_public_expenditure], ['Net', f.net_public_impact]].filter(c => c[1]);
+        this.charts.c = new Chart(document.getElementById('chart-components'), {
+          type: 'bar',
+          data: { labels: comps.map(c => c[0]), datasets: [
+            { label: 'Bas', data: comps.map(c => Number(c[1].low)), backgroundColor: grey },
+            { label: 'Central', data: comps.map(c => Number(c[1].central)), backgroundColor: navy },
+            { label: 'Haut', data: comps.map(c => Number(c[1].high)), backgroundColor: red } ] },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => this.eur(v) } } } },
+        });
+        this.charts.h = new Chart(document.getElementById('chart-history'), {
+          type: 'line',
+          data: { labels: this.history.map(p => this.date(p.date)), datasets: [
+            { label: 'Participants', data: this.history.map(p => p.participants), borderColor: navy, backgroundColor: navy, tension: 0.2 } ] },
+          options: { responsive: true, maintainAspectRatio: false },
+        });
+        this.charts.s = new Chart(document.getElementById('chart-sectors'), {
+          type: 'bar',
+          data: { labels: this.sectors.map(s => this.labels[s.code] || s.code), datasets: [
+            { label: "Chiffre d'affaires réduit", data: this.sectors.map(s => Number(s.turnover_change)), backgroundColor: navy } ] },
+          options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { callback: v => this.eur(v) } } } },
+        });
+      },
+    }));
+  });
+</script>
+{% endblock %}

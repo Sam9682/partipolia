@@ -1,0 +1,72 @@
+{% extends "public/base.html" %}
+{% block title %}Méthodologie — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Méthodologie</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Hypothèses, sources, limites. Les résultats sont des estimations modélisées, avec des fourchettes d'incertitude.</p>
+  </div>
+</section>
+<div class="mx-auto max-w-4xl space-y-6 px-4 pt-8">
+  <section class="disclaimer" data-testid="methodology-disclaimer">
+    <p><strong>Estimations, pas mesures.</strong> Les montants ne sont pas des recettes fiscales constatées ni des pertes avérées de l'État. Les engagements sont déclaratifs et non vérifiés. Les participants ne représentent pas la population française.</p>
+  </section>
+
+  <section class="card">
+    <h2 class="font-bold text-navy-900">Des indicateurs distincts</h2>
+    <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+      <li><strong>Économies personnelles</strong> : ce que le foyer ne dépense plus (TTC).</li>
+      <li><strong>Chiffre d'affaires réduit</strong> : la dépense hors taxes qui n'arrive plus aux entreprises, et son effet sur leurs fournisseurs.</li>
+      <li><strong>Valeur ajoutée réduite</strong> : la part de ce chiffre d'affaires qui rémunère travail et capital.</li>
+      <li><strong>Recettes publiques réduites</strong> : les impôts et cotisations correspondants.</li>
+      <li><strong>Dépenses publiques supplémentaires</strong> : allocations chômage et activité partielle.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2 class="font-bold text-navy-900">Trois niveaux de calcul, sans double compte</h2>
+    <ol class="mt-2 list-decimal space-y-2 pl-5 text-sm text-slate-700">
+      <li><strong>Direct.</strong> TVA = dépense TTC × taux / (1 + taux), par taux applicable à chaque catégorie, plus les taxes sur les carburants des déplacements évités.</li>
+      <li><strong>Indirect.</strong> Modèle entrées-sorties de Leontief sur les données INSEE (38 branches), limité aux impôts de production et à l'impôt sur les sociétés. La TVA sur les achats intermédiaires est déductible, donc exclue.</li>
+      <li><strong>Induit.</strong> Effet sur l'emploi par élasticités (court, moyen et long terme), sans supposer qu'une baisse de chiffre d'affaires détruit des emplois proportionnellement : cotisations, impôt sur le revenu, allocations chômage, activité partielle.</li>
+    </ol>
+    <p class="mt-3 text-sm text-slate-700">Impact net = pertes de recettes + dépenses publiques supplémentaires − effet de rebond (TVA récupérée quand une partie des économies est dépensée ailleurs). Les importations sont déduites : la dépense qui profite à des produits importés ne crée pas d'activité en France.</p>
+  </section>
+
+  <section class="card" data-testid="methodology-sources">
+    <h2 class="font-bold text-navy-900">Sources de données</h2>
+    <div class="mt-2 overflow-x-auto"><table class="w-full text-left text-sm">
+      <thead><tr class="border-b text-xs uppercase text-slate-500"><th class="py-2 pr-3">Donnée</th><th class="pr-3">Source</th><th class="pr-3">Année</th><th>Statut</th></tr></thead>
+      <tbody>
+      {% for s in sources %}<tr class="border-b align-top"><td class="py-2 pr-3">{{ s.what }}</td><td class="pr-3"><a class="underline" href="{{ s.url }}" rel="noopener">{{ s.source }}</a></td><td class="pr-3">{{ s.year }}</td><td>{{ s.status }}</td></tr>{% endfor %}
+      </tbody></table></div>
+  </section>
+
+  <section class="card" data-testid="methodology-provisional">
+    <h2 class="font-bold text-navy-900">Paramètres encore provisoires</h2>
+    <p class="mt-1 text-sm text-slate-600">Faute de donnée officielle vérifiée, ces paramètres sont des hypothèses modifiables par les administrateurs, avec un niveau de confiance explicite. Ils élargissent les fourchettes affichées.</p>
+    <div class="mt-2 overflow-x-auto"><table class="w-full text-left text-sm">
+      <thead><tr class="border-b text-xs uppercase text-slate-500"><th class="py-2 pr-3">Paramètre</th><th class="pr-3">Confiance</th><th>Remarque</th></tr></thead>
+      <tbody>
+      {% for p in provisional %}<tr class="border-b align-top"><td class="py-2 pr-3 font-mono text-xs">{{ p.type }}</td><td class="pr-3">{{ p.confidence }}</td><td class="text-xs text-slate-600">{{ p.note }}</td></tr>{% endfor %}
+      </tbody></table></div>
+  </section>
+
+  <section class="card">
+    <h2 class="font-bold text-navy-900">Limites connues</h2>
+    <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+      <li>Les fourchettes ne traduisent que l'incertitude des paramètres, pas celle du modèle.</li>
+      <li>La répartition entre État, collectivités et Sécurité sociale est simplifiée.</li>
+      <li>Les économies redépensées ne récupèrent que la TVA : l'activité qu'elles créent n'est pas modélisée.</li>
+      <li>Le modèle est linéaire : pas d'effets de prix ni de contraintes de capacité.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2 class="font-bold text-navy-900">Version du modèle</h2>
+    <p class="mt-1 text-sm text-slate-700">Chaque résultat indique la version du modèle et des jeux de données utilisés. Les versions publiées sont figées : une simulation enregistrée se recalcule à l'identique. Version de référence affichée ici : <strong>{{ model_version }}</strong>.</p>
+    <p class="mt-1 text-xs text-slate-500">Jeux de données : {{ dataset_versions | join(', ') }}</p>
+  </section>
+</div>
+{% endblock %}

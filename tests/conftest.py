@@ -100,3 +100,68 @@ async def db_session() -> AsyncIterator[object]:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all, tables=required_tables)
         await engine.dispose()
+
+
+ECONOMIC_TABLES = (
+    "users",
+    "audit_logs",
+    "consumption_categories",
+    "economic_datasets",
+    "fiscal_parameters",
+    "model_versions",
+    "model_version_datasets",
+    "economic_simulations",
+    "simulation_results",
+    "citizen_commitments",
+    "aggregated_impacts",
+)
+
+
+@pytest_asyncio.fixture
+async def econ_session() -> AsyncIterator[object]:
+    """``AsyncSession`` on a PostgreSQL database with the Partipolia economic schema.
+
+    The six default categories are seeded. Skipped when no PostgreSQL is reachable
+    (set ``TEST_DATABASE_URL`` to enable).
+    """
+    url = _candidate_database_url()
+    if url is None:
+        pytest.skip("Aucune base PostgreSQL de test disponible (TEST_DATABASE_URL).")
+
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    import app.models  # noqa: F401  (registers every table on Base.metadata)
+    from app.core.database import Base
+    from app.economics.categories import DEFAULT_CATEGORIES
+    from app.models.consumption_category import ConsumptionCategory
+
+    tables = [Base.metadata.tables[name] for name in ECONOMIC_TABLES]
+    engine = create_async_engine(url, future=True)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all, tables=tables)
+            await conn.run_sync(Base.metadata.create_all, tables=tables)
+    except Exception as exc:  # pragma: no cover
+        await engine.dispose()
+        pytest.skip(f"Base PostgreSQL de test non joignable : {exc}")
+
+    factory = async_sessionmaker(bind=engine, expire_on_commit=False, autoflush=False)
+    session = factory()
+    session.add_all(
+        ConsumptionCategory(
+            code=c.code,
+            name=c.name,
+            description=c.description,
+            reference_annual_expenditure=c.reference_annual_expenditure,
+        )
+        for c in DEFAULT_CATEGORIES
+    )
+    await session.commit()
+    try:
+        yield session
+    finally:
+        await session.rollback()
+        await session.close()
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all, tables=tables)
+        await engine.dispose()

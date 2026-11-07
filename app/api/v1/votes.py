@@ -43,7 +43,7 @@ _INVALID_VOTE_VALUE_MESSAGE = "La valeur du vote doit être +1, 0 ou -1."
 
 
 def get_vote_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> VoteService:
     """Dépendance fournissant un :class:`VoteService` lié à la session de requête."""
     return VoteService(session)

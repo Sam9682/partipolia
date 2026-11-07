@@ -49,7 +49,7 @@ _FORBIDDEN_MESSAGE = "Action réservée à l'auteur ou à un administrateur."
 
 
 def get_argument_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> ArgumentService:
     """Dépendance fournissant un :class:`ArgumentService` lié à la session de requête."""
     return ArgumentService(session)

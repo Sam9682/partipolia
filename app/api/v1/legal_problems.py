@@ -152,14 +152,14 @@ class SideEffectReportInfo(BaseModel):
 
 
 def get_legal_reform_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> LegalReformService:
     """Dépendance fournissant un :class:`LegalReformService` lié à la session de requête."""
     return LegalReformService(session)
 
 
 def get_legal_analysis_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
     pipeline: Annotated[RagPipeline, Depends(get_rag_pipeline)],
 ) -> LegalAnalysisService:
     """Dépendance fournissant un :class:`LegalAnalysisService` lié à la requête.

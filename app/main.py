@@ -43,7 +43,8 @@ from app.core.middleware import (
     register_exception_handlers,
 )
 from app.core.redis import close_redis, get_redis
-from app.web.router import TEMPLATES_DIR, web_router
+from app.web.admin import admin_web_router
+from app.web.public import TEMPLATES_DIR, public_router
 
 # Répertoire des fichiers statiques (``app/static``), voisin des gabarits.
 STATIC_DIR = TEMPLATES_DIR.parent / "static"
@@ -70,11 +71,11 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="PARTIPOLAI",
-    version="0.1.0",
+    title="PARTIPOLIA",
+    version="2.0.0",
     description=(
-        "Plateforme de parti politique virtuel — API REST /api/v1 et rendu Web SSR "
-        "(monolithe modulaire FastAPI + PostgreSQL/pgvector + Redis + Celery + RAG)."
+        "Plateforme de mobilisation économique citoyenne — API REST /api/v1 et rendu Web SSR "
+        "(monolithe modulaire FastAPI + PostgreSQL + Redis + Celery)."
     ),
     lifespan=lifespan,
 )
@@ -174,5 +175,8 @@ app.include_router(api_router, prefix="/api/v1")
 # Fichiers statiques (CSS/JS/Tailwind, images) servis sous /static.
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-# Pages Web SSR (Jinja2/HTMX) montées à la racine du site (Exigence 24).
-app.include_router(web_router)
+# Pages publiques Partipolia (SSR, français) montées à la racine du site.
+# Le routeur Web historique (``app.web.router.web_router``) est archivé : il
+# reste importable mais n'est plus monté.
+app.include_router(public_router)
+app.include_router(admin_web_router)

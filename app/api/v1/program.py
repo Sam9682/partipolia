@@ -54,7 +54,7 @@ _ASSOCIATION_NOT_FOUND_MESSAGE = "Association Programme_Proposition introuvable.
 
 
 def get_program_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> ProgramService:
     """Dépendance fournissant un :class:`ProgramService` lié à la session de requête."""
     return ProgramService(session)

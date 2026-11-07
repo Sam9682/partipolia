@@ -47,7 +47,7 @@ _log = get_logger(__name__, component="rag")
 
 
 def get_rag_pipeline(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> RagPipeline:
     """Assemble un :class:`RagPipeline` lié à la session de la requête (Exigence 13.3).
 

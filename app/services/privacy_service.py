@@ -324,5 +324,32 @@ class PrivacyService:
                     ),
                     basis="Modération et sécurité de la Plateforme (Exigence 17).",
                 ),
+                RetentionRule(
+                    category="Engagements citoyens (déclaratifs)",
+                    retention=(
+                        "Conservés tant que le compte existe ; supprimés avec le compte. "
+                        "Ils sont déclaratifs et non vérifiés ; aucune transaction ni "
+                        "donnée bancaire n'est collectée."
+                    ),
+                    basis="Consentement explicite à l'agrégation, retirable à tout moment.",
+                ),
+                RetentionRule(
+                    category="Simulations enregistrées",
+                    retention=(
+                        "Seules les données saisies (pourcentages de réduction, nombre "
+                        "d'adultes) sont conservées ; supprimées avec le compte. Les "
+                        "simulations anonymes ne sont liées à aucune personne."
+                    ),
+                    basis="Reproductibilité des résultats par version de modèle.",
+                ),
+                RetentionRule(
+                    category="Agrégats nationaux",
+                    retention=(
+                        "Totaux anonymes conservés sans limite ; ils ne contiennent aucune "
+                        "donnée individuelle et ne sont publiés qu'au-delà d'un seuil "
+                        "minimal de participants."
+                    ),
+                    basis="Intérêt collectif, données anonymisées.",
+                ),
             ]
         )

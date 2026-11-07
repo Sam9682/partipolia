@@ -1,0 +1,11 @@
+category_code,parameter_type,key,low,central,high,unit,confidence,note
+restaurants,vat_split,0.10,0.92,0.85,0.75,share,provisional,"Legal rates verified (service-public.gouv.fr F22399). Share of on-site spend at 10% vs 20% (alcohol) is an assumption; calibrate on INSEE COICOP 11.1."
+restaurants,vat_split,0.20,0.08,0.15,0.25,share,provisional,"Alcoholic drinks consumed on site; share is an assumption."
+clothing,vat_split,0.20,1,1,1,share,high,"Standard rate 20% (economie.gouv.fr)."
+leisure,vat_split,0.055,0.50,0.35,0.20,share,provisional,"Live shows and some cinema tickets at 5.5% (service-public.gouv.fr F37605); share of leisure spend is an assumption."
+leisure,vat_split,0.10,0.30,0.30,0.30,share,provisional,"Other cinema and leisure services at 10% (service-public.gouv.fr F37605); share is an assumption."
+leisure,vat_split,0.20,0.20,0.35,0.50,share,provisional,"Other leisure goods and services at 20%; share is an assumption."
+hotels_holidays,vat_split,0.10,0.80,0.70,0.60,share,provisional,"Accommodation and passenger transport at 10% (service-public.gouv.fr F37288); share is an assumption."
+hotels_holidays,vat_split,0.20,0.20,0.30,0.40,share,provisional,"Other holiday services at 20%; share is an assumption."
+electronics,vat_split,0.20,1,1,1,share,high,"Standard rate 20% (economie.gouv.fr)."
+digital_subscriptions,vat_split,0.20,1,1,1,share,medium,"Streaming and online services at 20%; online press at 2.1% is excluded from this category."

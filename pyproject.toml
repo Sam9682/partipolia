@@ -94,6 +94,14 @@ ignore = ["B008"]  # FastAPI utilise des appels dans les valeurs par défaut (De
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]
+# French user-facing copy and frozen seed data are kept on single lines.
+"app/web/public.py" = ["E501"]
+"app/economics/categories.py" = ["E501"]
+"app/economics/defaults.py" = ["E501"]
+"app/services/simulation_service.py" = ["E501"]
+"app/services/simulation_presenter.py" = ["E501"]
+"scripts/seed_economic_model.py" = ["E501"]
+"alembic/versions/0006_consumption_categories.py" = ["E501"]
 
 # ---------------------------------------------------------------------------
 # Mypy — typage statique

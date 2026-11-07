@@ -34,3 +34,5 @@ coverage.xml
 # --- Données locales / volumes ---
 *.sqlite3
 pgdata/
+# --- Partipolia : binaire Tailwind autonome (non versionné, CSS compilé versionné) ---
+tools/tailwindcss

@@ -52,7 +52,7 @@ _INVALID_SOURCE_TYPE_MESSAGE = "Type de source invalide."
 
 
 def get_source_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> SourceService:
     """Dépendance fournissant un :class:`SourceService` lié à la session de requête."""
     return SourceService(session)

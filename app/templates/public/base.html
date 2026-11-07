@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}PARTIPOLIA — La reprise en main par les citoyens{% endblock %}</title>
+    <meta name="description" content="{% block description %}PARTIPOLIA mesure le pouvoir économique collectif des citoyens : simulez votre impact, rejoignez le mouvement.{% endblock %}" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    {# Tous les actifs sont servis localement (aucun CDN) : RGPD et robustesse. #}
+    <link rel="stylesheet" href="/static/css/partipolia.css" />
+    <script src="/static/js/htmx.min.js" defer></script>
+    <script src="/static/js/alpine.min.js" defer></script>
+    {% block head_extra %}{% endblock %}
+  </head>
+  <body class="min-h-screen font-sans">
+    <a href="#contenu" class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">Aller au contenu</a>
+    <header class="bg-navy-900 text-white" x-data="{ open: false }">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+        <a href="/" class="text-xl font-extrabold tracking-widest">PARTI<span class="text-brand-red">POLIA</span></a>
+        <button type="button" class="rounded p-2 md:hidden" @click="open = !open" :aria-expanded="open.toString()" aria-controls="menu-principal" aria-label="Menu">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <nav id="menu-principal" aria-label="Navigation principale" class="hidden gap-5 text-sm md:flex" :class="{ 'hidden': !open }" data-testid="main-nav">
+          {% for item in nav_items %}
+          <a href="{{ item.href }}" class="py-1 {% if item.href == current_path %}border-b-2 border-brand-red font-semibold{% else %}text-navy-100 hover:text-white{% endif %}"{% if item.href == current_path %} aria-current="page"{% endif %}>{{ item.label }}</a>
+          {% endfor %}
+        </nav>
+      </div>
+      {# Menu mobile : empilé sous l'en-tête. #}
+      <nav x-show="open" x-cloak class="border-t border-navy-700 px-4 py-3 md:hidden" aria-label="Navigation mobile">
+        {% for item in nav_items %}
+        <a href="{{ item.href }}" class="block py-2 text-navy-100 hover:text-white">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+    </header>
+
+    <main id="contenu">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="mt-16 bg-navy-950 text-navy-100">
+      <div class="mx-auto max-w-6xl px-4 py-10 text-sm">
+        <p class="font-semibold text-white">PARTIPOLIA — Votre argent. Votre pouvoir. Votre décision.</p>
+        <p class="mt-3 max-w-3xl text-xs text-slate-300" data-testid="global-disclaimer">
+          Les montants affichés sont des <strong>estimations modélisées</strong>, et non des mesures de recettes
+          fiscales réelles. Les engagements des participants sont <strong>déclaratifs</strong> et ne sont pas
+          vérifiés. Le mouvement est non violent, indépendant des partis et n'encourage ni la fraude ni le
+          non-paiement des impôts obligatoires.
+        </p>
+        <nav class="mt-4 flex flex-wrap gap-4 text-xs" aria-label="Informations légales">
+          <a href="/methodologie" class="hover:text-white">Méthodologie</a>
+          <a href="/mentions-legales" class="hover:text-white">Mentions légales</a>
+          <a href="/confidentialite" class="hover:text-white">Confidentialité</a>
+          <a href="/cookies" class="hover:text-white">Cookies</a>
+          <a href="/conditions" class="hover:text-white">Conditions</a>
+        </nav>
+      </div>
+    </footer>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

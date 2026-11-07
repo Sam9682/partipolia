@@ -31,7 +31,7 @@ _THEME_NOT_FOUND_MESSAGE = "Thème introuvable."
 
 
 def get_theme_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> ThemeService:
     """Dépendance fournissant un :class:`ThemeService` lié à la session de requête."""
     return ThemeService(session)

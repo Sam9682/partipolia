@@ -67,6 +67,7 @@ async def create_admin(email: str, password: str, display_name: str) -> bool:
                 password_hash=hash_password(password),
                 display_name=display_name,
                 is_admin=True,
+                role="super_admin",
                 is_active=True,
                 is_verified=True,
             )

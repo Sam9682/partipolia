@@ -1,0 +1,176 @@
+{% extends "public/base.html" %}
+{% block title %}Rejoindre — PARTIPOLIA{% endblock %}
+
+{% block content %}
+<section class="bg-navy-900 text-white">
+  <div class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl font-extrabold sm:text-4xl">Rejoindre le mouvement</h1>
+    <p class="mt-3 max-w-3xl text-navy-100">Aucune vérification d'identité. Une adresse e-mail et un mot de passe suffisent ; le pseudonyme est facultatif.</p>
+  </div>
+</section>
+
+<script type="application/json" id="join-categories">{{ categories | tojson }}</script>
+
+<div class="mx-auto max-w-4xl px-4 pt-8" x-data="join()" x-init="init()" data-testid="join">
+  <p class="text-sm text-red-700" role="alert" x-show="error" x-text="error" x-cloak></p>
+  <p class="text-sm text-green-800" role="status" x-show="notice" x-text="notice" x-cloak></p>
+
+  {# --- Not signed in --------------------------------------------------- #}
+  <div x-show="ready && !me" x-cloak class="card">
+    <div class="flex gap-4 border-b pb-3 text-sm font-semibold">
+      <button type="button" :class="mode === 'register' ? 'text-brand-red' : 'text-slate-500'" @click="mode = 'register'">Créer un compte</button>
+      <button type="button" :class="mode === 'login' ? 'text-brand-red' : 'text-slate-500'" @click="mode = 'login'">Me connecter</button>
+    </div>
+    <form class="mt-4 space-y-4" @submit.prevent="mode === 'register' ? register() : login()" data-testid="auth-form">
+      <div><label for="j-email" class="block text-sm font-medium">Adresse e-mail</label>
+        <input id="j-email" type="email" required autocomplete="email" x-model="form.email" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" /></div>
+      <div><label for="j-pass" class="block text-sm font-medium">Mot de passe (8 caractères minimum)</label>
+        <input id="j-pass" type="password" required minlength="8" :autocomplete="mode === 'register' ? 'new-password' : 'current-password'" x-model="form.password" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" /></div>
+      <template x-if="mode === 'register'">
+        <div class="space-y-4">
+          <div><label for="j-pseudo" class="block text-sm font-medium">Pseudonyme (facultatif)</label>
+            <input id="j-pseudo" type="text" maxlength="120" x-model="form.pseudonym" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" /></div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div><label for="j-adults" class="block text-sm font-medium">Adultes dans le foyer (facultatif)</label>
+              <input id="j-adults" type="number" min="1" max="10" x-model.number="form.adults" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" /></div>
+            <div><label for="j-region" class="block text-sm font-medium">Code région (facultatif)</label>
+              <input id="j-region" type="text" maxlength="3" pattern="[0-9A-Za-z]{2,3}" x-model="form.region" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" /></div>
+          </div>
+          <label class="flex items-start gap-2 text-sm">
+            <input type="checkbox" x-model="form.consent" class="mt-1" />
+            <span>J'accepte que mes engagements déclaratifs soient inclus, de façon <strong>anonyme et agrégée</strong>, dans les indicateurs nationaux. Je peux retirer ce consentement à tout moment.</span>
+          </label>
+        </div>
+      </template>
+      <button type="submit" class="btn-primary w-full" :disabled="busy" x-text="mode === 'register' ? 'JE REPRENDS LE CONTRÔLE' : 'Me connecter'"></button>
+    </form>
+    <p class="mt-4 text-xs text-slate-500">Vos données se limitent à ce qui est nécessaire. Aucune transaction ni donnée bancaire n'est collectée. Voir la <a class="underline" href="/confidentialite">politique de confidentialité</a>.</p>
+  </div>
+
+  {# --- Signed in ------------------------------------------------------- #}
+  <div x-show="ready && me" x-cloak class="space-y-6">
+    <div class="card">
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="font-bold text-navy-900">Mon plan de réduction</h2>
+        <button type="button" class="text-sm underline" @click="logout()">Me déconnecter</button>
+      </div>
+      <p class="mt-1 text-xs text-slate-600" x-text="notice_declared"></p>
+      <label class="mt-3 flex items-start gap-2 text-sm">
+        <input type="checkbox" :checked="consent" @change="setConsent($event.target.checked)" class="mt-1" />
+        <span>Inclure mes engagements dans les indicateurs nationaux anonymes.</span>
+      </label>
+
+      <form class="mt-4 space-y-5" @submit.prevent="save()" data-testid="plan-form">
+        <template x-for="c in categories" :key="c.code">
+          <div>
+            <div class="flex items-baseline justify-between gap-2">
+              <label :for="'p-' + c.code" class="font-semibold text-navy-900" x-text="c.name"></label>
+              <output class="text-lg font-extrabold text-brand-red" x-text="plan[c.code] + ' %'"></output>
+            </div>
+            <input :id="'p-' + c.code" type="range" min="0" max="100" step="5" x-model.number="plan[c.code]" class="w-full accent-brand-red" />
+            <p class="text-xs text-slate-500" x-show="byCode[c.code]" x-text="byCode[c.code] ? statusText(byCode[c.code]) : ''"></p>
+            <div class="mt-1 flex flex-wrap gap-2" x-show="byCode[c.code]">
+              <button type="button" class="text-xs underline" @click="toggle(byCode[c.code])" x-text="byCode[c.code] && byCode[c.code].status === 'active' ? 'Suspendre' : 'Réactiver'"></button>
+              <button type="button" class="text-xs underline" @click="renew(byCode[c.code])">Renouveler</button>
+            </div>
+          </div>
+        </template>
+        <div class="flex flex-wrap items-center gap-4">
+          <label class="text-sm">Durée
+            <select x-model.number="duration" class="ml-1 rounded border border-slate-300 px-2 py-1 text-sm">
+              <option :value="1">1 mois</option><option :value="3">3 mois</option>
+              <option :value="6">6 mois</option><option :value="12">12 mois</option>
+            </select></label>
+          <button type="submit" class="btn-primary" :disabled="busy">Enregistrer mon engagement</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" x-show="sim" x-cloak data-testid="my-impact">
+      <h2 class="font-bold text-navy-900">Mon impact estimé</h2>
+      <p class="mt-2" x-text="sim ? 'Économies personnelles : ' + eur(sim.personal.annual_savings) + ' par an (' + eur(sim.personal.monthly_savings) + ' par mois)' : ''"></p>
+      <p class="text-sm text-slate-700" x-text="sim ? 'Impact net estimé sur les finances publiques : ' + eur(sim.fiscal.net_public_impact.low) + ' à ' + eur(sim.fiscal.net_public_impact.high) + ' par an' : ''"></p>
+      <p class="mt-2 text-xs text-slate-500" x-text="sim ? sim.disclaimers[0] : ''"></p>
+      <p class="mt-1 text-xs text-slate-500" x-text="sim ? 'Version du modèle : ' + sim.model_version : ''"></p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('join', () => ({
+      categories: JSON.parse(document.getElementById('join-categories').textContent),
+      mode: 'register', ready: false, busy: false, error: '', notice: '',
+      me: null, consent: false, commitments: [], byCode: {}, plan: {}, sim: null, duration: 3,
+      form: { email: '', password: '', pseudonym: '', adults: 1, region: '', consent: false },
+      notice_declared: 'Vos engagements sont déclaratifs : ils expriment votre intention et ne sont pas vérifiés.',
+      eur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v)); },
+      statusText(c) { return (c.status === 'active' ? 'Actif' : 'Suspendu') + ' · du ' + new Date(c.start_date).toLocaleDateString('fr-FR') + ' au ' + new Date(c.end_date).toLocaleDateString('fr-FR'); },
+      async api(method, url, body) {
+        const r = await fetch(url, { method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+        if (!r.ok) { const e = new Error('http ' + r.status); e.status = r.status; throw e; }
+        return r.status === 204 ? null : r.json();
+      },
+      async init() {
+        this.categories.forEach(c => { this.plan[c.code] = 0; });
+        try { this.me = await this.api('GET', '/api/v1/auth/me'); await this.load(); } catch (e) { this.me = null; }
+        this.ready = true;
+      },
+      async load() {
+        const d = await this.api('GET', '/api/v1/commitments/me');
+        this.commitments = d.commitments; this.consent = d.consent_aggregation; this.sim = d.simulation;
+        this.byCode = {}; this.categories.forEach(c => { this.plan[c.code] = 0; });
+        d.commitments.forEach(c => { this.byCode[c.category_code] = c; this.plan[c.category_code] = Number(c.reduction_percentage); });
+      },
+      async register() {
+        this.busy = true; this.error = ''; this.notice = '';
+        try {
+          await this.api('POST', '/api/v1/auth/register', { email: this.form.email, password: this.form.password, display_name: this.form.pseudonym.trim() || 'Citoyen' });
+          await this.api('POST', '/api/v1/auth/login', { email: this.form.email, password: this.form.password });
+          const profile = { household_adults: Math.min(10, Math.max(1, parseInt(this.form.adults, 10) || 1)), consent_aggregation: !!this.form.consent };
+          if (this.form.region.trim()) { profile.region = this.form.region.trim().toUpperCase(); }
+          await this.api('PUT', '/api/v1/citizens/me', profile);
+          this.me = await this.api('GET', '/api/v1/auth/me'); await this.load();
+          this.notice = 'Bienvenue ! Choisissez maintenant vos engagements.';
+        } catch (e) { this.error = "L'inscription n'a pas abouti. Vérifiez vos informations ou essayez de vous connecter."; }
+        this.busy = false;
+      },
+      async login() {
+        this.busy = true; this.error = ''; this.notice = '';
+        try {
+          await this.api('POST', '/api/v1/auth/login', { email: this.form.email, password: this.form.password });
+          this.me = await this.api('GET', '/api/v1/auth/me'); await this.load();
+        } catch (e) { this.error = 'Identifiants invalides. Veuillez réessayer.'; }
+        this.busy = false;
+      },
+      async logout() { try { await this.api('POST', '/api/v1/auth/logout'); } catch (e) {} this.me = null; this.sim = null; },
+      async setConsent(value) {
+        try { await this.api('PUT', '/api/v1/citizens/me', { consent_aggregation: value }); this.consent = value; await this.load(); }
+        catch (e) { this.error = "Le consentement n'a pas pu être enregistré."; }
+      },
+      async save() {
+        this.busy = true; this.error = ''; this.notice = '';
+        try {
+          for (const c of this.categories) {
+            const pct = String(this.plan[c.code] || 0), existing = this.byCode[c.code];
+            if (existing && Number(pct) === 0) { await this.api('DELETE', '/api/v1/commitments/' + existing.id); }
+            else if (existing) { await this.api('PUT', '/api/v1/commitments/' + existing.id, { reduction_percentage: pct }); }
+            else if (Number(pct) > 0) { await this.api('POST', '/api/v1/commitments', { category_code: c.code, reduction_percentage: pct, duration_months: this.duration }); }
+          }
+          await this.load(); this.notice = 'Engagement enregistré.';
+        } catch (e) { this.error = "L'engagement n'a pas pu être enregistré."; }
+        this.busy = false;
+      },
+      async toggle(c) { await this.update(c, { status: c.status === 'active' ? 'suspended' : 'active' }); },
+      async renew(c) { await this.update(c, { renew: true }); },
+      async update(c, body) {
+        this.error = '';
+        try { await this.api('PUT', '/api/v1/commitments/' + c.id, body); await this.load(); }
+        catch (e) { this.error = "La modification n'a pas pu être enregistrée."; }
+      },
+    }));
+  });
+</script>
+{% endblock %}

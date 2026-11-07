@@ -64,7 +64,13 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
     La session est commitée si le bloc s'exécute sans erreur, annulée en cas
     d'exception, puis systématiquement fermée. Les routeurs et Services la
-    reçoivent via ``Depends(get_session)``.
+    reçoivent via ``Depends(get_session, scope="function")``.
+
+    IMPORTANT : le ``scope="function"`` est indispensable. Par défaut, FastAPI exécute
+    le code situé après ``yield`` *après* l'envoi de la réponse ; le commit se ferait
+    alors après que le client a reçu sa réponse, et une lecture immédiate (ex. login
+    juste après l'inscription) pourrait ne pas voir l'écriture. Avec
+    ``scope="function"``, le commit a lieu avant l'envoi de la réponse.
     """
     async with SessionLocal() as session:
         try:

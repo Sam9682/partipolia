@@ -50,7 +50,7 @@ _INVALID_STATUS_MESSAGE = "Statut d'engagement invalide."
 
 
 def get_mandate_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> MandateService:
     """Dépendance fournissant un :class:`MandateService` lié à la session de requête."""
     return MandateService(session)

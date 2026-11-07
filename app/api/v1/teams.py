@@ -48,7 +48,7 @@ _TEAM_MEMBER_NOT_FOUND_MESSAGE = "Membre d'Équipe introuvable."
 
 
 def get_team_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> TeamService:
     """Dépendance fournissant un :class:`TeamService` lié à la session de requête."""
     return TeamService(session)

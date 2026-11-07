@@ -46,6 +46,9 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD celery -A app.workers.celery_app:celery_app inspect ping -d celery@$HOSTNAME || exit 1
 
 # Worker Celery : la file par défaut consomme les tâches d'ingestion/embeddings.
+# `-B` embeds the scheduler (hourly national dashboard refresh). Run a single
+# worker with `-B`; scale out with additional workers started without it.
 CMD ["celery", "-A", "app.workers.celery_app:celery_app", "worker", \
+     "-B", "--schedule=/tmp/celerybeat-schedule", \
      "--loglevel=INFO", \
      "--concurrency=2"]

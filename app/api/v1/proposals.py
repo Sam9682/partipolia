@@ -69,14 +69,14 @@ _FORBIDDEN_MESSAGE = "Action réservée à l'auteur ou à un administrateur."
 
 
 def get_proposal_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> ProposalService:
     """Dépendance fournissant un :class:`ProposalService` lié à la session de requête."""
     return ProposalService(session)
 
 
 def get_duplicate_detection_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> DuplicateDetectionService:
     """Dépendance fournissant le :class:`DuplicateDetectionService` (Exigence 5).
 

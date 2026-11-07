@@ -50,7 +50,7 @@ _COOKIE_PATH = "/"
 
 
 def get_privacy_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> PrivacyService:
     """Dépendance fournissant un :class:`PrivacyService` lié à la session de requête."""
     return PrivacyService(session)

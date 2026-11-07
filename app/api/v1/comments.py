@@ -59,7 +59,7 @@ _FORBIDDEN_MESSAGE = "Action réservée à l'auteur ou à un administrateur."
 
 
 def get_comment_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> CommentService:
     """Dépendance fournissant un :class:`CommentService` lié à la session de requête."""
     return CommentService(session)

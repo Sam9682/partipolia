@@ -26,7 +26,7 @@ router = APIRouter()
 
 
 def get_statistics_service(
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
 ) -> StatisticsService:
     """Dépendance fournissant un :class:`StatisticsService` lié à la session de requête."""
     return StatisticsService(session)
