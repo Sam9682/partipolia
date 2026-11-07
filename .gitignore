@@ -30,9 +30,13 @@ coverage.xml
 .idea/
 .vscode/
 .DS_Store
+.kiro/
 
 # --- Données locales / volumes ---
 *.sqlite3
 pgdata/
+conf/certs/
+conf/conf.d/
+
 # --- Partipolia : binaire Tailwind autonome (non versionné, CSS compilé versionné) ---
 tools/tailwindcss
