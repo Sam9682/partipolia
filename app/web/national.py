@@ -50,9 +50,9 @@ from app.services.saved_scenario_service import (
 )
 from app.services.simulation_service import DatabaseSnapshotProvider
 from app.web.formatting import format_eur_fr, format_number_fr
-from app.web.public import page_context, templates
+from app.web.public import page_context, resolve_header_identity, templates
 
-national_web_router: APIRouter = APIRouter()
+national_web_router: APIRouter = APIRouter(dependencies=[Depends(resolve_header_identity)])
 
 SessionDep = Annotated[AsyncSession, Depends(get_session, scope="function")]
 OptionalUser = Annotated[UserPublic | None, Depends(get_current_user_optional)]

@@ -81,6 +81,13 @@ class Settings(BaseSettings):
     app_debug: bool = Field(default=False, alias="APP_DEBUG")
     app_base_url: str = Field(default="http://localhost:8000", alias="APP_BASE_URL")
 
+    # --- Anonymat des indicateurs d'impact ---------------------------------
+    # Nombre minimal de participants avant publication de tout chiffre agrégé
+    # (« Participants : moins de N »). Défaut : 20.
+    participants_min_for_impact: int = Field(
+        default=20, ge=1, alias="PARTICIPANTS_MIN_FOR_IMPACT"
+    )
+
     # --- Base de données (SQLAlchemy 2.x async + psycopg 3 + pgvector) -----
     database_url: str = Field(
         default="postgresql+psycopg://partipolia:partipolia@localhost:5432/partipolia",

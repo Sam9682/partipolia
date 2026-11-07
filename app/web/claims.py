@@ -39,9 +39,9 @@ from app.services.claim_service import (
     ReportTarget,
 )
 from app.web.national import _CATEGORIES, CATEGORY_NAMES  # noqa: F401  (enregistre les filtres)
-from app.web.public import page_context, templates
+from app.web.public import page_context, resolve_header_identity, templates
 
-claims_web_router: APIRouter = APIRouter()
+claims_web_router: APIRouter = APIRouter(dependencies=[Depends(resolve_header_identity)])
 
 SessionDep = Annotated[AsyncSession, Depends(get_session, scope="function")]
 OptionalUser = Annotated[UserPublic | None, Depends(get_current_user_optional)]

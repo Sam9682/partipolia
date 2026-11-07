@@ -25,6 +25,14 @@
             <output :for="'r-' + c.code" class="text-lg font-extrabold text-brand-red" x-text="reductions[c.code] + ' %'"></output>
           </div>
           <p class="text-xs text-slate-500" x-text="'Référence : ' + eur(c.reference) + ' par adulte et par an'"></p>
+          <div class="mt-1 flex flex-wrap items-center gap-2">
+            <label :for="'a-' + c.code" class="text-xs text-slate-700">Ma dépense annuelle<span class="sr-only" x-text="' : ' + c.name + ' (euros par adulte et par an)'"></span></label>
+            <input :id="'a-' + c.code" type="text" inputmode="decimal" autocomplete="off" x-model="amounts[c.code]" @input.debounce.250ms="onAmount(c)" :aria-invalid="errors[c.code] ? 'true' : 'false'" :aria-describedby="'e-' + c.code" class="w-28 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+            <span class="text-xs" aria-hidden="true">€</span>
+            <button type="button" class="btn-outline text-xs" x-show="isCustom(c)" x-cloak @click="restore(c)" :aria-label="'Rétablir la référence : ' + c.name">Rétablir la référence</button>
+          </div>
+          <p :id="'e-' + c.code" class="mt-1 text-xs text-red-700" x-show="errors[c.code]" x-text="errors[c.code]" x-cloak></p>
+          <p class="mt-1 text-xs font-semibold text-brand-red" x-show="isCustom(c)" x-cloak>Personnalisé · référence : <span x-text="eur(c.reference)"></span></p>
           <input :id="'r-' + c.code" type="range" min="0" max="100" step="5" x-model.number="reductions[c.code]" @input.debounce.250ms="calculate()" class="mt-2 w-full accent-brand-red" :aria-valuetext="reductions[c.code] + ' pour cent'" />
         </div>
       </template>
@@ -34,6 +42,7 @@
       </div>
     </form>
 
+    <p class="sr-only" aria-live="polite" data-testid="amount-errors" x-text="errorSummary()"></p>
     <div class="space-y-4" aria-live="polite">
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="card"><p class="kpi-value" data-testid="annual-savings" x-text="result ? eur(result.personal.annual_savings) : '—'"></p><p class="kpi-label mt-1">Économies personnelles par an</p></div>
@@ -128,9 +137,98 @@
       horizon: 'medium',
       result: null,
       error: '',
+      amounts: {},    // text shown in each amount input, by category code
+      errors: {},     // validation message by category code
+      overrides: {},  // valid custom amounts (normalized strings), by category code
       init() {
-        this.categories.forEach(c => { this.reductions[c.code] = 0; });
+        this.categories.forEach(c => {
+          this.reductions[c.code] = 0;
+          this.amounts[c.code] = String(c.reference);
+        });
+        this.loadStore();
         this.calculate();
+      },
+      // localStorage persistence: only category codes and amount strings.
+      loadStore() {
+        let raw = null;
+        try {
+          raw = window.localStorage.getItem('partipolia.referenceOverrides');
+        } catch (e) {
+          return; // storage denied: stay in memory
+        }
+        if (raw === null) { return; }
+        let data;
+        try {
+          data = JSON.parse(raw);
+        } catch (e) {
+          try { window.localStorage.removeItem('partipolia.referenceOverrides'); } catch (e2) { /* ignore */ }
+          return;
+        }
+        if (data === null || typeof data !== 'object' || Array.isArray(data)) {
+          try { window.localStorage.removeItem('partipolia.referenceOverrides'); } catch (e2) { /* ignore */ }
+          return;
+        }
+        this.categories.forEach(c => {
+          if (!Object.prototype.hasOwnProperty.call(data, c.code)) { return; }
+          const value = data[c.code];
+          if (typeof value !== 'string') { return; }
+          const parsed = this.parseAmount(value);
+          if (!parsed.ok || Number(parsed.value) === Number(c.reference)) { return; }
+          this.overrides[c.code] = parsed.value;
+          this.amounts[c.code] = parsed.value;
+        });
+      },
+      saveStore() {
+        try {
+          if (Object.keys(this.overrides).length === 0) {
+            window.localStorage.removeItem('partipolia.referenceOverrides');
+          } else {
+            window.localStorage.setItem('partipolia.referenceOverrides', JSON.stringify({ ...this.overrides }));
+          }
+        } catch (e) {
+          // storage denied or full: keep working with in-memory overrides
+        }
+      },
+      // Validation only: the sent value is the normalized string, never a Number.
+      parseAmount(text) {
+        const raw = String(text ?? '').trim().replace(',', '.');
+        if (raw === '') { return { ok: false, message: 'Saisissez un montant.' }; }
+        if (!/^\d+(\.\d+)?$/.test(raw)) { return { ok: false, message: 'Saisissez un nombre positif (ex. 1200,50).' }; }
+        const dot = raw.indexOf('.');
+        if (dot !== -1 && raw.length - dot - 1 > 2) { return { ok: false, message: 'Deux décimales au maximum.' }; }
+        if (Number(raw) > 100000) { return { ok: false, message: 'Le montant ne peut pas dépasser 100 000 €.' }; }
+        return { ok: true, value: raw };
+      },
+      onAmount(c) {
+        const parsed = this.parseAmount(this.amounts[c.code]);
+        if (!parsed.ok) {
+          this.errors[c.code] = parsed.message;
+          return;
+        }
+        delete this.errors[c.code];
+        if (Number(parsed.value) === Number(c.reference)) {
+          delete this.overrides[c.code];
+        } else {
+          this.overrides[c.code] = parsed.value;
+        }
+        this.saveStore();
+        this.calculate();
+      },
+      restore(c) {
+        this.amounts[c.code] = String(c.reference);
+        delete this.overrides[c.code];
+        delete this.errors[c.code];
+        this.saveStore();
+        this.calculate();
+      },
+      isCustom(c) {
+        return c.code in this.overrides;
+      },
+      errorSummary() {
+        return this.categories
+          .filter(c => this.errors[c.code])
+          .map(c => c.name + ' : ' + this.errors[c.code])
+          .join(' ');
       },
       // Display-only formatting: every amount is computed server-side with Decimal.
       eur(value) {
@@ -170,7 +268,7 @@
           const response = await fetch('/api/v1/simulations/calculate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reductions, adults, horizon: this.horizon }),
+            body: JSON.stringify({ reductions, adults, horizon: this.horizon, reference_overrides: { ...this.overrides } }),
           });
           if (response.status === 429) { this.error = 'Trop de requêtes. Réessayez dans un instant.'; return; }
           if (!response.ok) { this.error = 'Le calcul est momentanément indisponible.'; return; }

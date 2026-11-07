@@ -14,6 +14,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.economics.decimal_utils import HUNDRED, ZERO
 
 
+MAX_CUSTOM_AMOUNT = Decimal("100000")
+MAX_OVERRIDES = 50
+
+
 class SimulationRequest(BaseModel):
     """Input of ``POST /api/v1/simulations/calculate``."""
 
@@ -23,6 +27,10 @@ class SimulationRequest(BaseModel):
         default_factory=dict,
         description="Reduction percentage (0-100) per category code.",
     )
+    reference_overrides: dict[str, Decimal] = Field(
+        default_factory=dict,
+        description="Custom annual amount per adult (EUR) replacing the reference, per category code.",
+    )
     adults: int = Field(default=1, ge=1, le=10, description="Number of adults in the household.")
     horizon: Literal["short", "medium", "long"] = Field(
         default="medium", description="Time horizon of employment adjustments."
@@ -31,6 +39,22 @@ class SimulationRequest(BaseModel):
         default=False,
         description="Store the input (never any personal data) so the result can be re-read.",
     )
+
+    @field_validator("reference_overrides")
+    @classmethod
+    def _check_reference_overrides(cls, value: dict[str, Decimal]) -> dict[str, Decimal]:
+        if len(value) > MAX_OVERRIDES:
+            raise ValueError("too many reference overrides")
+        for code, amount in value.items():
+            if not amount.is_finite():
+                raise ValueError(f"reference override for {code!r} must be a finite number")
+            if not (ZERO <= amount <= MAX_CUSTOM_AMOUNT):
+                raise ValueError(
+                    f"reference override for {code!r} must be between 0 and {MAX_CUSTOM_AMOUNT}"
+                )
+            if amount.as_tuple().exponent < -2:  # type: ignore[operator]
+                raise ValueError(f"reference override for {code!r} has too many decimals")
+        return value
 
     @field_validator("reductions")
     @classmethod

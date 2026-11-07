@@ -26,11 +26,13 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Final, Literal
 
+from app.core.config import get_settings
+
 logger = logging.getLogger(__name__)
 
-#: Same value as ``app.services.aggregation_service.MIN_COHORT_SIZE`` (kept here so
-#: that the pure engine does not import the service layer).
-MIN_COHORT_SIZE: Final[int] = 20
+#: Same value as ``app.services.aggregation_service.MIN_COHORT_SIZE``
+#: (env ``PARTICIPANTS_MIN_FOR_IMPACT``, default 20).
+MIN_COHORT_SIZE: Final[int] = get_settings().participants_min_for_impact
 
 OTHER_CATEGORIES_KEY: Final[str] = "other"
 

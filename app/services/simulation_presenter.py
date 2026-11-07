@@ -184,11 +184,14 @@ def build_fiscal_result(
 
 
 def build_response(snapshot: ModelSnapshot, request: SimulationRequest) -> SimulationResponse:
-    unknown = set(request.reductions) - set(snapshot.category_codes)
+    unknown = (set(request.reductions) | set(request.reference_overrides)) - set(
+        snapshot.category_codes
+    )
     if unknown:
         raise UnknownCategoryError(sorted(unknown)[0])
 
-    savings = compute_personal_savings(snapshot, request.reductions, request.adults)
+    overrides = request.reference_overrides
+    savings = compute_personal_savings(snapshot, request.reductions, request.adults, overrides)
     outcome = run_engine(snapshot, savings, request.horizon)
     modules = dict(outcome.modules)
 
@@ -198,7 +201,7 @@ def build_response(snapshot: ModelSnapshot, request: SimulationRequest) -> Simul
     for row in savings.categories:
         if row.reduction_percentage > 0:
             single_savings = compute_personal_savings(
-                snapshot, {row.code: row.reduction_percentage}, request.adults
+                snapshot, {row.code: row.reduction_percentage}, request.adults, overrides
             )
             per_category[row.code] = run_engine(snapshot, single_savings, request.horizon)
 

@@ -118,6 +118,9 @@ class SimulationService:
             reductions={k: Decimal(v) for k, v in payload["reductions"].items()},
             adults=payload["adults"],
             horizon=payload.get("horizon", "medium"),
+            reference_overrides={
+                k: Decimal(v) for k, v in payload.get("reference_overrides", {}).items()
+            },
         )
         response = build_response(snapshot, request)
         response.simulation_id = stored.id
@@ -152,6 +155,9 @@ class SimulationService:
                 "reductions": {k: str(v) for k, v in request.reductions.items()},
                 "adults": request.adults,
                 "horizon": request.horizon,
+                "reference_overrides": {
+                    k: str(v) for k, v in request.reference_overrides.items()
+                },
             },
         )
         zero = Decimal(0)

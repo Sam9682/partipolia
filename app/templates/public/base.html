@@ -18,14 +18,25 @@
     <header class="bg-navy-900 text-white" x-data="{ open: false }">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <a href="/" class="text-xl font-extrabold tracking-widest">PARTI<span class="text-brand-red">POLIA</span></a>
-        <button type="button" class="rounded p-2 md:hidden" @click="open = !open" :aria-expanded="open.toString()" aria-controls="menu-principal" aria-label="Menu">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
         <nav id="menu-principal" aria-label="Navigation principale" class="hidden gap-5 text-sm md:flex" :class="{ 'hidden': !open }" data-testid="main-nav">
           {% for item in nav_items %}
           <a href="{{ item.href }}" class="py-1 {% if item.href == current_path %}border-b-2 border-brand-red font-semibold{% else %}text-navy-100 hover:text-white{% endif %}"{% if item.href == current_path %} aria-current="page"{% endif %}>{{ item.label }}</a>
           {% endfor %}
         </nav>
+        <div class="flex items-center gap-2">
+          {# Indicateur d'identité : toujours visible, hors du panneau mobile repliable. #}
+          <div class="flex items-center gap-3 text-sm" data-testid="identity-indicator">
+            {% if identity_email %}
+            <span class="max-w-[12rem] truncate text-navy-100" data-testid="identity-email" title="{{ identity_email }}">{{ identity_email }}</span>
+            {% else %}
+            <span class="text-navy-100" data-testid="identity-anonymous">Anonyme</span>
+            <a href="/login" class="rounded px-2 py-1 font-semibold text-white underline hover:text-brand-red focus:outline-none focus-visible:ring-2 focus-visible:ring-white">Connexion</a>
+            {% endif %}
+          </div>
+          <button type="button" class="rounded p-2 md:hidden" @click="open = !open" :aria-expanded="open.toString()" aria-controls="menu-principal" aria-label="Menu">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+        </div>
       </div>
       {# Menu mobile : empilé sous l'en-tête. #}
       <nav x-show="open" x-cloak class="border-t border-navy-700 px-4 py-3 md:hidden" aria-label="Navigation mobile">

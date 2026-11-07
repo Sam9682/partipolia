@@ -23,6 +23,7 @@ from sqlalchemy import Numeric, cast, distinct, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.economics.aggregate import aggregate_savings
 from app.economics.decimal_utils import ZERO, money
 from app.economics.engine import run_engine
@@ -42,8 +43,9 @@ from app.services.commitment_service import CONSENT_KEY
 from app.services.simulation_presenter import DISCLAIMERS, METHODOLOGY_FISCAL, build_fiscal_result
 from app.services.simulation_service import SnapshotProvider
 
-#: Minimum number of participants before any aggregate is published.
-MIN_COHORT_SIZE = 20
+#: Minimum number of participants before any aggregate is published
+#: (env ``PARTICIPANTS_MIN_FOR_IMPACT``, default 20).
+MIN_COHORT_SIZE = get_settings().participants_min_for_impact
 DAYS_PER_YEAR = Decimal(365)
 MONTHS_PER_YEAR = Decimal(12)
 

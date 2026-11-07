@@ -26,15 +26,20 @@ def compute_personal_savings(
     snapshot: ModelSnapshot,
     reductions: Mapping[str, Decimal],
     adults: int = 1,
+    reference_overrides: Mapping[str, Decimal] | None = None,
 ) -> PersonalSavings:
     """Compute personal savings for the given per-category reduction percentages.
 
     Categories missing from ``reductions`` are treated as 0 % reduction. Unknown
     category codes raise ``KeyError``. Reductions must be in ``[0, 100]``.
+
+    ``reference_overrides`` optionally replaces the snapshot's reference annual
+    expenditure per category code (per adult). The snapshot is never mutated.
     """
     if not 1 <= adults <= MAX_ADULTS:
         raise ValueError(f"adults must be between 1 and {MAX_ADULTS}")
-    unknown = set(reductions) - set(snapshot.category_codes)
+    overrides: Mapping[str, Decimal] = reference_overrides or {}
+    unknown = (set(reductions) | set(overrides)) - set(snapshot.category_codes)
     if unknown:
         raise KeyError(sorted(unknown)[0])
 
@@ -44,7 +49,10 @@ def compute_personal_savings(
         for category in snapshot.categories:
             percentage = reductions.get(category.code, ZERO)
             fraction = pct_to_fraction(percentage)
-            original = category.reference_annual_expenditure * factor
+            reference = overrides.get(
+                category.code, category.reference_annual_expenditure
+            )
+            original = reference * factor
             avoided = original * fraction
             rows.append(
                 CategorySavings(

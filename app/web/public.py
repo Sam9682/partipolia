@@ -7,13 +7,17 @@ mounted by :mod:`app.main` ("archive and hide").
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user_optional
+from app.core.database import get_session
 from app.economics.categories import DEFAULT_CATEGORIES, TOTAL_REFERENCE_EXPENDITURE
 from app.economics.defaults import bootstrap_snapshot
 from app.economics.sector_labels import SECTOR_LABELS
@@ -24,7 +28,28 @@ from app.web.formatting import format_eur_fr
 TEMPLATES_DIR: Path = Path(__file__).resolve().parent.parent / "templates"
 templates: Jinja2Templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-public_router: APIRouter = APIRouter()
+logger: logging.Logger = logging.getLogger(__name__)
+
+
+
+async def resolve_header_identity(
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
+) -> None:
+    """Resolve the header identity and store it on ``request.state``.
+
+    Never raises: any unexpected error is logged and the visitor is treated as
+    anonymous.
+    """
+    try:
+        user = await get_current_user_optional(request, session)
+    except Exception:  # noqa: BLE001 - the header must never break the page
+        logger.exception("header identity resolution failed")
+        user = None
+    request.state.identity_email = user.email if user is not None else None
+
+
+public_router: APIRouter = APIRouter(dependencies=[Depends(resolve_header_identity)])
 
 # Single source of truth for the main navigation (French labels, order is display order).
 NAV_ITEMS: list[dict[str, str]] = [
@@ -33,7 +58,6 @@ NAV_ITEMS: list[dict[str, str]] = [
     {"label": "Simulateur", "href": "/simulateur"},
     {"label": "Simulateur national", "href": "/simulateur-national"},
     {"label": "Impact national", "href": "/impact-national"},
-    {"label": "Régions", "href": "/regions"},
     {"label": "Nos revendications", "href": "/nos-revendications"},
     {"label": "Revendications citoyennes", "href": "/revendications"},
     {"label": "Consultations", "href": "/consultations"},
@@ -52,8 +76,13 @@ POLICY_DEMANDS: list[str] = [
 
 
 def page_context(request: Request, **extra: Any) -> dict[str, Any]:
-    """Shared template context: navigation and current path."""
-    return {"nav_items": list(NAV_ITEMS), "current_path": request.url.path, **extra}
+    """Shared template context: navigation, current path and header identity."""
+    return {
+        "nav_items": list(NAV_ITEMS),
+        "current_path": request.url.path,
+        "identity_email": getattr(request.state, "identity_email", None),
+        **extra,
+    }
 
 
 def _info(request: Request, title: str, lead: str, sections: list[tuple[str, str]]) -> HTMLResponse:

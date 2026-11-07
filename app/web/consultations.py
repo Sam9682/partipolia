@@ -56,9 +56,9 @@ from app.services.consultation_service import (
 )
 from app.web.formatting import format_number_fr
 from app.web.national import _bars  # noqa: F401  (enregistre aussi les filtres Jinja)
-from app.web.public import page_context, templates
+from app.web.public import page_context, resolve_header_identity, templates
 
-consultations_web_router: APIRouter = APIRouter()
+consultations_web_router: APIRouter = APIRouter(dependencies=[Depends(resolve_header_identity)])
 
 SessionDep = Annotated[AsyncSession, Depends(get_session, scope="function")]
 OptionalUser = Annotated[UserPublic | None, Depends(get_current_user_optional)]

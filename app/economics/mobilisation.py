@@ -14,12 +14,13 @@ from dataclasses import dataclass
 from decimal import Decimal, localcontext
 from typing import Final, Literal
 
+from app.core.config import get_settings
 from app.economics.decimal_utils import HUNDRED, ZERO, engine_context, money
 
 MobilisationStatus = Literal["ok", "unavailable", "suppressed", "inconsistent"]
 
 #: Default minimal cohort size below which no figure is exposed.
-DEFAULT_MIN_COHORT: Final[int] = 20
+DEFAULT_MIN_COHORT: Final[int] = get_settings().participants_min_for_impact
 
 
 @dataclass(frozen=True, slots=True)

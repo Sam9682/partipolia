@@ -15,7 +15,6 @@ EXPECTED_NAV = [
     ("Simulateur", "/simulateur"),
     ("Simulateur national", "/simulateur-national"),
     ("Impact national", "/impact-national"),
-    ("Régions", "/regions"),
     ("Nos revendications", "/nos-revendications"),
     ("Revendications citoyennes", "/revendications"),
     ("Consultations", "/consultations"),
@@ -25,7 +24,7 @@ EXPECTED_NAV = [
 
 # Pages adossées à la base de données : exclues de l'échantillon sans PostgreSQL
 # (leurs liens de menu restent vérifiés par ``test_navigation_items_and_order``).
-DB_BACKED_PATHS = {"/regions", "/revendications", "/consultations"}
+DB_BACKED_PATHS = {"/revendications", "/consultations"}
 
 PUBLIC_PATHS = [href for _, href in EXPECTED_NAV if href not in DB_BACKED_PATHS] + [
     "/login",
@@ -72,6 +71,15 @@ def test_navigation_items_and_order(client: TestClient) -> None:
     assert nav is not None
     links = re.findall(r'<a href="([^"]+)"[^>]*>([^<]+)</a>', nav.group(1))
     assert [(label.strip(), href) for href, label in links] == EXPECTED_NAV
+
+
+def test_regions_link_absent_from_menus(client: TestClient) -> None:
+    html = client.get("/").text
+    for label in ("Navigation principale", "Navigation mobile"):
+        nav = re.search(rf'aria-label="{label}".*?</nav>', html, re.S)
+        assert nav is not None, label
+        assert 'href="/regions"' not in nav.group(0), label
+        assert "Régions" not in nav.group(0), label
 
 
 @pytest.mark.parametrize("path", LEGACY_PATHS)

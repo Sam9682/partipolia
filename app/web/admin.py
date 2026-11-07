@@ -25,9 +25,9 @@ from app.models.roles import Role, has_role
 from app.models.user import User
 from app.schemas.auth import UserPublic
 from app.services.economic_data_service import EconomicDataService
-from app.web.public import page_context, templates
+from app.web.public import page_context, resolve_header_identity, templates
 
-admin_web_router = APIRouter()
+admin_web_router = APIRouter(dependencies=[Depends(resolve_header_identity)])
 
 
 @admin_web_router.get(
