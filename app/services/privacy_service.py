@@ -29,8 +29,9 @@ personne (droit à l'effacement pondéré par l'intérêt collectif).
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Final
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from typing import Any, Final
 
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -155,7 +156,7 @@ class PrivacyService:
             )
 
         return DataExport(
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime.now(UTC),
             account=ExportedAccount.model_validate(user),
             proposals=[
                 ExportedProposal(
@@ -510,9 +511,9 @@ class PrivacyService:
         await self._session.flush()
         return system_author
 
-    async def _count(self, model: type, column: object, user_id: int) -> int:
+    async def _count(self, model: type, column: Any, user_id: int) -> int:
         """Compte les lignes de ``model`` dont ``column == user_id``."""
-        rows = (
+        rows: Sequence[Any] = (
             await self._session.scalars(select(model).where(column == user_id))
         ).all()
         return len(rows)

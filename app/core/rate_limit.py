@@ -32,7 +32,7 @@ service prime sur une limitation basique), l'incident étant journalisé.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Final
 
 from fastapi import Request, status
@@ -218,7 +218,7 @@ def rate_limiter_dependency(
     window_seconds: int | None = None,
     *,
     reinforced: bool = False,
-):
+) -> Callable[[Request], Awaitable[None]]:
     """Fabrique une dépendance FastAPI appliquant la limitation de débit à un point.
 
     :param scope: identifiant logique du point d'accès (``"login"``, ``"chat"``…),
@@ -268,7 +268,7 @@ def rate_limiter_dependency(
 #
 # ``default_rate_limit`` couvre les points d'accès sensibles standards ; on la
 # paramètre par ``scope`` afin que chaque famille de points ait son propre budget.
-def default_rate_limit(scope: str):
+def default_rate_limit(scope: str) -> Callable[[Request], Awaitable[None]]:
     """Dépendance de limitation au seuil par défaut pour un ``scope`` donné."""
     return rate_limiter_dependency(scope, reinforced=False)
 
