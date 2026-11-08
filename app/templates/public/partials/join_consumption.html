@@ -1,0 +1,57 @@
+  {# --- Signed in ------------------------------------------------------- #}
+  <div x-show="ready && me" x-cloak class="space-y-6" data-testid="bloc-consommation">
+    <div class="card">
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="font-bold text-navy-900">Mon plan de réduction</h2>
+        <button type="button" class="text-sm underline" @click="logout()">Me déconnecter</button>
+      </div>
+      <p class="mt-1 text-xs text-slate-600" x-text="notice_declared"></p>
+      <label class="mt-3 flex items-start gap-2 text-sm">
+        <input type="checkbox" :checked="consent" @change="setConsent($event.target.checked)" class="mt-1" />
+        <span>Inclure mes engagements dans les indicateurs nationaux anonymes.</span>
+      </label>
+
+      <form class="mt-4 space-y-5" @submit.prevent="save()" data-testid="plan-form">
+        <template x-for="c in categories" :key="c.code">
+          <div>
+            <div class="flex items-baseline justify-between gap-2">
+              <label :for="'p-' + c.code" class="font-semibold text-navy-900" x-text="c.name"></label>
+              <output class="text-lg font-extrabold text-brand-red" x-text="plan[c.code] + ' %'"></output>
+            </div>
+            <input :id="'p-' + c.code" type="range" min="0" max="100" step="5" x-model.number="plan[c.code]" class="w-full accent-brand-red" />
+            <p class="text-xs text-slate-500" x-text="'Référence : ' + c.reference_fr + ' par adulte et par an'"></p>
+            <div class="mt-1 flex flex-wrap items-center gap-2">
+              <label :for="'a-' + c.code" class="text-xs text-slate-700">Ma dépense annuelle<span class="sr-only" x-text="' : ' + c.name + ' (euros par adulte et par an)'"></span></label>
+              <input :id="'a-' + c.code" type="text" inputmode="decimal" autocomplete="off" x-model="amounts[c.code]" @input.debounce.250ms="onAmountInput(c.code)" :aria-label="'Ma dépense annuelle : ' + c.name + ' (euros par adulte et par an)'" :aria-invalid="errors[c.code] ? 'true' : 'false'" :aria-describedby="'a-' + c.code + '-err'" class="w-28 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+              <span class="text-xs" aria-hidden="true">€</span>
+              <button type="button" class="btn-outline text-xs" x-show="overrides[c.code]" x-cloak @click="restore(c.code)" :aria-label="'Rétablir la référence : ' + c.name">Rétablir la référence</button>
+            </div>
+            <p :id="'a-' + c.code + '-err'" class="mt-1 text-xs text-red-700" x-show="errors[c.code]" x-text="errors[c.code]" x-cloak></p>
+            <p class="mt-1 text-xs font-semibold text-brand-red" x-show="overrides[c.code]" x-cloak x-text="'Personnalisé · référence : ' + c.reference_fr"></p>
+            <p class="text-xs text-slate-500" x-show="byCode[c.code]" x-text="byCode[c.code] ? statusText(byCode[c.code]) : ''"></p>
+            <div class="mt-1 flex flex-wrap gap-2" x-show="byCode[c.code]">
+              <button type="button" class="text-xs underline" @click="toggle(byCode[c.code])" x-text="byCode[c.code] && byCode[c.code].status === 'active' ? 'Suspendre' : 'Réactiver'"></button>
+              <button type="button" class="text-xs underline" @click="renew(byCode[c.code])">Renouveler</button>
+            </div>
+          </div>
+        </template>
+        <div class="sr-only" aria-live="polite" data-testid="amount-errors" x-text="liveMessage"></div>
+        <div class="flex flex-wrap items-center gap-4">
+          <label class="text-sm">Durée
+            <select x-model.number="duration" class="ml-1 rounded border border-slate-300 px-2 py-1 text-sm">
+              <option :value="1">1 mois</option><option :value="3">3 mois</option>
+              <option :value="6">6 mois</option><option :value="12">12 mois</option>
+            </select></label>
+          <button type="submit" class="btn-primary" :disabled="busy">Enregistrer mon engagement</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" x-show="sim" x-cloak data-testid="my-impact">
+      <h2 class="font-bold text-navy-900">Mon impact estimé</h2>
+      <p class="mt-2" x-text="sim ? 'Économies personnelles : ' + eur(sim.personal.annual_savings) + ' par an (' + eur(sim.personal.monthly_savings) + ' par mois)' : ''"></p>
+      <p class="text-sm text-slate-700" x-text="sim ? 'Impact net estimé sur les finances publiques : ' + eur(sim.fiscal.net_public_impact.low) + ' à ' + eur(sim.fiscal.net_public_impact.high) + ' par an' : ''"></p>
+      <p class="mt-2 text-xs text-slate-500" x-text="sim ? sim.disclaimers[0] : ''"></p>
+      <p class="mt-1 text-xs text-slate-500" x-text="sim ? 'Version du modèle : ' + sim.model_version : ''"></p>
+    </div>
+  </div>

@@ -18,6 +18,7 @@ from app.api.v1 import (
     economic_data,
     moderation,
     national_simulations,
+    net_balance,
     privacy,
     simulations,
 )
@@ -38,6 +39,9 @@ api_router.include_router(economic_data.admin_router, prefix="/admin", tags=["ad
 
 # Personal simulator — anonymous, stateless, rate limited.
 api_router.include_router(simulations.router, prefix="/simulations", tags=["simulations"])
+
+# Net contributor balance — anonymous, stateless, rate limited.
+api_router.include_router(net_balance.router, prefix="/net-balance", tags=["net-balance"])
 
 # Authentication — register, login, refresh, logout, me.
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])

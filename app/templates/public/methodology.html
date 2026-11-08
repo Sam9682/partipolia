@@ -53,6 +53,16 @@
       </tbody></table></div>
   </section>
 
+  <section class="card" data-testid="methodology-net-balance-provisional">
+    <h2 class="font-bold text-navy-900">Bilan net : paramètres provisoires</h2>
+    <p class="mt-1 text-sm text-slate-600">Ces paramètres du simulateur de bilan net sont des hypothèses provisoires, en attente d'une source officielle vérifiée.</p>
+    <div class="mt-2 overflow-x-auto"><table class="w-full text-left text-sm">
+      <thead><tr class="border-b text-xs uppercase text-slate-500"><th class="py-2 pr-3">Identifiant</th><th class="pr-3">Sujet</th><th class="pr-3">Valeur</th><th class="pr-3">Unité</th><th>Source</th></tr></thead>
+      <tbody>
+      {% for r in net_balance_provisional %}<tr class="border-b align-top"><td class="py-2 pr-3 font-mono text-xs">{{ r.id }}</td><td class="pr-3">{{ r.subject }}</td><td class="pr-3">{{ r.value }}</td><td class="pr-3">{{ r.unit }}</td><td class="text-xs text-slate-600">{{ r.source }}</td></tr>{% endfor %}
+      </tbody></table></div>
+  </section>
+
   <section class="card" data-testid="methodology-national">
     <h2 class="font-bold text-navy-900">Scénarios nationaux</h2>
     <p class="mt-2 text-sm text-slate-700">Le <a class="underline" href="/simulateur-national">simulateur national</a> applique le même moteur à un scénario d'hypothèse : un taux de participation de la population adulte de référence et un pourcentage de réduction par catégorie de consommation. Le nombre de participants est le taux multiplié par la population de référence, issue d'un jeu de données versionné. Chaque résultat est une fourchette (basse, centrale, haute) et indique la version du modèle utilisée.</p>

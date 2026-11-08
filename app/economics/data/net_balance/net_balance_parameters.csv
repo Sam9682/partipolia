@@ -1,0 +1,14 @@
+id,sujet,valeur,unite,source,annee,confiance
+charges_salariales.salarie,salarie,0.28,ratio_net,"Hypothèse d'amorçage (à sourcer)",,provisional
+charges_patronales.salarie,salarie,0.55,ratio_net,"Hypothèse d'amorçage (à sourcer)",,provisional
+charges_salariales.sans_emploi,sans_emploi,0,ratio_net,"Revenus de remplacement, taux nul",,provisional
+charges_patronales.sans_emploi,sans_emploi,0,ratio_net,"Revenus de remplacement, taux nul",,provisional
+charges_salariales.fonctionnaire,fonctionnaire,0.25,ratio_net,"Hypothèse d'amorçage (à sourcer)",,provisional
+charges_patronales.fonctionnaire,fonctionnaire,0.75,ratio_net,"Hypothèse d'amorçage (à sourcer)",,provisional
+charges_salariales.entrepreneur,entrepreneur,0.40,ratio_net,"Hypothèse d'amorçage (à sourcer)",,provisional
+charges_patronales.entrepreneur,entrepreneur,0,ratio_net,"Cotisations regroupées dans le taux salarial",,provisional
+allocations_familiales.deux_enfants,allocations_familiales,1700.00,eur_an,"À sourcer",,provisional
+allocations_familiales.enfant_supplementaire,allocations_familiales,2180.00,eur_an_par_enfant,"À sourcer",,provisional
+complement_familial.enfants_min,complement_familial,3,entier,"À sourcer",,provisional
+complement_familial.montant,complement_familial,2000.00,eur_an,"À sourcer",,provisional
+ars.par_enfant,ars,400.00,eur_an_par_enfant,"À sourcer",,provisional

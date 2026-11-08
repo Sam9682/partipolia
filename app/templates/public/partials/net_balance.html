@@ -1,0 +1,327 @@
+{#- Bilan net : blocs Revenus et Aides, (bloc Consommation fourni par la page), puis Bilan net.
+    Partiel commun à /simulateur et /participer. Le composant Alpine netBalance() est défini
+    dans le <script> en fin de fichier. Pour insérer le bloc Consommation existant entre les
+    Aides et le Bilan, la page positionne avant l'include :
+      {% set net_balance_consumption_template = "public/partials/xxx.html" %}
+    Le composant ne conserve rien (ni localStorage, ni sessionStorage, ni cookie). -#}
+<div x-data="netBalance()" x-init="init()" data-testid="net-balance" class="space-y-8">
+
+  <section class="card space-y-4" data-testid="bloc-revenus" aria-labelledby="nb-revenus-title">
+    <h2 id="nb-revenus-title" class="text-xl font-bold text-navy-900">1. Mes revenus</h2>
+    <p class="text-sm text-slate-600">Revenu net annuel en euros, par statut. Plusieurs statuts peuvent être renseignés dans le même foyer.</p>
+    <template x-for="s in statuts" :key="s.code">
+      <div class="rounded-md border border-slate-200 p-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="flex items-center gap-2 font-semibold text-navy-900" :for="'nb-statut-' + s.code">
+            <input :id="'nb-statut-' + s.code" type="checkbox" x-model="form.revenus[s.code].actif" class="h-4 w-4" />
+            <span x-text="s.label"></span>
+          </label>
+          <template x-if="form.revenus[s.code].actif">
+            <div class="flex flex-wrap items-center gap-2">
+              <label class="text-xs text-slate-700" :for="'nb-revenu-' + s.code">Revenu net annuel<span class="sr-only" x-text="' : ' + s.label"></span></label>
+              <input :id="'nb-revenu-' + s.code" type="text" inputmode="decimal" autocomplete="off"
+                     x-model="form.revenus[s.code].montant"
+                     :aria-invalid="err('revenus.' + s.code) ? 'true' : 'false'"
+                     :aria-describedby="'nb-err-revenus-' + s.code"
+                     class="w-32 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+              <span class="text-xs" aria-hidden="true">€</span>
+            </div>
+          </template>
+        </div>
+        <p :id="'nb-err-revenus-' + s.code" class="mt-1 text-xs text-red-700" role="alert" x-show="err('revenus.' + s.code)" x-text="err('revenus.' + s.code)" x-cloak></p>
+        <template x-if="form.revenus[s.code].actif && ligne(s.code)">
+          <div class="mt-2 text-xs text-slate-700" :data-testid="'statut-detail-' + s.code">
+            <p>
+              Charges salariales estimées : <span x-text="ligne(s.code).charges_salariales_fr"></span>
+              (taux appliqué : <span x-text="pct(ligne(s.code).taux_salarial)"></span>)
+              · Charges patronales estimées : <span x-text="ligne(s.code).charges_patronales_fr"></span>
+              (taux appliqué : <span x-text="pct(ligne(s.code).taux_patronal)"></span>)
+              <span class="ml-1 rounded bg-red-50 px-1.5 py-0.5 font-semibold text-brand-red" x-show="ligne(s.code).provisoire" data-testid="pastille-provisoire">provisoire</span>
+            </p>
+            <p class="mt-1 text-slate-500" x-show="ligne(s.code).depense_etat">Rémunération classée en dépense de l'État : ces charges ne sont pas comptées dans vos contributions.</p>
+          </div>
+        </template>
+      </div>
+    </template>
+  </section>
+
+  <section class="card space-y-4" data-testid="bloc-aides" aria-labelledby="nb-aides-title">
+    <h2 id="nb-aides-title" class="text-xl font-bold text-navy-900">2. Mes aides</h2>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="nb-enfants" class="text-sm font-semibold text-navy-900">Enfants à charge</label>
+      <input id="nb-enfants" type="text" inputmode="numeric" autocomplete="off" x-model="form.enfants"
+             :aria-invalid="err('enfants_a_charge') ? 'true' : 'false'" aria-describedby="nb-err-enfants"
+             class="w-20 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+    </div>
+    <p id="nb-err-enfants" class="text-xs text-red-700" role="alert" x-show="err('enfants_a_charge')" x-text="err('enfants_a_charge')" x-cloak></p>
+
+    <div class="space-y-3">
+      <h3 class="text-sm font-bold uppercase text-slate-500">Aides monétaires (montant annuel)</h3>
+      <template x-for="a in aidesMonetaires" :key="a.code">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="w-64 text-sm text-navy-900" :for="'nb-aide-' + a.code" x-text="a.label"></label>
+            <input :id="'nb-aide-' + a.code" type="text" inputmode="decimal" autocomplete="off"
+                   x-model="form.aides[a.code].valeur" @input="form.aides[a.code].modifie = true"
+                   :aria-invalid="err('aides.' + a.code) ? 'true' : 'false'"
+                   :aria-describedby="'nb-err-aide-' + a.code"
+                   class="w-28 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+            <span class="text-xs" aria-hidden="true">€</span>
+            <template x-if="estimation(a.code)">
+              <span class="text-xs text-slate-600" :data-testid="'estimation-' + a.code">
+                Estimation : <span x-text="estimation(a.code).montant_annuel_fr"></span>
+                <span class="ml-1 rounded bg-red-50 px-1.5 py-0.5 font-semibold text-brand-red" x-show="estimation(a.code).provisoire">provisoire</span>
+                <button type="button" class="btn-outline ml-1 text-xs" x-show="form.aides[a.code].modifie" @click="utiliserEstimation(a.code)" :aria-label="'Utiliser l\'estimation : ' + a.label">Utiliser l'estimation</button>
+              </span>
+            </template>
+          </div>
+          <p :id="'nb-err-aide-' + a.code" class="mt-1 text-xs text-red-700" role="alert" x-show="err('aides.' + a.code)" x-text="err('aides.' + a.code)" x-cloak></p>
+        </div>
+      </template>
+    </div>
+
+    <div class="space-y-3">
+      <h3 class="text-sm font-bold uppercase text-slate-500">Aides non monétaires (valeur annuelle estimée)</h3>
+      <template x-for="(n, i) in form.nonMonetaires" :key="n.id">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="sr-only" :for="'nb-nm-libelle-' + n.id" x-text="'Libellé de l\'aide ' + (i + 1)"></label>
+            <input :id="'nb-nm-libelle-' + n.id" type="text" maxlength="80" autocomplete="off" placeholder="Libellé (ex. cantine)" x-model="n.libelle"
+                   :aria-invalid="(err('aides.non_monetaires[' + i + ']') || err('aides.non_monetaires[' + i + '].libelle')) ? 'true' : 'false'"
+                   :aria-describedby="'nb-err-nm-' + n.id"
+                   class="w-56 rounded-md border border-slate-300 px-2 py-1 text-sm" />
+            <label class="sr-only" :for="'nb-nm-valeur-' + n.id" x-text="'Valeur annuelle de l\'aide ' + (i + 1)"></label>
+            <input :id="'nb-nm-valeur-' + n.id" type="text" inputmode="decimal" autocomplete="off" placeholder="Valeur" x-model="n.valeur"
+                   :aria-invalid="err('aides.non_monetaires[' + i + '].valeur') ? 'true' : 'false'"
+                   :aria-describedby="'nb-err-nm-' + n.id"
+                   class="w-28 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+            <span class="text-xs" aria-hidden="true">€</span>
+            <button type="button" class="btn-outline text-xs" @click="retirerAideNonMonetaire(i)" :aria-label="'Retirer l\'aide non monétaire ' + (i + 1)">Retirer</button>
+          </div>
+          <p :id="'nb-err-nm-' + n.id" class="mt-1 text-xs text-red-700" role="alert"
+             x-show="errNm(i)" x-text="errNm(i)" x-cloak></p>
+        </div>
+      </template>
+      <p class="text-xs text-red-700" role="alert" x-show="err('aides.non_monetaires')" x-text="err('aides.non_monetaires')" x-cloak></p>
+      <button type="button" class="btn-outline text-sm" @click="ajouterAideNonMonetaire()" :disabled="form.nonMonetaires.length >= maxNonMonetaires">Ajouter une aide non monétaire</button>
+    </div>
+
+    <dl class="grid gap-2 border-t pt-3 text-sm sm:grid-cols-2" aria-live="polite">
+      <div><dt class="text-slate-600">Sous-total aides monétaires</dt><dd class="font-bold" data-testid="sous-total-monetaire" x-text="resultat ? resultat.aides_monetaires_fr : '—'"></dd></div>
+      <div><dt class="text-slate-600">Sous-total aides non monétaires</dt><dd class="font-bold" data-testid="sous-total-non-monetaire" x-text="resultat ? resultat.aides_non_monetaires_fr : '—'"></dd></div>
+    </dl>
+  </section>
+
+  {% if net_balance_consumption_template %}{% include net_balance_consumption_template %}{% endif %}
+
+  <section class="card space-y-4" data-testid="bilan-net" aria-labelledby="nb-bilan-title" aria-live="polite">
+    <h2 id="nb-bilan-title" class="text-xl font-bold text-navy-900">Mon bilan net</h2>
+
+    <ul class="space-y-1" x-show="erreursGenerales.length" x-cloak>
+      <template x-for="m in erreursGenerales" :key="m"><li class="text-sm text-red-700" role="alert" x-text="m"></li></template>
+    </ul>
+    <p class="text-sm text-red-700" role="alert" x-show="erreur" x-text="erreur" x-cloak></p>
+
+    <template x-if="resultat">
+      <div>
+        <p class="kpi-value" data-testid="verdict" x-text="resultat.verdict_libelle"></p>
+        <p class="text-2xl font-extrabold text-brand-red" data-testid="bilan-montant" x-show="resultat.verdict !== 'solde_nul'" x-text="resultat.montant_mis_en_avant_fr + ' par an'"></p>
+
+        <table class="mt-4 w-full text-left text-sm" data-testid="bilan-detail">
+          <caption class="sr-only">Détail du bilan net, en euros par an</caption>
+          <tbody>
+            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Charges salariales</th><td class="py-1 text-right" x-text="resultat.charges_salariales_fr"></td></tr>
+            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Charges patronales</th><td class="py-1 text-right" x-text="resultat.charges_patronales_fr"></td></tr>
+            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Contribution de consommation (TVA et accises)</th><td class="py-1 text-right" x-text="resultat.consommation.total_fr"></td></tr>
+            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Aides monétaires</th><td class="py-1 text-right" x-text="resultat.aides_monetaires_fr"></td></tr>
+            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Aides non monétaires</th><td class="py-1 text-right" x-text="resultat.aides_non_monetaires_fr"></td></tr>
+          </tbody>
+        </table>
+
+        <p class="mt-3 rounded-md bg-slate-100 p-3 text-xs text-slate-700" data-testid="mention-fonctionnaire" x-show="resultat.mention_fonctionnaire" x-text="resultat.mention_fonctionnaire"></p>
+        <p class="mt-3 rounded bg-red-50 px-3 py-2 text-xs text-slate-800" x-show="resultat.parametres_provisoires.length">
+          Paramètres <strong>provisoires</strong> utilisés : <span x-text="resultat.parametres_provisoires.join(', ')"></span>.
+        </p>
+      </div>
+    </template>
+    <p class="text-sm text-slate-500" x-show="!resultat &amp;&amp; !erreur" x-cloak>Le bilan s'affiche dès que le calcul est disponible.</p>
+
+    <p class="disclaimer" data-testid="avertissement-bilan" x-text="resultat ? resultat.avertissement : avertissementParDefaut"></p>
+  </section>
+</div>
+
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('netBalance', () => ({
+      statuts: [
+        { code: 'salarie', label: 'Salarié' },
+        { code: 'sans_emploi', label: 'Sans emploi' },
+        { code: 'fonctionnaire', label: 'Fonctionnaire' },
+        { code: 'entrepreneur', label: 'Entrepreneur' },
+      ],
+      aidesMonetaires: [
+        { code: 'apl_als', label: 'APL / ALS' },
+        { code: 'allocations_familiales', label: 'Allocations familiales' },
+        { code: 'prime_activite', label: "Prime d'activité" },
+        { code: 'rsa', label: 'RSA' },
+        { code: 'allocation_chomage', label: 'Allocation chômage' },
+        { code: 'complement_familial', label: 'Complément familial' },
+        { code: 'ars', label: 'Allocation de rentrée scolaire (ARS)' },
+      ],
+      enfantsDependants: ['allocations_familiales', 'complement_familial', 'ars'],
+      maxNonMonetaires: 20,
+      avertissementParDefaut: "Ce bilan est une estimation fondée sur des taux moyens simplifiés, et non un calcul fiscal individuel.",
+
+      // État local uniquement : rien n'est écrit dans localStorage, sessionStorage ni cookie.
+      form: { revenus: {}, enfants: '0', aides: {}, nonMonetaires: [] },
+      consommation: { reductions: {}, adultes: 1, reference_overrides: {} },
+      resultat: null,
+      erreurs: {},
+      erreursGenerales: [],
+      erreur: '',
+      _timer: null,
+      _seq: 0,
+      _nextId: 1,
+      _lastPayload: null,
+
+      init() {
+        this.statuts.forEach(s => { this.form.revenus[s.code] = { actif: false, montant: '' }; });
+        this.aidesMonetaires.forEach(a => { this.form.aides[a.code] = { valeur: '', modifie: false }; });
+        window.addEventListener('consumption-changed', (e) => {
+          const d = (e && e.detail) || {};
+          this.consommation = {
+            reductions: d.reductions || {},
+            adultes: d.adultes ?? d.adults ?? 1,
+            reference_overrides: d.reference_overrides || {},
+          };
+          this.schedule();
+        });
+        this.$watch('form', () => this.schedule());
+        this.schedule(0);
+      },
+
+      err(champ) { return this.erreurs[champ] || ''; },
+      errNm(i) {
+        return this.err('aides.non_monetaires[' + i + ']') || this.err('aides.non_monetaires[' + i + '].libelle') || this.err('aides.non_monetaires[' + i + '].valeur');
+      },
+      ligne(code) { return this.resultat ? (this.resultat.statuts || []).find(l => l.statut === code) || null : null; },
+      estimation(code) {
+        if (!this.resultat || !this.enfantsDependants.includes(code)) return null;
+        return (this.resultat.estimations_aides || []).find(e => e.aide === code) || null;
+      },
+      // Affichage d'un taux (fraction décimale -> pourcentage) ; aucun calcul de montant côté navigateur.
+      pct(t) {
+        const n = Number(t);
+        return Number.isFinite(n) ? (n * 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' %' : '—';
+      },
+
+      ajouterAideNonMonetaire() {
+        if (this.form.nonMonetaires.length >= this.maxNonMonetaires) return;
+        this.form.nonMonetaires.push({ id: this._nextId++, libelle: '', valeur: '' });
+      },
+      retirerAideNonMonetaire(i) { this.form.nonMonetaires.splice(i, 1); },
+      utiliserEstimation(code) {
+        const e = this.estimation(code);
+        if (!e) return;
+        this.form.aides[code].valeur = e.montant_annuel;
+        this.form.aides[code].modifie = false;
+      },
+
+      payload() {
+        const revenus = this.statuts
+          .filter(s => this.form.revenus[s.code].actif && String(this.form.revenus[s.code].montant).trim() !== '')
+          .map(s => ({ statut: s.code, revenu_net: String(this.form.revenus[s.code].montant).trim() }));
+        const monetaires = {};
+        this.aidesMonetaires.forEach(a => {
+          const v = String(this.form.aides[a.code].valeur).trim();
+          if (v !== '') monetaires[a.code] = v;
+        });
+        const reductions = {};
+        Object.keys(this.consommation.reductions || {}).forEach(k => { reductions[k] = String(this.consommation.reductions[k]); });
+        const overrides = {};
+        Object.keys(this.consommation.reference_overrides || {}).forEach(k => { overrides[k] = String(this.consommation.reference_overrides[k]); });
+        return {
+          revenus,
+          enfants_a_charge: String(this.form.enfants).trim(),
+          aides: {
+            monetaires,
+            non_monetaires: this.form.nonMonetaires.map(n => ({ libelle: n.libelle, valeur: String(n.valeur).trim() })),
+          },
+          consommation: { reductions, adultes: this.consommation.adultes, reference_overrides: overrides },
+        };
+      },
+
+      schedule(delay = 300) {
+        clearTimeout(this._timer);
+        this._timer = setTimeout(() => this.calculerBilan(), delay);
+      },
+
+      async calculerBilan() {
+        const body = JSON.stringify(this.payload());
+        if (body === this._lastPayload && this.resultat) return;
+        this._lastPayload = body;
+        const seq = ++this._seq;
+        try {
+          const response = await fetch('/api/v1/net-balance/calculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+          });
+          if (seq !== this._seq) return;
+          if (response.status === 429) { this._lastPayload = null; this.erreur = 'Trop de requêtes. Réessayez dans un instant.'; return; }
+          if (response.status === 400) {
+            const data = await response.json().catch(() => ({}));
+            if (seq !== this._seq) return;
+            this.afficherErreurs(data);
+            return;
+          }
+          if (!response.ok) { this._lastPayload = null; this.erreur = 'Le calcul est momentanément indisponible.'; return; }
+          const data = await response.json();
+          if (seq !== this._seq) return;
+          this.erreur = '';
+          this.erreurs = {};
+          this.erreursGenerales = [];
+          this.resultat = data;
+          this.prefillerEstimations();
+        } catch (e) {
+          if (seq !== this._seq) return;
+          this._lastPayload = null;
+          this.erreur = 'Le calcul est momentanément indisponible.';
+        }
+      },
+
+      // Préremplit les aides liées aux enfants tant que l'utilisateur n'a pas saisi de montant.
+      prefillerEstimations() {
+        (this.resultat.estimations_aides || []).forEach(e => {
+          const champ = this.form.aides[e.aide];
+          if (champ && !champ.modifie && this.enfantsDependants.includes(e.aide) && champ.valeur !== e.montant_annuel) {
+            champ.valeur = e.montant_annuel;
+          }
+        });
+      },
+
+      afficherErreurs(data) {
+        const liste = (data && data.error && data.error.fields) || (data && data.fields) || [];
+        const parChamp = {};
+        const generales = [];
+        liste.forEach(f => {
+          const champ = f.field || f.champ || '';
+          const message = f.message || 'Valeur invalide.';
+          if (champ && !(champ in parChamp)) parChamp[champ] = message;
+          if (!champ || !this.champAffiche(champ)) generales.push(message);
+        });
+        this.erreurs = parChamp;
+        this.erreursGenerales = generales;
+        this.erreur = liste.length ? '' : 'Les valeurs saisies sont invalides.';
+        this.resultat = null;
+      },
+
+      champAffiche(champ) {
+        return champ === 'enfants_a_charge' || champ === 'aides.non_monetaires'
+          || /^revenus\.[a-z_]+$/.test(champ) || /^aides\.[a-z_]+$/.test(champ)
+          || /^aides\.non_monetaires\[\d+\](\.(libelle|valeur))?$/.test(champ);
+      },
+    }));
+  });
+</script>

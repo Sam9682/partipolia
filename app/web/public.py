@@ -20,6 +20,7 @@ from app.api.deps import get_current_user_optional
 from app.core.database import get_session
 from app.economics.categories import DEFAULT_CATEGORIES, TOTAL_REFERENCE_EXPENDITURE
 from app.economics.defaults import bootstrap_snapshot
+from app.economics.net_balance.parameters import load_net_balance_parameters
 from app.economics.sector_labels import SECTOR_LABELS
 from app.economics.types import Confidence
 from app.services.privacy_service import PrivacyService
@@ -240,6 +241,7 @@ async def methodology(request: Request) -> HTMLResponse:
             request,
             sources=SOURCES,
             provisional=list(seen.values()),
+            net_balance_provisional=load_net_balance_parameters().provisional_rows(),
             model_version=snapshot.model_version,
             dataset_versions=list(snapshot.dataset_versions),
         ),

@@ -43,6 +43,7 @@ from app.core.middleware import (
     register_exception_handlers,
 )
 from app.core.redis import close_redis, get_redis
+from app.economics.net_balance.parameters import load_net_balance_parameters
 from app.web.admin import admin_web_router
 from app.web.claims import claims_web_router
 from app.web.consultations import consultations_web_router
@@ -64,6 +65,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     client Redis, afin d'éviter les fuites de connexions (Exigence 33.1).
     """
     configure_logging()
+    # Échoue au démarrage si le CSV du bilan net est invalide (Exigence 6.8).
+    load_net_balance_parameters()
     logger.info("application_startup", app_env=settings.app_env)
     try:
         yield

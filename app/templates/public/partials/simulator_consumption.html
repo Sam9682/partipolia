@@ -1,0 +1,114 @@
+<div data-testid="bloc-consommation" class="space-y-4">
+  <h2 class="text-xl font-bold text-navy-900">3. Ma consommation</h2>
+  <div class="grid gap-8 lg:grid-cols-2">
+    <form class="card space-y-6" @submit.prevent aria-label="Réductions par catégorie">
+      <div class="flex items-center justify-between gap-4">
+        <label for="adults" class="text-sm font-semibold text-navy-900">Adultes dans le foyer</label>
+        <input id="adults" type="number" min="1" max="10" x-model.number="adults" @input.debounce.300ms="calculate()" class="w-20 rounded-md border border-slate-300 px-2 py-1 text-right" />
+      </div>
+      <template x-for="c in categories" :key="c.code">
+        <div>
+          <div class="flex items-baseline justify-between gap-2">
+            <label :for="'r-' + c.code" class="font-semibold text-navy-900" x-text="c.name"></label>
+            <output :for="'r-' + c.code" class="text-lg font-extrabold text-brand-red" x-text="reductions[c.code] + ' %'"></output>
+          </div>
+          <p class="text-xs text-slate-500" x-text="'Référence : ' + eur(c.reference) + ' par adulte et par an'"></p>
+          <div class="mt-1 flex flex-wrap items-center gap-2">
+            <label :for="'a-' + c.code" class="text-xs text-slate-700">Ma dépense annuelle<span class="sr-only" x-text="' : ' + c.name + ' (euros par adulte et par an)'"></span></label>
+            <input :id="'a-' + c.code" type="text" inputmode="decimal" autocomplete="off" x-model="amounts[c.code]" @input.debounce.250ms="onAmount(c)" :aria-invalid="errors[c.code] ? 'true' : 'false'" :aria-describedby="'e-' + c.code" class="w-28 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+            <span class="text-xs" aria-hidden="true">€</span>
+            <button type="button" class="btn-outline text-xs" x-show="isCustom(c)" x-cloak @click="restore(c)" :aria-label="'Rétablir la référence : ' + c.name">Rétablir la référence</button>
+          </div>
+          <p :id="'e-' + c.code" class="mt-1 text-xs text-red-700" x-show="errors[c.code]" x-text="errors[c.code]" x-cloak></p>
+          <p class="mt-1 text-xs font-semibold text-brand-red" x-show="isCustom(c)" x-cloak>Personnalisé · référence : <span x-text="eur(c.reference)"></span></p>
+          <input :id="'r-' + c.code" type="range" min="0" max="100" step="5" x-model.number="reductions[c.code]" @input.debounce.250ms="calculate()" class="mt-2 w-full accent-brand-red" :aria-valuetext="reductions[c.code] + ' pour cent'" />
+        </div>
+      </template>
+      <div class="flex flex-wrap gap-3">
+        <button type="button" class="btn-outline" @click="applyExample()">Exemple</button>
+        <button type="button" class="btn-outline" @click="reset()">Remettre à zéro</button>
+      </div>
+    </form>
+
+    <p class="sr-only" aria-live="polite" data-testid="amount-errors" x-text="errorSummary()"></p>
+    <div class="space-y-4" aria-live="polite">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="card"><p class="kpi-value" data-testid="annual-savings" x-text="result ? eur(result.personal.annual_savings) : '—'"></p><p class="kpi-label mt-1">Économies personnelles par an</p></div>
+        <div class="card"><p class="kpi-value" data-testid="monthly-savings" x-text="result ? eur(result.personal.monthly_savings) : '—'"></p><p class="kpi-label mt-1">Économies personnelles par mois</p></div>
+        <div class="card"><p class="kpi-value text-2xl" x-text="result ? eur(result.personal.original_expenditure) : '—'"></p><p class="kpi-label mt-1">Dépense annuelle d'origine</p></div>
+        <div class="card"><p class="kpi-value text-2xl" x-text="result ? eur(result.personal.remaining_expenditure) : '—'"></p><p class="kpi-label mt-1">Dépense annuelle restante</p></div>
+      </div>
+
+      <div class="card" x-show="result" x-cloak data-testid="fiscal">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="font-bold text-navy-900">Impact estimé sur les finances publiques</h2>
+          <label class="text-xs text-slate-600">Horizon
+            <select x-model="horizon" @change="calculate()" class="ml-1 rounded border border-slate-300 px-1 py-0.5 text-xs">
+              <option value="short">court terme</option>
+              <option value="medium">moyen terme</option>
+              <option value="long">long terme</option>
+            </select>
+          </label>
+        </div>
+        <p class="kpi-value mt-2" data-testid="net-impact" x-text="result ? eur(result.fiscal.net_public_impact.central) : '—'"></p>
+        <p class="text-sm text-slate-600" data-testid="net-range" x-text="result ? 'Impact net estimé : de ' + eur(result.fiscal.net_public_impact.low) + ' à ' + eur(result.fiscal.net_public_impact.high) + ' par an (EUR)' : ''"></p>
+        <p class="mt-2 rounded bg-red-50 px-3 py-2 text-xs text-slate-800" x-show="result && result.fiscal.confidence === 'provisional'">
+          Niveau de confiance : <strong>provisoire</strong>. Plusieurs paramètres sont des hypothèses en attente de données officielles :
+          <span x-text="result ? result.fiscal.provisional_parameters.join(', ') : ''"></span>.
+        </p>
+
+        <table class="mt-4 w-full text-left text-sm">
+          <caption class="sr-only">Décomposition de l'impact estimé, en euros par an</caption>
+          <thead><tr class="border-b text-xs uppercase text-slate-500"><th class="py-1 pr-2">Composante</th><th class="py-1 pr-2 text-right">Bas</th><th class="py-1 pr-2 text-right">Central</th><th class="py-1 text-right">Haut</th></tr></thead>
+          <tbody>
+            <template x-for="r in rows()" :key="r.label">
+              <tr class="border-b" :class="r.strong ? 'font-bold' : ''">
+                <td class="py-1 pr-2" x-text="r.label"></td>
+                <td class="py-1 pr-2 text-right" x-text="eur(r.v.low)"></td>
+                <td class="py-1 pr-2 text-right" x-text="eur(r.v.central)"></td>
+                <td class="py-1 text-right" x-text="eur(r.v.high)"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+
+        <h3 class="mt-4 text-xs font-bold uppercase text-slate-500">Autres indicateurs (distincts des recettes fiscales)</h3>
+        <ul class="mt-1 space-y-1 text-sm text-slate-700">
+          <li x-text="result ? 'Chiffre d\'affaires hors taxes évité (achats directs) : ' + eur(result.direct.turnover_ht.central) : ''"></li>
+          <li x-show="result && result.fiscal.reduced_turnover" x-text="'Chiffre d\'affaires évité dans la chaîne de fournisseurs : ' + (result.fiscal.reduced_turnover ? eur(result.fiscal.reduced_turnover.central) : '')"></li>
+          <li x-show="result && result.fiscal.reduced_value_added" x-text="'Valeur ajoutée réduite : ' + (result.fiscal.reduced_value_added ? eur(result.fiscal.reduced_value_added.central) : '')"></li>
+          <li x-show="result && result.fiscal.import_leakage" x-text="'Dépense qui profite à des importations : ' + (result.fiscal.import_leakage ? eur(result.fiscal.import_leakage.central) : '')"></li>
+          <li x-show="result && result.fiscal.household_fuel_savings" x-text="'Carburant économisé par le foyer : ' + (result.fiscal.household_fuel_savings ? eur(result.fiscal.household_fuel_savings.central) : '')"></li>
+        </ul>
+
+        <h3 class="mt-4 text-xs font-bold uppercase text-slate-500">Répartition simplifiée par administration</h3>
+        <p class="text-sm text-slate-700" x-text="result ? 'État : ' + eur(result.fiscal.by_public_sector.central.central) + ' · Collectivités : ' + eur(result.fiscal.by_public_sector.local.central) + ' · Sécurité sociale : ' + eur(result.fiscal.by_public_sector.social_security.central) : ''"></p>
+
+        <p class="mt-3 text-xs text-slate-500" x-text="result ? result.fiscal.methodology : ''"></p>
+        <p class="mt-3 text-xs text-slate-500" x-text="result ? 'Version du modèle : ' + result.model_version + ' · jeux de données : ' + result.dataset_versions.join(', ') : ''" data-testid="model-version"></p>
+      </div>
+
+      <p class="rounded-md bg-slate-100 p-3 text-xs text-slate-700" x-show="result && !(result.fiscal.modules.indirect && result.fiscal.modules.induced)" x-cloak>
+        Cette version du modèle ne contient pas toutes les données nécessaires : certains effets (indirect, emploi) ne sont pas calculés.
+      </p>
+      <div class="disclaimer space-y-1" x-show="result" x-cloak>
+        <template x-for="d in (result ? result.disclaimers : [])" :key="d"><p x-text="d"></p></template>
+      </div>
+      <p class="text-sm text-red-700" role="alert" x-show="error" x-text="error" x-cloak></p>
+    </div>
+  </div>
+
+  <div class="card mt-8" x-show="result" x-cloak>
+    <h2 class="font-bold text-navy-900">Détail par catégorie</h2>
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead><tr class="border-b text-xs uppercase text-slate-500"><th class="py-2 pr-4">Catégorie</th><th class="py-2 pr-4">Réduction</th><th class="py-2 pr-4">Économie annuelle</th><th class="py-2">TVA estimée</th></tr></thead>
+        <tbody>
+          <template x-for="row in (result ? result.categories : [])" :key="row.code">
+            <tr class="border-b"><td class="py-2 pr-4" x-text="row.name"></td><td class="py-2 pr-4" x-text="row.reduction_percentage + ' %'"></td><td class="py-2 pr-4" x-text="eur(row.annual_savings)"></td><td class="py-2" x-text="eur(row.direct_vat.central)"></td></tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
