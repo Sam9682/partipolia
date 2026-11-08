@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal
 
+from app.core.logging import get_logger
 from app.economics.decimal_utils import ZERO, money
 from app.economics.energy_baseline import EnergyBaseline, EnergyLine, compute_energy_baseline
 from app.economics.engine import EngineOutcome, ScenarioOutcome, run_engine
@@ -14,6 +15,7 @@ from app.economics.parameters import (
     energy_baseline_available,
 )
 from app.economics.personal import compute_personal_savings
+from app.economics.tax_breakdown import PROPERTY_TAX_SHARE, TAX_TYPES, project_scenario
 from app.economics.types import SCENARIOS, Confidence, ModelSnapshot
 from app.schemas.simulation import (
     CategoryResult,
@@ -27,7 +29,11 @@ from app.schemas.simulation import (
     SectorImpact,
     SimulationRequest,
     SimulationResponse,
+    TaxBreakdown,
+    TaxBreakdownLine,
 )
+
+logger = get_logger(__name__)
 
 DISCLAIMERS: tuple[str, ...] = (
     "Ces montants sont des estimations modélisées, et non des mesures de recettes fiscales réelles.",
@@ -52,6 +58,34 @@ METHODOLOGY_FISCAL = (
     "allocations chômage et activité partielle). Net = pertes de recettes + dépenses publiques "
     "supplémentaires − effet de rebond (réaffectation d'une partie des économies)."
 )
+
+METHODOLOGY_BREAKDOWN = (
+    "Ventilation du manque à gagner brut par type de prélèvement, issue des mêmes composantes du "
+    "modèle que les montants Direct, Indirect et Induit : la somme des lignes correspond à la perte "
+    "de recettes brute (à quelques centimes d'arrondi près). Les prestations chômage, l'activité "
+    "partielle et l'effet de rebond ne sont pas des prélèvements et sont exclus. La taxe foncière "
+    "est isolée en appliquant une part paramétrable aux impôts de production ; sans ce paramètre, "
+    "elle est indiquée comme indisponible et les impôts de production sont comptés en totalité."
+)
+
+#: Parameter types examined to decide whether a breakdown line is provisional.
+_LINE_PARAMETER_TYPES: dict[str, tuple[str, ...]] = {
+    "tva": ("vat_split",),
+    "accises": (
+        "fuel_excise_per_l",
+        "fuel_l_per_100km",
+        "fuel_price_ttc_per_l",
+        "car_share",
+        "km_per_trip",
+        "trips_per_1000_eur",
+    ),
+    "charges_salariales": ("employee_contribution_rate", "employment_elasticity"),
+    "charges_patronales": ("branch_compensation", "branch_wages", "employment_elasticity"),
+    "impot_revenu": ("income_tax_rate_on_wages", "employment_elasticity"),
+    "impots_production": ("production_tax_rate_on_va", "demand_share", "io_flow"),
+    "taxe_fonciere": ("production_tax_rate_on_va", PROPERTY_TAX_SHARE),
+    "impot_societes": ("corporate_tax_rate", "ebe_to_taxable_profit"),
+}
 
 _CONFIDENCE_ORDER = (
     Confidence.HIGH,
@@ -126,6 +160,57 @@ def _used_confidence(
     return _lowest_confidence(confidences), sorted(provisional)
 
 
+def _property_share(snapshot: ModelSnapshot) -> Decimal | None:
+    """Central value of the optional property-tax share, or ``None`` if absent."""
+    if not snapshot.has(PROPERTY_TAX_SHARE):
+        return None
+    return snapshot.param(PROPERTY_TAX_SHARE).central
+
+
+def build_tax_breakdown(snapshot: ModelSnapshot, outcome: EngineOutcome) -> TaxBreakdown:
+    """Breakdown of the gross revenue loss by tax type (8 lines, fixed order)."""
+    share = _property_share(snapshot)
+    per_scenario = {s: project_scenario(outcome.scenario(s), share) for s in SCENARIOS}
+    provisional_types = {
+        ptype
+        for (ptype, _category, _key), parameter in snapshot.parameters.items()
+        if parameter.confidence is Confidence.PROVISIONAL
+    }
+    fuel_enabled = outcome.modules.get("fuel", False)
+    lines: list[TaxBreakdownLine] = []
+    used_provisional: set[str] = set()
+    for tax_id, label in TAX_TYPES:
+        types = set(_LINE_PARAMETER_TYPES[tax_id])
+        if tax_id == "tva" and fuel_enabled:
+            types.add("fuel_vat_rate")
+        line_provisional = types & provisional_types
+        used_provisional |= line_provisional
+        lines.append(
+            TaxBreakdownLine(
+                id=tax_id,
+                label=label,
+                amount=MoneyRange(
+                    low=per_scenario["low"].amounts[tax_id],
+                    central=per_scenario["central"].amounts[tax_id],
+                    high=per_scenario["high"].amounts[tax_id],
+                ),
+                available=per_scenario["central"].available[tax_id],
+                provisional=bool(line_provisional),
+            )
+        )
+    total = MoneyRange(
+        low=sum((per_scenario["low"].amounts[t] for t, _ in TAX_TYPES), ZERO),
+        central=sum((per_scenario["central"].amounts[t] for t, _ in TAX_TYPES), ZERO),
+        high=sum((per_scenario["high"].amounts[t] for t, _ in TAX_TYPES), ZERO),
+    )
+    return TaxBreakdown(
+        lines=lines,
+        total=total,
+        provisional_parameters=sorted(used_provisional),
+        note=METHODOLOGY_BREAKDOWN,
+    )
+
+
 def build_fiscal_result(
     snapshot: ModelSnapshot,
     outcome: EngineOutcome,
@@ -152,6 +237,11 @@ def build_fiscal_result(
             )
             for code, change in ranked
         ]
+    try:
+        tax_breakdown: TaxBreakdown | None = build_tax_breakdown(snapshot, outcome)
+    except Exception:  # noqa: BLE001 - the breakdown must never break the fiscal result
+        logger.exception("tax_breakdown_failed")  # no input values are logged
+        tax_breakdown = None
     return FiscalResult(
         horizon=horizon,
         modules=modules,
@@ -195,6 +285,7 @@ def build_fiscal_result(
         confidence=overall.value,
         provisional_parameters=provisional,
         methodology=METHODOLOGY_FISCAL,
+        tax_breakdown=tax_breakdown,
     )
 
 

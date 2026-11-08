@@ -59,6 +59,51 @@
       <p class="mt-2 text-sm text-slate-700" x-text="data && data.fiscal ? 'État : ' + eur(data.fiscal.by_public_sector.central.central) + ' · Collectivités locales : ' + eur(data.fiscal.by_public_sector.local.central) + ' · Sécurité sociale : ' + eur(data.fiscal.by_public_sector.social_security.central) : ''"></p>
       <p class="mt-1 text-xs text-slate-500">Les recettes de l'État, des collectivités et de la Sécurité sociale ne sont pas fusionnées. La répartition est simplifiée (voir la méthodologie).</p>
     </div>
+
+    <section class="card mt-4" data-testid="prelevements" aria-labelledby="prelevements-title" x-show="data && data.fiscal" x-cloak>
+      <h2 id="prelevements-title" class="font-bold text-navy-900">Impact par type de prélèvement</h2>
+
+      <p class="mt-2 text-sm text-slate-700" data-testid="prelevements-unavailable"
+         x-show="data && data.fiscal && !data.fiscal.tax_breakdown">
+        La ventilation par type de prélèvement est momentanément indisponible.
+      </p>
+
+      <div x-show="data && data.fiscal && data.fiscal.tax_breakdown">
+        <div class="relative h-72">
+          <canvas id="chart-prelevements" role="img"
+                  aria-label="Impact estimé par type de prélèvement, fourchettes basse, centrale et haute"></canvas>
+        </div>
+        <table class="mt-4 w-full text-sm" data-testid="prelevements-table">
+          <caption class="sr-only">Impact annuel estimé par type de prélèvement, en euros</caption>
+          <thead>
+            <tr class="text-left"><th scope="col">Prélèvement</th><th scope="col">Bas</th><th scope="col">Central</th><th scope="col">Haut</th></tr>
+          </thead>
+          <tbody>
+            <template x-for="l in breakdownLines()" :key="l.id">
+              <tr>
+                <th scope="row" class="text-left font-normal">
+                  <span x-text="l.label"></span>
+                  <span class="badge" x-show="l.provisional">provisoire</span>
+                  <span class="text-xs text-slate-500" x-show="!l.available">(donnée indisponible)</span>
+                </th>
+                <td x-text="l.suppressed || !l.amount ? 'Donnée masquée' : eur(l.amount.low)"></td>
+                <td x-text="l.suppressed || !l.amount ? 'Donnée masquée' : eur(l.amount.central)"></td>
+                <td x-text="l.suppressed || !l.amount ? 'Donnée masquée' : eur(l.amount.high)"></td>
+              </tr>
+            </template>
+          </tbody>
+          <tfoot x-show="data && data.fiscal && data.fiscal.tax_breakdown && data.fiscal.tax_breakdown.total">
+            <tr class="font-bold">
+              <th scope="row" class="text-left">Total</th>
+              <td x-text="data && data.fiscal && data.fiscal.tax_breakdown && data.fiscal.tax_breakdown.total ? eur(data.fiscal.tax_breakdown.total.low) : ''"></td>
+              <td x-text="data && data.fiscal && data.fiscal.tax_breakdown && data.fiscal.tax_breakdown.total ? eur(data.fiscal.tax_breakdown.total.central) : ''"></td>
+              <td x-text="data && data.fiscal && data.fiscal.tax_breakdown && data.fiscal.tax_breakdown.total ? eur(data.fiscal.tax_breakdown.total.high) : ''"></td>
+            </tr>
+          </tfoot>
+        </table>
+        <p class="mt-2 text-xs text-slate-500" x-text="data && data.fiscal && data.fiscal.tax_breakdown ? 'Montants annuels en euros (' + data.fiscal.tax_breakdown.note + ')' : ''"></p>
+      </div>
+    </section>
   </div>
 
   <section class="card mt-4" x-show="data" x-cloak data-testid="net-contributors" aria-labelledby="net-contributors-title">
@@ -92,6 +137,10 @@
       labels: JSON.parse(document.getElementById('sector-labels').textContent),
       eur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v)); },
       pct(v) { return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(v)) + ' %'; },
+      breakdownLines() {
+        const b = this.data && this.data.fiscal ? this.data.fiscal.tax_breakdown : null;
+        return b ? b.lines : [];
+      },
       date(v) { return v ? new Date(v).toLocaleDateString('fr-FR') : ''; },
       async init() {
         try {
@@ -130,6 +179,24 @@
             { label: "Chiffre d'affaires réduit", data: this.sectors.map(s => Number(s.turnover_change)), backgroundColor: navy } ] },
           options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { callback: v => this.eur(v) } } } },
         });
+        this.drawBreakdown(navy, red, grey);
+      },
+      drawBreakdown(navy, red, grey) {
+        // Isolé : une erreur ici ne doit pas bloquer les autres graphiques.
+        try {
+          if (this.charts.p) { this.charts.p.destroy(); this.charts.p = null; }
+          const canvas = document.getElementById('chart-prelevements');
+          const lines = this.breakdownLines().filter(l => !l.suppressed && l.amount);
+          if (!canvas || !lines.length) { return; }
+          this.charts.p = new Chart(canvas, {
+            type: 'bar',
+            data: { labels: lines.map(l => l.label), datasets: [
+              { label: 'Bas', data: lines.map(l => Number(l.amount.low)), backgroundColor: grey },
+              { label: 'Central', data: lines.map(l => Number(l.amount.central)), backgroundColor: navy },
+              { label: 'Haut', data: lines.map(l => Number(l.amount.high)), backgroundColor: red } ] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => this.eur(v) } } } },
+          });
+        } catch (e) { /* ventilation non affichée, le tableau reste disponible */ }
       },
     }));
   });

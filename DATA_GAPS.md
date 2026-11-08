@@ -41,6 +41,7 @@ Employer contribution rates by branch are *derived* from these INSEE tables
 | `fuel_price_ttc_per_l` | Average pump price | SDES / ministry price series |
 | `fuel_excise_per_l` | **Current excise per litre.** The tax was renamed "accise sur les produits energetiques (ex-TICPE)"; the schedule could not be retrieved and verified | douane.gouv.fr, impots.gouv.fr |
 | `car_share`, `km_per_trip`, `trips_per_1000_eur` (per category) | Mobility behaviour linked to each type of spending | SDES mobility surveys (ENTD / EMP) |
+| `property_tax_share_of_production_tax` (key `*`, `provisional`) | Share of the business property tax on built property (taxe fonciere sur les proprietes baties des entreprises) within production taxes (D29-D39). Used to isolate the "Taxe fonciere" line of the national tax breakdown. Shipped as a provisional seed assumption, not a verified figure | INSEE, comptes nationaux (production taxes D29-D39 by type); DGFiP, statistiques de fiscalite locale. Note: DGFiP reports business TFPB at 12.9 Md EUR in 2022, to be compared with total D29-D39 to derive the share |
 
 | `reference_population` (key `adults`, `provisional`) | Number of adults (18+) living in France, used by the national simulation. Shipped as an order of magnitude (low 53 M, central 54 M, high 55 M); the INSEE figure was not retrieved and verified | INSEE, estimations de population par age (bilan demographique) |
 ## Known modelling limits (also shown on the methodology page)
@@ -51,3 +52,6 @@ Employer contribution rates by branch are *derived* from these INSEE tables
   is simplified (VAT and excise are attributed to central government).
 * The model is linear: it does not capture capacity constraints or price effects.
 * Declared commitments are not verified consumption.
+* Household property tax on rents (net balance) is not modelled at national scale:
+  only the business share of property tax, within production taxes, is estimated
+  (provisional parameter `property_tax_share_of_production_tax`).

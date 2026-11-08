@@ -85,6 +85,9 @@ PARAMETER_TYPES: dict[str, ParameterTypeSpec] = {
     # National simulation: adult reference population (key = "adults", unit persons).
     # Optional: absent from past model versions; not part of any MODULE_REQUIREMENTS.
     "reference_population": _NATIONAL,
+    # Share of property tax in production taxes (key = "*"), used only to split the
+    # national tax breakdown. Optional: not part of any MODULE_REQUIREMENTS.
+    "property_tax_share_of_production_tax": _NATIONAL,
     # National averages per adult for the energy baseline line (key = "*").
     # Optional, like reference_population: see ENERGY_BASELINE_REQUIREMENTS.
     "avg_fuel_l_per_adult": _NATIONAL,

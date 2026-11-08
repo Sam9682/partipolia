@@ -124,6 +124,40 @@ class PublicSectorBreakdown(BaseModel):
     social_security: MoneyRange
 
 
+TaxTypeId = Literal[
+    "tva",
+    "accises",
+    "charges_salariales",
+    "charges_patronales",
+    "impot_revenu",
+    "taxe_fonciere",
+    "impots_production",
+    "impot_societes",
+]
+
+
+class TaxBreakdownLine(BaseModel):
+    """One type of levy. Range in EUR per year (Decimal serialized as a string)."""
+
+    id: TaxTypeId
+    label: str  # French label
+    amount: MoneyRange | None  # None when suppressed; never a substitute 0
+    available: bool = True  # False: missing parameter or module (zero amount)
+    provisional: bool = False  # relies on a provisional parameter
+    suppressed: bool = False  # hidden by the cohort threshold
+
+
+class TaxBreakdown(BaseModel):
+    """Breakdown of the fiscal impact by type of levy (always 8 lines, fixed order)."""
+
+    currency: str = "EUR"
+    period: str = "année"
+    lines: list[TaxBreakdownLine]
+    total: MoneyRange | None  # sum of lines; None when a line is suppressed
+    provisional_parameters: list[str]
+    note: str
+
+
 class FiscalResult(BaseModel):
     """Full fiscal estimate. Every figure is a low / central / high range in EUR per year.
 
@@ -152,6 +186,7 @@ class FiscalResult(BaseModel):
     confidence: str
     provisional_parameters: list[str]
     methodology: str
+    tax_breakdown: TaxBreakdown | None = None
 
 
 class SectorImpact(BaseModel):

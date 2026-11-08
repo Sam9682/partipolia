@@ -40,7 +40,7 @@ from app.schemas.dashboard import (
     HistoryPoint,
     NetContributorIndicators,
 )
-from app.schemas.simulation import FiscalResult, MoneyRange
+from app.schemas.simulation import FiscalResult, MoneyRange, TaxBreakdown
 from app.services.commitment_service import CONSENT_KEY
 from app.services.simulation_presenter import DISCLAIMERS, METHODOLOGY_FISCAL, build_fiscal_result
 from app.services.simulation_service import SnapshotProvider
@@ -294,8 +294,26 @@ def to_net_contributor_indicators(
     )
 
 
+def apply_breakdown_suppression(
+    breakdown: TaxBreakdown | None, participants: int, min_cohort: int
+) -> TaxBreakdown | None:
+    """Hide breakdown lines whose underlying headcount is below ``min_cohort``.
+
+    Every line rests on ``participants`` (the breakdown is computed on the aggregate of
+    all active commitments). A hidden line has ``amount=None`` and ``suppressed=True``;
+    as soon as one line is hidden, ``total`` is ``None`` so it cannot be recovered by
+    difference.
+    """
+    if breakdown is None or participants >= min_cohort:
+        return breakdown
+    lines = [
+        line.model_copy(update={"amount": None, "suppressed": True}) for line in breakdown.lines
+    ]
+    return breakdown.model_copy(update={"lines": lines, "total": None})
+
+
 def to_national(row: AggregatedImpact | None, min_cohort: int) -> DashboardNational:
-    common = {
+    common: dict[str, Any] = {
         "min_cohort": min_cohort,
         "methodology": METHODOLOGY_FISCAL,
         "net_contributors": to_net_contributor_indicators(
@@ -317,7 +335,26 @@ def to_national(row: AggregatedImpact | None, min_cohort: int) -> DashboardNatio
             model_version=row.model_version if row else None,
             **common,
         )
-    fiscal = FiscalResult.model_validate(row.details["fiscal"])
+    fiscal = FiscalResult.model_validate(row.details["fiscal"])  # old rows: no tax_breakdown
+    breakdown = apply_breakdown_suppression(fiscal.tax_breakdown, row.participant_count, min_cohort)
+    if breakdown is not None:
+        if any(line.suppressed for line in breakdown.lines):
+            # Conservative: drop the whole fiscal block so nothing can be derived by difference.
+            return DashboardNational(
+                suppressed=True,
+                participants_label=f"moins de {min_cohort}",
+                calculated_at=row.calculated_at,
+                model_version=row.model_version,
+                **common,
+            )
+        provisional = [line.label for line in breakdown.lines if line.provisional]
+        if provisional:
+            common["disclaimers"] = [
+                *common["disclaimers"],
+                "La ventilation par type de prélèvement repose sur des paramètres provisoires : "
+                f"{', '.join(provisional)}. "
+                "Les montants de ces lignes sont des ordres de grandeur.",
+            ]
     return DashboardNational(
         suppressed=False,
         participants_label=str(row.participant_count),
@@ -342,6 +379,7 @@ __all__ = [
     "AggregationService",
     "NetContributorInputs",
     "aggregate_savings",
+    "apply_breakdown_suppression",
     "to_national",
     "to_net_contributor_indicators",
 ]
