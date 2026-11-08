@@ -54,6 +54,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/js/national_slider.js"></script>
 <script>
   document.addEventListener('alpine:init', () => {
     Alpine.data('join', () => ({
@@ -62,6 +63,15 @@
       me: null, consent: false, commitments: [], byCode: {}, plan: {}, sim: null, duration: 3,
       form: { email: '', password: '', pseudonym: '', adults: 1, region: '', consent: false },
       notice_declared: 'Vos engagements sont déclaratifs : ils expriment votre intention et ne sont pas vérifiés.',
+      // Transfert vers /simulateur-national : navigation toujours, sans paramètre ni fragment.
+      goNational() {
+        try {
+          window.PartipoliaNational.writeTransfer(window.sessionStorage, this.sim);
+        } catch (e) {
+          // storage denied or script unavailable: navigate anyway
+        }
+        window.location.assign('/simulateur-national');
+      },
       get energie() { return this.sim?.energie ?? null; },
       eur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v)); },
       statusText(c) { return (c.status === 'active' ? 'Actif' : 'Suspendu') + ' · du ' + new Date(c.start_date).toLocaleDateString('fr-FR') + ' au ' + new Date(c.end_date).toLocaleDateString('fr-FR'); },

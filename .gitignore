@@ -43,3 +43,4 @@ tools/tailwindcss
 
 # Rapports de sécurité générés par `make security`
 reports/
+node_modules/

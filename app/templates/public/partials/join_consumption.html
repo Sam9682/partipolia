@@ -54,5 +54,10 @@
       <p class="mt-2 text-xs text-slate-500" x-text="sim ? sim.disclaimers[0] : ''"></p>
       <p class="mt-1 text-xs text-slate-500" x-text="sim ? 'Version du modèle : ' + sim.model_version : ''"></p>
       {% include "public/partials/impact_extras.html" %}
+      <template x-if="me">
+        <div class="mt-4">
+          <button type="button" class="btn-outline" @click="goNational()">Simulation nationale</button>
+        </div>
+      </template>
     </div>
   </div>

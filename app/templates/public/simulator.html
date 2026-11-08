@@ -15,11 +15,15 @@
   {% set net_balance_consumption_template = "public/partials/simulator_consumption.html" %}
   {% include "public/partials/net_balance.html" %}
 
-  <div class="mt-8 text-center"><a href="/participer" class="btn-primary">JE REPRENDS LE CONTRÔLE</a></div>
+  <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+    <a href="/participer" class="btn-primary">JE REPRENDS LE CONTRÔLE</a>
+    <button type="button" class="btn-outline" @click="goNational()">Simulation nationale</button>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/js/national_slider.js"></script>
 <script>
   document.addEventListener('alpine:init', () => {
     Alpine.data('simulator', () => ({
@@ -121,6 +125,15 @@
           .filter(c => this.errors[c.code])
           .map(c => c.name + ' : ' + this.errors[c.code])
           .join(' ');
+      },
+      // Transfert vers /simulateur-national : navigation toujours, sans paramètre ni fragment.
+      goNational() {
+        try {
+          window.PartipoliaNational.writeTransfer(window.sessionStorage, this.result);
+        } catch (e) {
+          // storage denied or script unavailable: navigate anyway
+        }
+        window.location.assign('/simulateur-national');
       },
       get energie() { return this.result?.energie ?? null; },
       // Display-only formatting: every amount is computed server-side with Decimal.

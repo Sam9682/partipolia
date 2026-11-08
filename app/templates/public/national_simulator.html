@@ -11,6 +11,48 @@
 </section>
 
 <div class="mx-auto max-w-6xl px-4 pt-8" data-testid="national-simulator">
+  <section class="card mb-8 space-y-4" aria-labelledby="extrapolation-titre" x-data="nationalExtrapolation()" x-init="init()" data-testid="extrapolation">
+    <h2 id="extrapolation-titre" class="font-bold text-navy-900">Extrapolation</h2>
+
+    <div>
+      <label for="population-slider" class="text-sm font-semibold text-navy-900">Nombre de personnes</label>
+      <input id="population-slider" type="range" min="0" max="1000" step="1" value="0"
+             x-model.number="position"
+             class="mt-2 w-full rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-900 focus-visible:ring-offset-2" />
+    </div>
+
+    <div aria-live="polite" aria-atomic="true" data-testid="extrapolation-valeurs" class="space-y-2 text-sm">
+      <p><span class="font-semibold">Nombre de personnes :</span> <span x-text="countText" data-testid="population-count">1</span></p>
+      <template x-if="transfer">
+        <div class="space-y-2">
+          <p data-testid="impact-national">
+            <span class="font-semibold">Impact public net national par an :</span>
+            <span x-text="nationalLowText"></span> (borne basse) à <span x-text="nationalHighText"></span> (borne haute)
+          </p>
+          <p data-testid="impact-par-personne" class="text-slate-600">
+            Impact par personne utilisé, par an :
+            <span x-text="perPersonLowText"></span> (borne basse) à <span x-text="perPersonHighText"></span> (borne haute)
+          </p>
+        </div>
+      </template>
+    </div>
+
+    <template x-if="!transfer">
+      <p class="text-sm text-slate-700" data-testid="extrapolation-absente">
+        Aucune donnée de simulation individuelle n'est disponible. <a href="/simulateur" class="underline focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-900">Lancez d'abord la simulation individuelle</a> pour obtenir l'impact national.
+      </p>
+    </template>
+
+    <template x-if="transfer">
+      <div class="space-y-1 text-sm text-slate-600" data-testid="extrapolation-origine">
+        <p>Valeurs reprises de votre simulation individuelle, ramenées à une personne. Horizon : <span x-text="horizonLabel"></span>.</p>
+      </div>
+    </template>
+    <p class="sr-only" aria-live="polite" data-testid="extrapolation-annonce" x-text="announcement"></p>
+
+    <p class="text-xs text-slate-600">Estimation modélisée issue d'une hypothèse, pas une prévision. Les économies personnelles par catégorie ne sont pas utilisées.</p>
+  </section>
+
   <div class="grid gap-8 lg:grid-cols-2">
     <div class="space-y-4">
       <form id="form-scenario" class="card space-y-4" aria-label="Paramètres du scénario national"
@@ -42,4 +84,43 @@
 </div>
 {% endblock %}
 
-{% block scripts %}<script src="/static/js/national.js" defer></script>{% endblock %}
+{% block scripts %}<script src="/static/js/national_slider.js"></script>
+<script src="/static/js/national.js" defer></script>
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('nationalExtrapolation', () => ({
+      position: 0,
+      transfer: null,
+      announcement: '',
+      horizons: { short: 'court terme', medium: 'moyen terme', long: 'long terme' },
+      init() {
+        const N = window.PartipoliaNational;
+        let transfer = null;
+        try { transfer = N.readTransfer(window.sessionStorage); } catch (e) { transfer = null; }
+        if (transfer) {
+          this.transfer = transfer;
+          this.announcement = 'Impact par personne prérempli depuis votre simulation individuelle.';
+        }
+      },
+      get count() { return window.PartipoliaNational.sliderToCount(this.position); },
+      get countText() { return window.PartipoliaNational.formatCount(this.count); },
+      get horizonLabel() { return this.horizons[this.transfer.horizon] || this.horizons.medium; },
+      national(bound) {
+        const N = window.PartipoliaNational;
+        return N.formatEuroSigned(N.multiplyCount(this.count, N.decimalToScaled(this.transfer[bound])));
+      },
+      perPerson(bound) {
+        const N = window.PartipoliaNational;
+        const cents = N.multiplyCount(100, N.decimalToScaled(this.transfer[bound]));
+        const negative = cents < 0n;
+        const abs = negative ? -cents : cents;
+        const frac = String(abs % 100n).padStart(2, '0');
+        return (negative ? '\u2212' : '+') + N.formatCount(abs / 100n) + ',' + frac + '\u00a0\u20ac';
+      },
+      get nationalLowText() { return this.national('low'); },
+      get nationalHighText() { return this.national('high'); },
+      get perPersonLowText() { return this.perPerson('low'); },
+      get perPersonHighText() { return this.perPerson('high'); }
+    }));
+  });
+</script>{% endblock %}
