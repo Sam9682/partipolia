@@ -6,13 +6,20 @@ from collections.abc import Callable
 from decimal import Decimal
 
 from app.economics.decimal_utils import ZERO, money
+from app.economics.energy_baseline import EnergyBaseline, EnergyLine, compute_energy_baseline
 from app.economics.engine import EngineOutcome, ScenarioOutcome, run_engine
-from app.economics.parameters import MODULE_REQUIREMENTS
+from app.economics.parameters import (
+    ENERGY_BASELINE_REQUIREMENTS,
+    MODULE_REQUIREMENTS,
+    energy_baseline_available,
+)
 from app.economics.personal import compute_personal_savings
 from app.economics.types import SCENARIOS, Confidence, ModelSnapshot
 from app.schemas.simulation import (
     CategoryResult,
     DirectFiscalResult,
+    EnergyBaselineOut,
+    EnergyLineOut,
     FiscalResult,
     MoneyRange,
     PersonalResult,
@@ -51,6 +58,14 @@ _CONFIDENCE_ORDER = (
     Confidence.MEDIUM,
     Confidence.LOW,
     Confidence.PROVISIONAL,
+)
+
+
+METHODOLOGY_ENERGY = (
+    "Moyenne nationale par adulte : dépense TTC = litres × prix TTC par litre ; accise = litres × "
+    "accise par litre ; TVA = dépense TTC × taux / (1 + taux). Ces montants décrivent une "
+    "consommation moyenne, ne dépendent pas de vos saisies et ne sont pas inclus dans vos "
+    "économies."
 )
 
 
@@ -183,6 +198,30 @@ def build_fiscal_result(
     )
 
 
+def _energy_line_out(line: EnergyLine) -> EnergyLineOut:
+    return EnergyLineOut(
+        litres=format(line.litres, "f"),
+        spend_ttc=format(line.spend_ttc, "f"),
+        excise=format(line.excise, "f"),
+        vat=format(line.vat, "f"),
+    )
+
+
+def build_energy_result(snapshot: ModelSnapshot, baseline: EnergyBaseline) -> EnergyBaselineOut:
+    """Energy block: source and confidence come from the parameters actually used."""
+    used = [snapshot.param(ptype) for ptype in ENERGY_BASELINE_REQUIREMENTS]
+    notes = sorted({p.note for p in used if p.note})
+    return EnergyBaselineOut(
+        fuel=_energy_line_out(baseline.fuel),
+        heating_oil=_energy_line_out(baseline.heating_oil),
+        total=_energy_line_out(baseline.total),
+        source=" | ".join(notes),
+        model_version=snapshot.model_version,
+        confidence=_lowest_confidence([p.confidence for p in used]).value,
+        methodology=METHODOLOGY_ENERGY,
+    )
+
+
 def build_response(snapshot: ModelSnapshot, request: SimulationRequest) -> SimulationResponse:
     unknown = (set(request.reductions) | set(request.reference_overrides)) - set(
         snapshot.category_codes
@@ -263,6 +302,11 @@ def build_response(snapshot: ModelSnapshot, request: SimulationRequest) -> Simul
         low=min(turnover_values), central=turnover_values[1], high=max(turnover_values)
     )
     fiscal = build_fiscal_result(snapshot, outcome, active, request.horizon)
+    energie = (
+        build_energy_result(snapshot, compute_energy_baseline(snapshot))
+        if energy_baseline_available(snapshot)
+        else None
+    )
 
     return SimulationResponse(
         model_version=snapshot.model_version,
@@ -284,4 +328,5 @@ def build_response(snapshot: ModelSnapshot, request: SimulationRequest) -> Simul
         fiscal=fiscal,
         categories=categories,
         disclaimers=list(DISCLAIMERS),
+        energie=energie,
     )

@@ -12,3 +12,26 @@ allocations_familiales.enfant_supplementaire,allocations_familiales,2180.00,eur_
 complement_familial.enfants_min,complement_familial,3,entier,"À sourcer",,provisional
 complement_familial.montant,complement_familial,2000.00,eur_an,"À sourcer",,provisional
 ars.par_enfant,ars,400.00,eur_an_par_enfant,"À sourcer",,provisional
+bareme_ir.tranche_1.seuil,bareme_ir,0,eur_an,"impots.gouv.fr, barème 2025 (à confirmer)",2025,high
+bareme_ir.tranche_1.taux,bareme_ir,0,ratio,"impots.gouv.fr, barème 2025 (à confirmer)",2025,high
+bareme_ir.tranche_2.seuil,bareme_ir,11497,eur_an,"impots.gouv.fr, barème 2025 (à confirmer)",2025,high
+bareme_ir.tranche_2.taux,bareme_ir,0.11,ratio,"impots.gouv.fr, barème 2025 (à confirmer)",2025,high
+bareme_ir.tranche_3.seuil,bareme_ir,29315,eur_an,"impots.gouv.fr, barème 2025 (à confirmer)",2025,high
+bareme_ir.tranche_3.taux,bareme_ir,0.30,ratio,"impots.gouv.fr, barème 2025 (à confirmer)",2025,high
+bareme_ir.tranche_4.seuil,bareme_ir,83823,eur_an,"impots.gouv.fr, barème 2025 (à confirmer)",2025,high
+bareme_ir.tranche_4.taux,bareme_ir,0.41,ratio,"impots.gouv.fr, barème 2025 (à confirmer)",2025,high
+bareme_ir.tranche_5.seuil,bareme_ir,180294,eur_an,"impots.gouv.fr, barème 2025 (à confirmer)",2025,high
+bareme_ir.tranche_5.taux,bareme_ir,0.45,ratio,"impots.gouv.fr, barème 2025 (à confirmer)",2025,high
+parts_fiscales.par_adulte,parts_fiscales,1,coefficient,"Quotient familial simplifié (CGI art. 193 et 194)",2025,medium
+parts_fiscales.enfant_1_et_2,parts_fiscales,0.5,coefficient,"Quotient familial simplifié (CGI art. 193 et 194)",2025,medium
+parts_fiscales.enfant_3_et_plus,parts_fiscales,1,coefficient,"Quotient familial simplifié (CGI art. 193 et 194)",2025,medium
+taxe_fonciere.taux_defaut,taxe_fonciere,0.12,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+apl_als.montant_base,apl_als,3600.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional
+apl_als.majoration_par_enfant,apl_als,800.00,eur_an_par_enfant,"Hypothèse d'amorçage (à sourcer)",,provisional
+apl_als.taux_degressivite,apl_als,0.10,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+rsa.forfait_personne_seule,rsa,7600.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional
+rsa.coef_adulte_supplementaire,rsa,0.5,coefficient,"Hypothèse d'amorçage (à sourcer)",,provisional
+rsa.coef_enfant_1_et_2,rsa,0.3,coefficient,"Hypothèse d'amorçage (à sourcer)",,provisional
+rsa.coef_enfant_3_et_plus,rsa,0.4,coefficient,"Hypothèse d'amorçage (à sourcer)",,provisional
+positionnement.niveau_vie_neutre,positionnement,30900,eur_an_par_uc,"INSEE, niveau de vie moyen 2024 (https://www.insee.fr/fr/statistiques/2491918)",2024,medium
+positionnement.taux_transfert_net,positionnement,0.35,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional

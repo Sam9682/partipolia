@@ -26,11 +26,15 @@ from app.economics.types import CategoryParameters, ModelSnapshot
 
 BOOTSTRAP_MODEL_VERSION = "bootstrap-0"
 DATA_DIR = Path(__file__).resolve().parent / "data"
+_NON_PARAMETER_FILES = frozenset({"insee_niveau_vie_deciles_2024.csv"})
 
 
 def dataset_files() -> list[Path]:
-    """Shipped dataset files, in a stable order."""
-    return sorted(DATA_DIR.glob("*.csv"))
+    """Shipped parameter dataset files, in a stable order.
+
+    The INSEE decile table has its own format and loader (``population_deciles``).
+    """
+    return sorted(p for p in DATA_DIR.glob("*.csv") if p.name not in _NON_PARAMETER_FILES)
 
 
 def load_rows(path: Path) -> list[ParameterRow]:

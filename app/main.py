@@ -44,6 +44,7 @@ from app.core.middleware import (
 )
 from app.core.redis import close_redis, get_redis
 from app.economics.net_balance.parameters import load_net_balance_parameters
+from app.economics.population_deciles import load_decile_table
 from app.web.admin import admin_web_router
 from app.web.claims import claims_web_router
 from app.web.consultations import consultations_web_router
@@ -67,6 +68,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     configure_logging()
     # Échoue au démarrage si le CSV du bilan net est invalide (Exigence 6.8).
     load_net_balance_parameters()
+    # Échoue au démarrage si la table de déciles INSEE est invalide.
+    load_decile_table()
     logger.info("application_startup", app_env=settings.app_env)
     try:
         yield

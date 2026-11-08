@@ -8,43 +8,92 @@
 
   <section class="card space-y-4" data-testid="bloc-revenus" aria-labelledby="nb-revenus-title">
     <h2 id="nb-revenus-title" class="text-xl font-bold text-navy-900">1. Mes revenus</h2>
-    <p class="text-sm text-slate-600">Revenu net annuel en euros, par statut. Plusieurs statuts peuvent être renseignés dans le même foyer.</p>
-    <template x-for="s in statuts" :key="s.code">
-      <div class="rounded-md border border-slate-200 p-3">
-        <div class="flex flex-wrap items-center gap-3">
-          <label class="flex items-center gap-2 font-semibold text-navy-900" :for="'nb-statut-' + s.code">
-            <input :id="'nb-statut-' + s.code" type="checkbox" x-model="form.revenus[s.code].actif" class="h-4 w-4" />
+    <p class="text-sm text-slate-600">Revenu net annuel en euros. Choisissez le statut qui décrit vos revenus.</p>
+
+    <fieldset data-testid="statuts" class="space-y-2">
+      <legend class="text-sm font-semibold text-navy-900">Statut</legend>
+      <div class="flex flex-wrap gap-4">
+        <template x-for="s in statuts" :key="s.code">
+          <label class="flex items-center gap-2 text-navy-900" :for="'nb-statut-' + s.code">
+            <input :id="'nb-statut-' + s.code" type="radio" name="nb-statut" :value="s.code"
+                   :checked="form.statut === s.code" @change="choisirStatut(s.code)" class="h-4 w-4" />
             <span x-text="s.label"></span>
           </label>
-          <template x-if="form.revenus[s.code].actif">
-            <div class="flex flex-wrap items-center gap-2">
-              <label class="text-xs text-slate-700" :for="'nb-revenu-' + s.code">Revenu net annuel<span class="sr-only" x-text="' : ' + s.label"></span></label>
-              <input :id="'nb-revenu-' + s.code" type="text" inputmode="decimal" autocomplete="off"
-                     x-model="form.revenus[s.code].montant"
-                     :aria-invalid="err('revenus.' + s.code) ? 'true' : 'false'"
-                     :aria-describedby="'nb-err-revenus-' + s.code"
-                     class="w-32 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
-              <span class="text-xs" aria-hidden="true">€</span>
-            </div>
-          </template>
-        </div>
-        <p :id="'nb-err-revenus-' + s.code" class="mt-1 text-xs text-red-700" role="alert" x-show="err('revenus.' + s.code)" x-text="err('revenus.' + s.code)" x-cloak></p>
-        <template x-if="form.revenus[s.code].actif && ligne(s.code)">
-          <div class="mt-2 text-xs text-slate-700" :data-testid="'statut-detail-' + s.code">
-            <p>
-              Charges salariales estimées : <span x-text="ligne(s.code).charges_salariales_fr"></span>
-              (taux appliqué : <span x-text="pct(ligne(s.code).taux_salarial)"></span>)
-              · Charges patronales estimées : <span x-text="ligne(s.code).charges_patronales_fr"></span>
-              (taux appliqué : <span x-text="pct(ligne(s.code).taux_patronal)"></span>)
-              <span class="ml-1 rounded bg-red-50 px-1.5 py-0.5 font-semibold text-brand-red" x-show="ligne(s.code).provisoire" data-testid="pastille-provisoire">provisoire</span>
-            </p>
-            <p class="mt-1 text-slate-500" x-show="ligne(s.code).depense_etat">Rémunération classée en dépense de l'État : ces charges ne sont pas comptées dans vos contributions.</p>
-          </div>
         </template>
       </div>
+    </fieldset>
+
+    <div x-show="form.statut" x-cloak>
+      <div class="flex flex-wrap items-center gap-2">
+        <label for="nb-revenu" class="text-sm font-semibold text-navy-900">Revenu net annuel</label>
+        <input id="nb-revenu" type="text" inputmode="decimal" autocomplete="off" x-model="form.revenu"
+               :aria-invalid="err('revenus.' + form.statut) ? 'true' : 'false'"
+               aria-describedby="nb-err-revenu"
+               class="w-32 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+        <span class="text-xs" aria-hidden="true">€</span>
+      </div>
+      <p id="nb-err-revenu" class="mt-1 text-xs text-red-700" role="alert" x-show="form.statut &amp;&amp; err('revenus.' + form.statut)" x-text="err('revenus.' + form.statut)" x-cloak></p>
+    </div>
+
+    <template x-if="form.statut &amp;&amp; ligne(form.statut)">
+      <div class="text-xs text-slate-700" :data-testid="'statut-detail-' + form.statut">
+        <p>
+          Charges salariales estimées : <span x-text="ligne(form.statut).charges_salariales_fr"></span>
+          (taux appliqué : <span x-text="pct(ligne(form.statut).taux_salarial)"></span>)
+          · Charges patronales estimées : <span x-text="ligne(form.statut).charges_patronales_fr"></span>
+          (taux appliqué : <span x-text="pct(ligne(form.statut).taux_patronal)"></span>)
+          <span class="ml-1 rounded bg-red-50 px-1.5 py-0.5 font-semibold text-brand-red" x-show="ligne(form.statut).provisoire" data-testid="pastille-provisoire">provisoire</span>
+        </p>
+        <p class="mt-1 text-slate-500" x-show="ligne(form.statut).depense_etat">Rémunération classée en dépense de l'État : ces charges ne sont pas comptées dans vos contributions.</p>
+      </div>
     </template>
+
+    <div class="border-t pt-3 text-sm" data-testid="ligne-impot-revenu">
+      <p class="font-semibold text-navy-900">Impôts sur les revenus</p>
+      <dl class="mt-1 grid gap-2 sm:grid-cols-3" aria-live="polite">
+        <div><dt class="text-slate-600">Montant annuel</dt><dd class="font-bold" data-testid="impot-revenu-montant" x-text="resultat ? resultat.impot_revenu_fr : '—'"></dd></div>
+        <div><dt class="text-slate-600">Tranche marginale</dt><dd class="font-bold" data-testid="impot-revenu-tranche" x-text="resultat ? pct(resultat.tranche_marginale) : '—'"></dd></div>
+        <div><dt class="text-slate-600">Taux moyen effectif</dt><dd class="font-bold" data-testid="impot-revenu-taux-moyen" x-text="resultat ? pct(resultat.taux_moyen_effectif) : '—'"></dd></div>
+      </dl>
+      <span class="mt-1 inline-block rounded bg-red-50 px-1.5 py-0.5 text-xs font-semibold text-brand-red" x-show="resultat &amp;&amp; resultat.impot_revenu_provisoire" x-cloak data-testid="pastille-provisoire-impot">provisoire</span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="nb-taux-moyen" class="text-sm font-semibold text-navy-900">Taux moyen d'imposition effectif</label>
+      <input id="nb-taux-moyen" type="text" readonly data-testid="taux-moyen-effectif"
+             :value="resultat ? pct(resultat.taux_moyen_effectif) : ''"
+             class="w-24 rounded-md border border-slate-300 bg-slate-100 px-2 py-1 text-right text-sm" />
+    </div>
   </section>
 
+  <section class="card space-y-4" data-testid="bloc-immobilier" aria-labelledby="nb-immobilier-title">
+    <h2 id="nb-immobilier-title" class="text-xl font-bold text-navy-900">Mes revenus immobiliers</h2>
+    <p class="text-sm text-slate-600">Facultatif : loyers perçus et taux de taxe foncière. Les loyers s'ajoutent au revenu imposable.</p>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="nb-loyers" class="text-sm font-semibold text-navy-900">Loyers annuels bruts</label>
+      <input id="nb-loyers" type="text" inputmode="decimal" autocomplete="off" x-model="form.immobilier.loyers"
+             :aria-invalid="err('immobilier.loyers_annuels') ? 'true' : 'false'" aria-describedby="nb-err-loyers"
+             class="w-32 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+      <span class="text-xs" aria-hidden="true">€</span>
+    </div>
+    <p id="nb-err-loyers" class="text-xs text-red-700" role="alert" x-show="err('immobilier.loyers_annuels')" x-text="err('immobilier.loyers_annuels')" x-cloak></p>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="nb-taux-tf" class="text-sm font-semibold text-navy-900">Taux de taxe foncière</label>
+      <input id="nb-taux-tf" type="text" inputmode="decimal" autocomplete="off" x-model="form.immobilier.taux"
+             @input="form.immobilier.tauxModifie = true"
+             :aria-invalid="err('immobilier.taux_taxe_fonciere') ? 'true' : 'false'" aria-describedby="nb-err-taux-tf"
+             class="w-24 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+      <span class="text-xs" aria-hidden="true">%</span>
+    </div>
+    <p id="nb-err-taux-tf" class="text-xs text-red-700" role="alert" x-show="err('immobilier.taux_taxe_fonciere')" x-text="err('immobilier.taux_taxe_fonciere')" x-cloak></p>
+
+    <div class="border-t pt-3 text-sm" data-testid="ligne-taxe-fonciere" aria-live="polite">
+      <span class="text-slate-600">Impôts fonciers</span> :
+      <span class="font-bold" x-text="resultat ? resultat.taxe_fonciere_fr : '—'"></span>
+    </div>
+  </section>
   <section class="card space-y-4" data-testid="bloc-aides" aria-labelledby="nb-aides-title">
     <h2 id="nb-aides-title" class="text-xl font-bold text-navy-900">2. Mes aides</h2>
 
@@ -68,6 +117,14 @@
                    :aria-describedby="'nb-err-aide-' + a.code"
                    class="w-28 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
             <span class="text-xs" aria-hidden="true">€</span>
+            <template x-if="estimationsRevenus.includes(a.code)">
+              <span class="inline-flex items-center gap-1">
+                <button type="button" class="btn-outline text-xs" :data-testid="'estimer-' + a.code"
+                        @click="estimer(a.code)" :disabled="!!estimationEnCours"
+                        :aria-label="'Estimer : ' + a.label">Estimer</button>
+                <span class="rounded bg-red-50 px-1.5 py-0.5 text-xs font-semibold text-brand-red" x-show="pastilleEstimation[a.code]" x-cloak :data-testid="'pastille-estimation-' + a.code">provisoire</span>
+              </span>
+            </template>
             <template x-if="estimation(a.code)">
               <span class="text-xs text-slate-600" :data-testid="'estimation-' + a.code">
                 Estimation : <span x-text="estimation(a.code).montant_annuel_fr"></span>
@@ -134,6 +191,9 @@
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Charges salariales</th><td class="py-1 text-right" x-text="resultat.charges_salariales_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Charges patronales</th><td class="py-1 text-right" x-text="resultat.charges_patronales_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Contribution de consommation (TVA et accises)</th><td class="py-1 text-right" x-text="resultat.consommation.total_fr"></td></tr>
+            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Impôts sur les revenus</th><td class="py-1 text-right" x-text="resultat.impot_revenu_fr"></td></tr>
+            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Impôts fonciers</th><td class="py-1 text-right" x-text="resultat.taxe_fonciere_fr"></td></tr>
+            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Revenus immobiliers</th><td class="py-1 text-right" x-text="resultat.revenus_immobiliers_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Aides monétaires</th><td class="py-1 text-right" x-text="resultat.aides_monetaires_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Aides non monétaires</th><td class="py-1 text-right" x-text="resultat.aides_non_monetaires_fr"></td></tr>
           </tbody>
@@ -170,11 +230,16 @@
         { code: 'ars', label: 'Allocation de rentrée scolaire (ARS)' },
       ],
       enfantsDependants: ['allocations_familiales', 'complement_familial', 'ars'],
+      estimationsRevenus: ['apl_als', 'rsa'], // jamais préremplies automatiquement
       maxNonMonetaires: 20,
       avertissementParDefaut: "Ce bilan est une estimation fondée sur des taux moyens simplifiés, et non un calcul fiscal individuel.",
 
       // État local uniquement : rien n'est écrit dans localStorage, sessionStorage ni cookie.
-      form: { revenus: {}, enfants: '0', aides: {}, nonMonetaires: [] },
+      form: { statut: null, revenu: '', enfants: '0', aides: {}, nonMonetaires: [],
+              immobilier: { loyers: '', taux: '', tauxModifie: false } },
+      pastilleEstimation: {}, // code -> provisoire (bool), retirée dès que le champ est modifié
+      estimationEnCours: null, // code de l'aide en cours d'estimation, sinon null
+      _valeurEstimee: {},
       consommation: { reductions: {}, adultes: 1, reference_overrides: {} },
       resultat: null,
       erreurs: {},
@@ -186,7 +251,6 @@
       _lastPayload: null,
 
       init() {
-        this.statuts.forEach(s => { this.form.revenus[s.code] = { actif: false, montant: '' }; });
         this.aidesMonetaires.forEach(a => { this.form.aides[a.code] = { valeur: '', modifie: false }; });
         window.addEventListener('consumption-changed', (e) => {
           const d = (e && e.detail) || {};
@@ -197,11 +261,41 @@
           };
           this.schedule();
         });
-        this.$watch('form', () => this.schedule());
+        this.$watch('form', () => { this.retirerPastillesModifiees(); this.schedule(); });
         this.schedule(0);
       },
 
       err(champ) { return this.erreurs[champ] || ''; },
+      choisirStatut(code) { this.form.statut = code; this.form.revenu = ''; },
+      retirerPastillesModifiees() {
+        Object.keys(this.pastilleEstimation).forEach(code => {
+          const champ = this.form.aides[code];
+          if (!champ || String(champ.valeur) !== this._valeurEstimee[code]) {
+            delete this.pastilleEstimation[code];
+            delete this._valeurEstimee[code];
+          }
+        });
+      },
+      estimationBrute(code) {
+        return this.resultat ? (this.resultat.estimations_aides || []).find(e => e.aide === code) || null : null;
+      },
+      // Estimation APL/ALS ou RSA à la demande : un calcul frais, puis copie du montant renvoyé.
+      async estimer(code) {
+        if (!this.estimationsRevenus.includes(code) || this.estimationEnCours) return;
+        this.estimationEnCours = code;
+        try {
+          clearTimeout(this._timer);
+          this._lastPayload = null; // force un appel frais
+          await this.calculerBilan();
+          const e = this.estimationBrute(code);
+          if (!this.resultat || this.erreur || Object.keys(this.erreurs).length || !e) return;
+          this._valeurEstimee[code] = String(e.montant_annuel);
+          this.form.aides[code].valeur = e.montant_annuel;
+          this.pastilleEstimation[code] = !!e.provisoire;
+        } finally {
+          this.estimationEnCours = null;
+        }
+      },
       errNm(i) {
         return this.err('aides.non_monetaires[' + i + ']') || this.err('aides.non_monetaires[' + i + '].libelle') || this.err('aides.non_monetaires[' + i + '].valeur');
       },
@@ -229,9 +323,12 @@
       },
 
       payload() {
-        const revenus = this.statuts
-          .filter(s => this.form.revenus[s.code].actif && String(this.form.revenus[s.code].montant).trim() !== '')
-          .map(s => ({ statut: s.code, revenu_net: String(this.form.revenus[s.code].montant).trim() }));
+        const revenu = String(this.form.revenu).trim();
+        const revenus = (this.form.statut && revenu !== '') ? [{ statut: this.form.statut, revenu_net: revenu }] : [];
+        const immobilier = { loyers_annuels: String(this.form.immobilier.loyers).trim() };
+        const taux = String(this.form.immobilier.taux).trim();
+        // Taux non envoyé tant qu'il n'est pas modifié (défaut côté serveur, pas de boucle de recalcul).
+        if (this.form.immobilier.tauxModifie && taux !== '') immobilier.taux_taxe_fonciere = taux;
         const monetaires = {};
         this.aidesMonetaires.forEach(a => {
           const v = String(this.form.aides[a.code].valeur).trim();
@@ -243,6 +340,7 @@
         Object.keys(this.consommation.reference_overrides || {}).forEach(k => { overrides[k] = String(this.consommation.reference_overrides[k]); });
         return {
           revenus,
+          immobilier,
           enfants_a_charge: String(this.form.enfants).trim(),
           aides: {
             monetaires,
@@ -284,6 +382,7 @@
           this.erreursGenerales = [];
           this.resultat = data;
           this.prefillerEstimations();
+          this.prefillerTauxDefaut();
         } catch (e) {
           if (seq !== this._seq) return;
           this._lastPayload = null;
@@ -299,6 +398,15 @@
             champ.valeur = e.montant_annuel;
           }
         });
+      },
+
+      // Affiche le taux par défaut renvoyé par l'API tant que l'utilisateur ne l'a pas modifié.
+      prefillerTauxDefaut() {
+        const imm = this.form.immobilier;
+        const defaut = this.resultat && this.resultat.taux_taxe_fonciere_defaut;
+        if (!imm.tauxModifie && defaut !== undefined && defaut !== null && imm.taux !== String(defaut)) {
+          imm.taux = String(defaut);
+        }
       },
 
       afficherErreurs(data) {
@@ -319,6 +427,7 @@
 
       champAffiche(champ) {
         return champ === 'enfants_a_charge' || champ === 'aides.non_monetaires'
+          || champ === 'immobilier.loyers_annuels' || champ === 'immobilier.taux_taxe_fonciere'
           || /^revenus\.[a-z_]+$/.test(champ) || /^aides\.[a-z_]+$/.test(champ)
           || /^aides\.non_monetaires\[\d+\](\.(libelle|valeur))?$/.test(champ);
       },

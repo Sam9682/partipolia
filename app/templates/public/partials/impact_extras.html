@@ -1,0 +1,52 @@
+{#- Positionnement dans la population et Ligne_Energie, partiel commun à /simulateur et /participer.
+    Inclus dans la portée Alpine de netBalance() (variable `resultat`), elle-même imbriquée dans
+    simulator() ou join() qui exposent `eur()` et le getter `energie`. Aucun calcul de montant ici. -#}
+<section class="mt-4 space-y-2 border-t pt-3" data-testid="positionnement" aria-labelledby="pos-title" x-show="resultat &amp;&amp; resultat.positionnement" x-cloak>
+  <h3 id="pos-title" class="text-sm font-bold text-navy-900">Ma place dans la population</h3>
+  <p class="sr-only" x-text="resultat &amp;&amp; resultat.positionnement ? resultat.positionnement.texte_alternatif : ''"></p>
+  <ol class="space-y-1 text-sm" aria-label="Tranches de population, de la plus contributrice à la plus bénéficiaire">
+    <template x-for="t in (resultat &amp;&amp; resultat.positionnement ? resultat.positionnement.tranches : [])" :key="t.indice">
+      <li class="flex flex-wrap items-center justify-between gap-2 rounded px-2 py-1" :class="t.est_utilisateur ? 'bg-red-50 font-bold border border-brand-red' : 'border border-transparent'" :aria-current="t.est_utilisateur ? 'true' : null">
+        <span x-text="t.libelle"></span>
+        <span class="flex items-center gap-2">
+          <span class="rounded bg-brand-red px-1.5 py-0.5 text-xs font-semibold text-white" x-show="t.est_utilisateur" x-cloak>Vous êtes ici</span>
+          <span x-text="t.part_population_fr"></span>
+        </span>
+      </li>
+    </template>
+  </ol>
+  <p class="text-xs text-slate-700" x-text="resultat &amp;&amp; resultat.positionnement ? resultat.positionnement.avertissement : ''"></p>
+  <p class="text-xs text-slate-500">
+    Source :
+    <a class="underline" rel="noopener noreferrer" :href="resultat &amp;&amp; resultat.positionnement ? resultat.positionnement.source_insee : '#'">INSEE, niveaux de vie</a>
+    · <span x-text="resultat &amp;&amp; resultat.positionnement ? 'Version de la table : ' + resultat.positionnement.version_table : ''"></span>
+  </p>
+</section>
+
+<section class="mt-4 space-y-2 border-t pt-3" data-testid="ligne-energie" aria-labelledby="nrj-title" x-show="energie" x-cloak>
+  <h3 id="nrj-title" class="text-sm font-bold text-navy-900">Énergie : moyenne nationale par adulte</h3>
+  <table class="w-full text-left text-sm">
+    <caption class="sr-only">Dépenses annuelles moyennes en carburant et en fioul, moyenne nationale par adulte, en euros</caption>
+    <thead>
+      <tr class="border-b text-xs uppercase text-slate-500">
+        <th scope="col" class="py-1 pr-2 font-semibold">Poste</th>
+        <th scope="col" class="py-1 pr-2 text-right font-semibold">Dépense TTC</th>
+        <th scope="col" class="py-1 pr-2 text-right font-semibold">Accise</th>
+        <th scope="col" class="py-1 text-right font-semibold">TVA</th>
+      </tr>
+    </thead>
+    <tbody>
+      <template x-for="r in (energie ? [{k: 'fuel', l: 'Carburant'}, {k: 'heating_oil', l: 'Fioul de chauffage'}, {k: 'total', l: 'Total'}] : [])" :key="r.k">
+        <tr class="border-b" :class="r.k === 'total' ? 'font-bold' : ''">
+          <th scope="row" class="py-1 pr-2 font-normal" :class="r.k === 'total' ? 'font-bold' : ''" x-text="r.l"></th>
+          <td class="py-1 pr-2 text-right" x-text="eur(energie[r.k].spend_ttc)"></td>
+          <td class="py-1 pr-2 text-right" x-text="eur(energie[r.k].excise)"></td>
+          <td class="py-1 text-right" x-text="eur(energie[r.k].vat)"></td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
+  <p class="text-xs text-slate-500">Moyenne nationale par adulte et par an, indicative : elle ne dépend pas de votre saisie.</p>
+  <p class="text-xs text-slate-500" x-text="energie ? 'Source : ' + energie.source : ''"></p>
+  <p class="text-xs text-slate-500" x-text="energie ? 'Version du modèle : ' + energie.model_version : ''"></p>
+</section>

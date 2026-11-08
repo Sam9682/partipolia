@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import csv
 import io
-from collections.abc import Mapping, Sequence
+import re
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from functools import lru_cache
@@ -28,7 +29,32 @@ PARAMETERS_FILE = (
 FILE_LABEL = "net_balance_parameters.csv"
 
 COLUMNS = ("id", "sujet", "valeur", "unite", "source", "annee", "confiance")
-UNITS = frozenset({"ratio_net", "eur_an", "eur_an_par_enfant", "entier"})
+UNITS = frozenset(
+    {"ratio_net", "eur_an", "eur_an_par_enfant", "entier", "ratio", "coefficient", "eur_an_par_uc"}
+)
+_RATIO_UNITS = frozenset({"ratio_net", "ratio"})
+_BRACKET_RE = re.compile(r"^bareme_ir\.tranche_(\d+)\.(seuil|taux)$")
+_PARTS_IDS = {
+    "adult": "parts_fiscales.par_adulte",
+    "child_1_2": "parts_fiscales.enfant_1_et_2",
+    "child_3_plus": "parts_fiscales.enfant_3_et_plus",
+}
+_PROPERTY_TAX_RATE_ID = "taxe_fonciere.taux_defaut"
+_POSITIONING_IDS = {
+    "neutral_level": "positionnement.niveau_vie_neutre",
+    "net_transfer_rate": "positionnement.taux_transfert_net",
+}
+_HOUSING_IDS = {
+    "base": "apl_als.montant_base",
+    "child": "apl_als.majoration_par_enfant",
+    "taper": "apl_als.taux_degressivite",
+}
+_RSA_IDS = {
+    "flat": "rsa.forfait_personne_seule",
+    "adult": "rsa.coef_adulte_supplementaire",
+    "child_1_2": "rsa.coef_enfant_1_et_2",
+    "child_3_plus": "rsa.coef_enfant_3_et_plus",
+}
 
 _EMPLOYEE_PREFIX = "charges_salariales."
 _EMPLOYER_PREFIX = "charges_patronales."
@@ -54,6 +80,7 @@ class NetBalanceParameterRow:
     source: str
     year: int | None
     confidence: Confidence
+    line: int = 0  # numéro de ligne dans le CSV (0 si inconnu)
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,9 +106,57 @@ class FamilyAidScale:
 
 
 @dataclass(frozen=True, slots=True)
+class TaxBracket:
+    threshold: Decimal  # seuil inférieur (€ par part)
+    rate: Decimal  # taux de la tranche, dans [0, 1]
+    threshold_row: NetBalanceParameterRow
+    rate_row: NetBalanceParameterRow
+
+
+@dataclass(frozen=True, slots=True)
+class IncomeTaxScale:
+    brackets: tuple[TaxBracket, ...]  # seuils strictement croissants, le premier vaut 0
+    adult_parts: Decimal
+    child_parts_first_two: Decimal
+    child_parts_third_plus: Decimal
+    parts_rows: tuple[NetBalanceParameterRow, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class PropertyTaxParams:
+    default_rate: Decimal  # ratio, ex. 0.12
+    default_rate_row: NetBalanceParameterRow
+
+
+@dataclass(frozen=True, slots=True)
+class IncomeAidScale:
+    housing_base: Decimal  # €/an
+    housing_per_child: Decimal  # €/an par enfant
+    housing_taper: Decimal  # ratio de dégressivité sur les ressources
+    rsa_flat: Decimal  # forfait annuel pour une personne seule
+    rsa_extra_adult: Decimal  # coefficient par adulte supplémentaire
+    rsa_child_first_two: Decimal  # coefficient par enfant (1er et 2e)
+    rsa_child_third_plus: Decimal  # coefficient par enfant à partir du 3e
+    housing_rows: tuple[NetBalanceParameterRow, ...]
+    rsa_rows: tuple[NetBalanceParameterRow, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class PositioningParams:
+    neutral_level: Decimal  # niveau de vie neutre, €/an par unité de consommation
+    net_transfer_rate: Decimal  # ratio du transfert net, dans [0, 1]
+    neutral_level_row: NetBalanceParameterRow
+    net_transfer_rate_row: NetBalanceParameterRow
+
+
+@dataclass(frozen=True, slots=True)
 class NetBalanceParameters:
     rates: Mapping[Status, StatusRates]
     family_scale: FamilyAidScale
+    income_tax: IncomeTaxScale
+    property_tax: PropertyTaxParams
+    income_aids: IncomeAidScale
+    positioning: PositioningParams
     rows: tuple[NetBalanceParameterRow, ...]
 
     def provisional_rows(self) -> tuple[NetBalanceParameterRow, ...]:
@@ -137,9 +212,9 @@ def parse_net_balance_csv(
             raise _error(line, f"valeur non numérique pour '{ident}'", label) from None
         if unit not in UNITS:
             raise _error(line, f"unité inconnue pour '{ident}'", label)
-        if unit == "ratio_net" and not (ZERO <= value <= ONE):
+        if unit in _RATIO_UNITS and not (ZERO <= value <= ONE):
             raise _error(line, f"taux hors de [0, 1] pour '{ident}'", label)
-        if unit != "ratio_net" and value < ZERO:
+        if unit not in _RATIO_UNITS and value < ZERO:
             raise _error(line, f"valeur négative pour '{ident}'", label)
         if unit == "entier" and value != value.to_integral_value():
             raise _error(line, f"entier attendu pour '{ident}'", label)
@@ -153,7 +228,9 @@ def parse_net_balance_csv(
             confidence = Confidence(raw_conf)
         except ValueError:
             raise _error(line, f"niveau de confiance inconnu pour '{ident}'", label) from None
-        rows.append(NetBalanceParameterRow(ident, subject, value, unit, source, year, confidence))
+        rows.append(
+            NetBalanceParameterRow(ident, subject, value, unit, source, year, confidence, line)
+        )
     return tuple(rows)
 
 
@@ -192,7 +269,91 @@ def build_parameters(
         supplement_amount_row=cf_amount,
         ars_per_child_row=ars,
     )
-    return NetBalanceParameters(rates=MappingProxyType(rates), family_scale=scale, rows=tuple(rows))
+    income_tax = _build_income_tax(by_id, need, label)
+    property_tax_row = need(_PROPERTY_TAX_RATE_ID)
+    property_tax = PropertyTaxParams(
+        default_rate=property_tax_row.value, default_rate_row=property_tax_row
+    )
+    housing = {k: need(v) for k, v in _HOUSING_IDS.items()}
+    rsa = {k: need(v) for k, v in _RSA_IDS.items()}
+    income_aids = IncomeAidScale(
+        housing_base=housing["base"].value,
+        housing_per_child=housing["child"].value,
+        housing_taper=housing["taper"].value,
+        rsa_flat=rsa["flat"].value,
+        rsa_extra_adult=rsa["adult"].value,
+        rsa_child_first_two=rsa["child_1_2"].value,
+        rsa_child_third_plus=rsa["child_3_plus"].value,
+        housing_rows=tuple(housing.values()),
+        rsa_rows=tuple(rsa.values()),
+    )
+    neutral_row = need(_POSITIONING_IDS["neutral_level"])
+    transfer_row = need(_POSITIONING_IDS["net_transfer_rate"])
+    if neutral_row.unit != "eur_an_par_uc":
+        raise _error(neutral_row.line, f"unité eur_an_par_uc attendue pour {neutral_row.id}", label)
+    if transfer_row.unit != "ratio":
+        raise _error(transfer_row.line, f"unité ratio attendue pour {transfer_row.id}", label)
+    if neutral_row.value <= ZERO:
+        raise _error(
+            neutral_row.line, f"valeur strictement positive attendue ({neutral_row.id})", label
+        )
+    positioning = PositioningParams(
+        neutral_level=neutral_row.value,
+        net_transfer_rate=transfer_row.value,
+        neutral_level_row=neutral_row,
+        net_transfer_rate_row=transfer_row,
+    )
+    return NetBalanceParameters(
+        rates=MappingProxyType(rates),
+        family_scale=scale,
+        income_tax=income_tax,
+        property_tax=property_tax,
+        income_aids=income_aids,
+        positioning=positioning,
+        rows=tuple(rows),
+    )
+
+
+def _build_income_tax(
+    by_id: Mapping[str, NetBalanceParameterRow],
+    need: Callable[[str], NetBalanceParameterRow],
+    label: str,
+) -> IncomeTaxScale:
+    numbers = sorted({int(m.group(1)) for ident in by_id if (m := _BRACKET_RE.match(ident))})
+    if not numbers:
+        raise NetBalanceParametersError(f"{label}, ligne manquante : bareme_ir.tranche_1.seuil")
+    brackets: list[TaxBracket] = []
+    for n in range(1, numbers[-1] + 1):
+        threshold_row = need(f"bareme_ir.tranche_{n}.seuil")
+        rate_row = need(f"bareme_ir.tranche_{n}.taux")
+        if threshold_row.unit != "eur_an":
+            raise _error(
+                threshold_row.line, f"unité eur_an attendue pour {threshold_row.id}", label
+            )
+        if rate_row.unit != "ratio":
+            raise _error(rate_row.line, f"unité ratio attendue pour {rate_row.id}", label)
+        if not brackets and threshold_row.value != ZERO:
+            raise _error(
+                threshold_row.line, f"le premier seuil doit valoir 0 ({threshold_row.id})", label
+            )
+        if brackets and threshold_row.value <= brackets[-1].threshold:
+            raise _error(
+                threshold_row.line,
+                f"seuils strictement croissants attendus ({threshold_row.id})",
+                label,
+            )
+        brackets.append(TaxBracket(threshold_row.value, rate_row.value, threshold_row, rate_row))
+    parts = {k: need(v) for k, v in _PARTS_IDS.items()}
+    for row in parts.values():
+        if row.unit != "coefficient":
+            raise _error(row.line, f"unité coefficient attendue pour {row.id}", label)
+    return IncomeTaxScale(
+        brackets=tuple(brackets),
+        adult_parts=parts["adult"].value,
+        child_parts_first_two=parts["child_1_2"].value,
+        child_parts_third_plus=parts["child_3_plus"].value,
+        parts_rows=tuple(parts.values()),
+    )
 
 
 @lru_cache(maxsize=1)

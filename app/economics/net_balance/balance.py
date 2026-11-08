@@ -13,13 +13,16 @@ from app.economics.net_balance.aids import (
     MonetaryAid,
     compute_aid_totals,
     estimate_child_aids,
+    estimate_income_aids,
 )
 from app.economics.net_balance.charges import StatusCharges, compute_charges
 from app.economics.net_balance.consumption import (
     ConsumptionContribution,
     compute_consumption_contribution,
 )
+from app.economics.net_balance.income_tax import IncomeTaxResult, compute_income_tax
 from app.economics.net_balance.parameters import NetBalanceParameterRow, NetBalanceParameters
+from app.economics.net_balance.real_estate import PropertyTaxResult, compute_property_tax
 from app.economics.net_balance.types import Status
 from app.economics.net_balance.validation import NetBalanceInput
 from app.economics.types import Confidence, ModelSnapshot
@@ -46,6 +49,8 @@ class NetBalanceResult:
     state_expense_total: Decimal  # rémunération estimée des fonctionnaires
     child_aid_estimates: Mapping[MonetaryAid, AidEstimate]
     provisional_parameters: tuple[str, ...]  # identifiants triés, sans doublon
+    income_tax: IncomeTaxResult
+    property_tax: PropertyTaxResult
 
 
 def classify(balance: Decimal) -> Verdict:
@@ -58,7 +63,11 @@ def classify(balance: Decimal) -> Verdict:
 
 
 def _used_rows(
-    charges: tuple[StatusCharges, ...], children: int, params: NetBalanceParameters
+    charges: tuple[StatusCharges, ...],
+    children: int,
+    params: NetBalanceParameters,
+    income_tax: IncomeTaxResult,
+    property_tax: PropertyTaxResult,
 ) -> list[NetBalanceParameterRow]:
     """Lignes de paramètres réellement utilisées par le calcul."""
     rows: list[NetBalanceParameterRow] = []
@@ -72,6 +81,11 @@ def _used_rows(
     rows.extend(
         (scale.supplement_min_children_row, scale.supplement_amount_row, scale.ars_per_child_row)
     )
+    rows.extend(income_tax.used_rows)
+    if property_tax.used_default:
+        rows.append(params.property_tax.default_rate_row)
+    rows.extend(params.income_aids.housing_rows)
+    rows.extend(params.income_aids.rsa_rows)
     return rows
 
 
@@ -95,7 +109,16 @@ def compute_net_balance(
     consumption = compute_consumption_contribution(
         snapshot, data.reductions, data.adults, data.reference_overrides
     )
-    contributions = employee_total + employer_total + consumption.total
+    net_income = sum((line.net_income for line in data.incomes), ZERO)
+    income_tax = compute_income_tax(
+        net_income, data.property_income, data.adults, data.children, params.income_tax
+    )
+    property_tax = compute_property_tax(
+        data.property_income, data.property_tax_rate, params.property_tax
+    )
+    contributions = (
+        employee_total + employer_total + consumption.total + income_tax.tax + property_tax.tax
+    )
 
     totals = compute_aid_totals(
         data.monetary_aids, (a.annual_value for a in data.non_monetary_aids)
@@ -106,11 +129,18 @@ def compute_net_balance(
         sorted(
             {
                 r.id
-                for r in _used_rows(charges, data.children, params)
+                for r in _used_rows(charges, data.children, params, income_tax, property_tax)
                 if r.confidence == Confidence.PROVISIONAL
             }
         )
     )
+
+    aid_estimates = {
+        **estimate_child_aids(data.children, params.family_scale),
+        **estimate_income_aids(
+            net_income, data.property_income, data.adults, data.children, params.income_aids
+        ),
+    }
 
     return NetBalanceResult(
         charges=charges,
@@ -124,6 +154,8 @@ def compute_net_balance(
         balance=balance,
         verdict=classify(balance),
         state_expense_total=state_expense,
-        child_aid_estimates=estimate_child_aids(data.children, params.family_scale),
+        child_aid_estimates=aid_estimates,
         provisional_parameters=provisional,
+        income_tax=income_tax,
+        property_tax=property_tax,
     )

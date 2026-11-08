@@ -13,7 +13,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.economics.decimal_utils import HUNDRED, ZERO
 
-
 MAX_CUSTOM_AMOUNT = Decimal("100000")
 MAX_OVERRIDES = 50
 
@@ -29,7 +28,9 @@ class SimulationRequest(BaseModel):
     )
     reference_overrides: dict[str, Decimal] = Field(
         default_factory=dict,
-        description="Custom annual amount per adult (EUR) replacing the reference, per category code.",
+        description=(
+            "Custom annual amount per adult (EUR) replacing the reference, per category code."
+        ),
     )
     adults: int = Field(default=1, ge=1, le=10, description="Number of adults in the household.")
     horizon: Literal["short", "medium", "long"] = Field(
@@ -159,6 +160,28 @@ class SectorImpact(BaseModel):
     value_added_change: Decimal
 
 
+class EnergyLineOut(BaseModel):
+    """One energy line; amounts are plain decimal strings (never scientific notation)."""
+
+    litres: str
+    spend_ttc: str
+    excise: str
+    vat: str
+
+
+class EnergyBaselineOut(BaseModel):
+    """Average annual fuel and heating-oil spend per adult (a stock, not a saving)."""
+
+    fuel: EnergyLineOut
+    heating_oil: EnergyLineOut
+    total: EnergyLineOut
+    per: str = "adulte"
+    source: str
+    model_version: str
+    confidence: str
+    methodology: str
+
+
 class SimulationResponse(BaseModel):
     """Output of the simulator. Indicators are intentionally kept separate."""
 
@@ -170,3 +193,4 @@ class SimulationResponse(BaseModel):
     fiscal: FiscalResult
     categories: list[CategoryResult]
     disclaimers: list[str]
+    energie: EnergyBaselineOut | None = None

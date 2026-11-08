@@ -88,6 +88,11 @@
         <p class="mt-3 text-xs text-slate-500" x-text="result ? 'Version du modèle : ' + result.model_version + ' · jeux de données : ' + result.dataset_versions.join(', ') : ''" data-testid="model-version"></p>
       </div>
 
+      <div class="card" x-show="result" x-cloak data-testid="my-impact">
+        <h2 class="font-bold text-navy-900">Mon impact estimé</h2>
+        {% include "public/partials/impact_extras.html" %}
+      </div>
+
       <p class="rounded-md bg-slate-100 p-3 text-xs text-slate-700" x-show="result && !(result.fiscal.modules.indirect && result.fiscal.modules.induced)" x-cloak>
         Cette version du modèle ne contient pas toutes les données nécessaires : certains effets (indirect, emploi) ne sont pas calculés.
       </p>

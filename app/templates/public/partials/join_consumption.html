@@ -53,5 +53,6 @@
       <p class="text-sm text-slate-700" x-text="sim ? 'Impact net estimé sur les finances publiques : ' + eur(sim.fiscal.net_public_impact.low) + ' à ' + eur(sim.fiscal.net_public_impact.high) + ' par an' : ''"></p>
       <p class="mt-2 text-xs text-slate-500" x-text="sim ? sim.disclaimers[0] : ''"></p>
       <p class="mt-1 text-xs text-slate-500" x-text="sim ? 'Version du modèle : ' + sim.model_version : ''"></p>
+      {% include "public/partials/impact_extras.html" %}
     </div>
   </div>

@@ -12,7 +12,11 @@ from decimal import Decimal
 from enum import StrEnum
 
 from app.economics.decimal_utils import ZERO, engine_context, money
-from app.economics.net_balance.parameters import FamilyAidScale, NetBalanceParameterRow
+from app.economics.net_balance.parameters import (
+    FamilyAidScale,
+    IncomeAidScale,
+    NetBalanceParameterRow,
+)
 from app.economics.types import Confidence
 
 
@@ -92,6 +96,47 @@ def estimate_child_aids(children: int, scale: FamilyAidScale) -> dict[MonetaryAi
             money(ars),
             _is_provisional(scale.ars_per_child_row),
         ),
+    }
+
+
+def estimate_income_aids(
+    net_income: Decimal,
+    property_income: Decimal,
+    adults: int,
+    children: int,
+    scale: IncomeAidScale,
+) -> dict[MonetaryAid, AidEstimate]:
+    """Estime APL/ALS et RSA à partir des ressources et de la composition du foyer."""
+    if isinstance(children, bool) or not isinstance(children, int) or children < 0:
+        raise ValueError("Le nombre d'enfants doit être un entier positif ou nul.")
+    if isinstance(adults, bool) or not isinstance(adults, int) or adults < 1:
+        raise ValueError("Le nombre d'adultes doit être un entier supérieur ou égal à 1.")
+
+    ctx = engine_context()
+    resources = ctx.add(net_income, property_income)
+
+    # APL/ALS : base + majoration par enfant - dégressivité x ressources, plancher à 0.
+    gross_housing = ctx.add(
+        scale.housing_base, ctx.multiply(Decimal(children), scale.housing_per_child)
+    )
+    housing = max(ZERO, ctx.subtract(gross_housing, ctx.multiply(scale.housing_taper, resources)))
+
+    # RSA : plafond du foyer - ressources, plancher à 0.
+    coefficient = ctx.add(Decimal(1), ctx.multiply(scale.rsa_extra_adult, Decimal(adults - 1)))
+    coefficient = ctx.add(
+        coefficient, ctx.multiply(scale.rsa_child_first_two, Decimal(min(children, 2)))
+    )
+    coefficient = ctx.add(
+        coefficient, ctx.multiply(scale.rsa_child_third_plus, Decimal(max(children - 2, 0)))
+    )
+    ceiling = ctx.multiply(scale.rsa_flat, coefficient)
+    rsa = max(ZERO, ctx.subtract(ceiling, resources))
+
+    return {
+        MonetaryAid.APL_ALS: AidEstimate(
+            MonetaryAid.APL_ALS, money(housing), _is_provisional(*scale.housing_rows)
+        ),
+        MonetaryAid.RSA: AidEstimate(MonetaryAid.RSA, money(rsa), _is_provisional(*scale.rsa_rows)),
     }
 
 

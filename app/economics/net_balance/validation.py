@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Protocol
 
-from app.economics.decimal_utils import HUNDRED, ZERO
+from app.economics.decimal_utils import HUNDRED, ZERO, pct_to_fraction
 from app.economics.net_balance.aids import MonetaryAid
 from app.economics.net_balance.types import Status
 from app.economics.personal import MAX_ADULTS
@@ -43,25 +43,50 @@ _CAP_MESSAGE = "le montant dépasse le plafond autorisé de 10 000 000 €."
 
 
 class IncomeLineRequest(Protocol):
-    status: Any
-    net_income: Any
+    @property
+    def status(self) -> Any: ...
+
+    @property
+    def net_income(self) -> Any: ...
 
 
 class NonMonetaryAidRequest(Protocol):
-    label: Any
-    value: Any
+    @property
+    def label(self) -> Any: ...
+
+    @property
+    def value(self) -> Any: ...
 
 
 class NetBalanceRequest(Protocol):
     """Requête brute (accès par attribut) ; satisfaite par le schéma Pydantic."""
 
-    incomes: Sequence[IncomeLineRequest] | None
-    children: Any
-    monetary_aids: Mapping[str, Any] | None
-    non_monetary_aids: Sequence[NonMonetaryAidRequest] | None
-    reductions: Mapping[str, Any] | None
-    adults: Any
-    reference_overrides: Mapping[str, Any] | None
+    @property
+    def incomes(self) -> Sequence[IncomeLineRequest] | None: ...
+
+    @property
+    def children(self) -> Any: ...
+
+    @property
+    def monetary_aids(self) -> Mapping[str, Any] | None: ...
+
+    @property
+    def non_monetary_aids(self) -> Sequence[NonMonetaryAidRequest] | None: ...
+
+    @property
+    def reductions(self) -> Mapping[str, Any] | None: ...
+
+    @property
+    def adults(self) -> Any: ...
+
+    @property
+    def reference_overrides(self) -> Mapping[str, Any] | None: ...
+
+    @property
+    def property_income(self) -> Any: ...
+
+    @property
+    def property_tax_rate(self) -> Any: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +116,8 @@ class NetBalanceInput:
     reductions: Mapping[str, Decimal]
     adults: int
     reference_overrides: Mapping[str, Decimal]
+    property_income: Decimal = ZERO
+    property_tax_rate: Decimal | None = None  # ratio dans [0, 1]
 
 
 def _parse_amount(value: Any) -> tuple[Decimal | None, str | None]:
@@ -127,8 +154,16 @@ def _status_key(raw: Any) -> Status | None:
 
 def _parse_incomes(raw: Sequence[Any] | None, errors: list[FieldError]) -> tuple[IncomeLine, ...]:
     lines: list[IncomeLine] = []
-    seen: set[Status] = set()
-    for index, item in enumerate(raw or ()):
+    items = list(raw or ())
+    if len(items) >= 2:
+        errors.append(
+            FieldError(
+                "revenus",
+                "Un seul statut est autorisé : choisissez la situation qui décrit vos revenus.",
+            )
+        )
+        return ()
+    for index, item in enumerate(items):
         status = _status_key(getattr(item, "status", None))
         if status is None:
             errors.append(
@@ -137,12 +172,6 @@ def _parse_incomes(raw: Sequence[Any] | None, errors: list[FieldError]) -> tuple
             continue
         field = f"revenus.{status.value}"
         label = _STATUS_LABELS[status]
-        if status in seen:
-            errors.append(
-                FieldError(field, f"Revenu net — {label} : un seul revenu par statut est autorisé.")
-            )
-            continue
-        seen.add(status)
         amount, problem = _parse_amount(getattr(item, "net_income", None))
         if amount is None:
             errors.append(FieldError(field, f"Revenu net — {label} : {problem}"))
@@ -272,6 +301,31 @@ def _parse_adults(raw: Any, errors: list[FieldError]) -> int:
     return adults
 
 
+def _parse_property_income(raw: Any, errors: list[FieldError]) -> Decimal:
+    if raw is None or raw == "":
+        return ZERO
+    amount, problem = _parse_amount(raw)
+    if amount is None:
+        errors.append(FieldError("immobilier.loyers_annuels", f"Loyers annuels : {problem}"))
+        return ZERO
+    return amount
+
+
+def _parse_property_tax_rate(raw: Any, errors: list[FieldError]) -> Decimal | None:
+    if raw is None or raw == "":
+        return None
+    percentage, _problem = _parse_amount(raw)
+    if percentage is None or percentage > HUNDRED:
+        errors.append(
+            FieldError(
+                "immobilier.taux_taxe_fonciere",
+                "Taux de taxe foncière : saisissez un pourcentage entre 0 et 100.",
+            )
+        )
+        return None
+    return pct_to_fraction(percentage)
+
+
 def parse_input(
     raw: NetBalanceRequest,
 ) -> tuple[NetBalanceInput | None, list[FieldError]]:
@@ -284,6 +338,8 @@ def parse_input(
     reductions = _parse_reductions(getattr(raw, "reductions", None), errors)
     adults = _parse_adults(getattr(raw, "adults", None), errors)
     overrides = _parse_overrides(getattr(raw, "reference_overrides", None), errors)
+    property_income = _parse_property_income(getattr(raw, "property_income", None), errors)
+    property_tax_rate = _parse_property_tax_rate(getattr(raw, "property_tax_rate", None), errors)
     if errors:
         return None, errors
     return (
@@ -295,6 +351,8 @@ def parse_input(
             reductions=reductions,
             adults=adults,
             reference_overrides=overrides,
+            property_income=property_income,
+            property_tax_rate=property_tax_rate,
         ),
         [],
     )

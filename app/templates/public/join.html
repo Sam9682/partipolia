@@ -62,6 +62,7 @@
       me: null, consent: false, commitments: [], byCode: {}, plan: {}, sim: null, duration: 3,
       form: { email: '', password: '', pseudonym: '', adults: 1, region: '', consent: false },
       notice_declared: 'Vos engagements sont déclaratifs : ils expriment votre intention et ne sont pas vérifiés.',
+      get energie() { return this.sim?.energie ?? null; },
       eur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v)); },
       statusText(c) { return (c.status === 'active' ? 'Actif' : 'Suspendu') + ' · du ' + new Date(c.start_date).toLocaleDateString('fr-FR') + ' au ' + new Date(c.end_date).toLocaleDateString('fr-FR'); },
       async api(method, url, body) {

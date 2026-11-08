@@ -15,6 +15,17 @@ Sources (Comptes nationaux annuels, base 2020):
 * 6.204 rémunération des salariés, 6.205 salaires et traitements bruts,
   6.206 excédent brut d'exploitation par branche (A38):
   https://www.insee.fr/fr/statistiques/fichier/8988821/T_6204_fr.xlsx (6205, 6206 likewise)
+
+Living-standard deciles (D1..D9, euros per year and per consumption unit), INSEE
+"Distribution des niveaux de vie", https://www.insee.fr/fr/statistiques/2416808.
+``--tes`` and ``--accounts-dir`` are optional; the deciles can be built alone::
+
+    python tools/build_insee_datasets.py --deciles niveaux_de_vie.xlsx \\
+        --deciles-year 2024 --out app/economics/data
+
+``--deciles`` also accepts a simple CSV with rows ``decile,valeur`` (D1..D9) when the
+INSEE workbook cannot be downloaded. Strict growth D1 < ... < D9 is checked before
+writing; the sha256 of the output is printed.
 """
 
 from __future__ import annotations
@@ -38,6 +49,14 @@ HEADER = [
     "confidence",
     "note",
 ]
+DECILES_HEADER = [
+    "decile",
+    "niveau_vie_eur_par_uc",
+    "annee_reference",
+    "source_url",
+    "version_table",
+]
+DECILES_URL = "https://www.insee.fr/fr/statistiques/2416808"
 TES_NOTE = "INSEE, TES symétrique A38 base 2020, production domestique au prix de base, {year}"
 ACC_NOTE = "INSEE, Comptes nationaux annuels base 2020, tableau {table}, A38, {year}"
 # Items published under a coarser code although they contain exactly one A38 branch.
@@ -174,30 +193,104 @@ def build_accounts(accounts_dir: Path, year: int, out: Path, branches: set[str])
     return len(lines)
 
 
-def _write(path: Path, lines: list[list[str]]) -> None:
+def _write(path: Path, lines: list[list[str]], header: list[str] | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle, lineterminator="\n")
-        writer.writerow(HEADER)
+        writer.writerow(header or HEADER)
         writer.writerows(lines)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    print(f"{path}: {len(lines)} rows sha256={digest[:16]}")
+    print(f"{path}: {len(lines)} rows sha256={digest}")
+
+
+def _decile_key(cell: object) -> int | None:
+    """Return 1..9 for a cell such as ``D1``, ``d5`` or ``9``; otherwise None."""
+    text = str(cell).strip().upper().removeprefix("D") if cell is not None else ""
+    return int(text) if text.isdigit() and 1 <= int(text) <= 9 else None
+
+
+def _read_decile_values(source: Path) -> dict[int, Decimal]:
+    """Read D1..D9 from a simple CSV (decile,valeur) or from an INSEE workbook.
+
+    In a workbook, the first row whose first cell is D1..D9 and whose next numeric
+    cell is a value is used for each decile.
+    """
+    pairs: list[tuple[object, ...]]
+    if source.suffix.lower() in {".xlsx", ".xlsm"}:
+        wb = openpyxl.load_workbook(source, read_only=True, data_only=True)
+        pairs = [row for ws in wb.worksheets for row in ws.iter_rows(values_only=True)]
+    else:
+        with source.open(newline="", encoding="utf-8-sig") as handle:
+            pairs = [tuple(row) for row in csv.reader(handle)]
+    values: dict[int, Decimal] = {}
+    for row in pairs:
+        if not row:
+            continue
+        key = _decile_key(row[0])
+        if key is None or key in values:
+            continue
+        for cell in row[1:]:
+            try:
+                value = Decimal(str(cell).strip().replace(" ", "").replace(",", "."))
+            except ArithmeticError:
+                continue
+            if value.is_finite():
+                values[key] = value
+                break
+    missing = sorted(set(range(1, 10)) - set(values))
+    if missing:
+        raise SystemExit(f"{source}: déciles manquants : {['D' + str(k) for k in missing]}")
+    return values
+
+
+def build_deciles(source: Path, year: int, out: Path) -> None:
+    """Write the INSEE living-standard deciles CSV (D1..D9) to ``out`` (a file path)."""
+    values = _read_decile_values(source)
+    for k in range(2, 10):
+        if values[k] <= values[k - 1]:
+            raise SystemExit(f"D{k} doit être strictement supérieur à D{k - 1}")
+    if values[1] <= 0:
+        raise SystemExit("D1 doit être strictement positif")
+    lines = [
+        [
+            f"D{k}",
+            format(values[k].normalize(), "f"),
+            str(year),
+            DECILES_URL,
+            f"insee-niveaux-de-vie-{year}",
+        ]
+        for k in range(1, 10)
+    ]
+    _write(out, lines, DECILES_HEADER)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--tes", type=Path, required=True)
-    parser.add_argument("--accounts-dir", type=Path, required=True)
+    parser.add_argument("--tes", type=Path, default=None)
+    parser.add_argument("--accounts-dir", type=Path, default=None)
     parser.add_argument("--year", type=int, default=2023)
+    parser.add_argument(
+        "--deciles", type=Path, default=None, help="INSEE xlsx or CSV decile,valeur"
+    )
+    parser.add_argument("--deciles-year", type=int, default=2024)
     parser.add_argument("--out", type=Path, default=Path("app/economics/data"))
     args = parser.parse_args()
-    branches = build_tes(args.tes, args.year, args.out / f"insee_tes_a38_{args.year}.csv")
-    build_accounts(
-        args.accounts_dir,
-        args.year,
-        args.out / f"insee_branch_accounts_a38_{args.year}.csv",
-        branches,
-    )
+    if args.deciles is None and (args.tes is None or args.accounts_dir is None):
+        parser.error("--tes et --accounts-dir sont requis sauf avec --deciles seul")
+    if args.deciles is not None:
+        build_deciles(
+            args.deciles,
+            args.deciles_year,
+            args.out / f"insee_niveau_vie_deciles_{args.deciles_year}.csv",
+        )
+    if args.tes is not None and args.accounts_dir is not None:
+        branches = build_tes(args.tes, args.year, args.out / f"insee_tes_a38_{args.year}.csv")
+        build_accounts(
+            args.accounts_dir,
+            args.year,
+            args.out / f"insee_branch_accounts_a38_{args.year}.csv",
+            branches,
+        )
 
 
 if __name__ == "__main__":

@@ -67,6 +67,15 @@ class ConsumptionIn(BaseModel):
     reference_overrides: dict[str, Any] | None = None
 
 
+class ImmobilierIn(BaseModel):
+    """Real estate block: annual rents and property tax rate (percentage)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    loyers_annuels: Any = None
+    taux_taxe_fonciere: Any = None
+
+
 class NetBalanceRequest(BaseModel):
     """Input of the net balance endpoint (satisfies ``validation.NetBalanceRequest``)."""
 
@@ -76,6 +85,15 @@ class NetBalanceRequest(BaseModel):
     enfants_a_charge: Any = None
     aides: AidsIn | None = None
     consommation: ConsumptionIn | None = None
+    immobilier: ImmobilierIn | None = None
+
+    @property
+    def property_income(self) -> Any:
+        return self.immobilier.loyers_annuels if self.immobilier is not None else None
+
+    @property
+    def property_tax_rate(self) -> Any:
+        return self.immobilier.taux_taxe_fonciere if self.immobilier is not None else None
 
     @property
     def incomes(self) -> list[IncomeLineIn] | None:
@@ -149,6 +167,28 @@ class ProvisionalParameterOut(BaseModel):
     source: str
 
 
+class TrancheOut(BaseModel):
+    indice: int
+    libelle: str
+    part_population: Decimal
+    part_population_fr: str  # « 10,0 % »
+    est_utilisateur: bool
+
+
+class PositionnementOut(BaseModel):
+    """Position of the household net contribution among ten population tranches."""
+
+    tranches: list[TrancheOut]
+    indice_utilisateur: int
+    libelle_utilisateur: str
+    texte_alternatif: str
+    source_insee: str
+    version_table: str
+    annee_reference: int
+    provisoire: bool
+    avertissement: str
+
+
 class NetBalanceResponse(BaseModel):
     """Output of the net balance endpoint: one verdict and its breakdown."""
 
@@ -179,6 +219,22 @@ class NetBalanceResponse(BaseModel):
     depense_etat_fr: str
     mention_fonctionnaire: str | None = None
 
+    impot_revenu: Decimal
+    impot_revenu_fr: str
+    revenu_imposable: Decimal
+    revenu_imposable_fr: str
+    parts_fiscales: Decimal
+    tranche_marginale: Decimal
+    taux_moyen_effectif: Decimal
+    impot_revenu_provisoire: bool
+    revenus_immobiliers: Decimal
+    revenus_immobiliers_fr: str
+    taxe_fonciere: Decimal
+    taxe_fonciere_fr: str
+    taux_taxe_fonciere: Decimal  # pourcentage appliqué
+    taux_taxe_fonciere_defaut: Decimal  # pourcentage par défaut du CSV
+
     estimations_aides: list[AidEstimateOut] = Field(default_factory=list)
     parametres_provisoires: list[str] = Field(default_factory=list)
     avertissement: str
+    positionnement: PositionnementOut | None = None

@@ -85,6 +85,12 @@ PARAMETER_TYPES: dict[str, ParameterTypeSpec] = {
     # National simulation: adult reference population (key = "adults", unit persons).
     # Optional: absent from past model versions; not part of any MODULE_REQUIREMENTS.
     "reference_population": _NATIONAL,
+    # National averages per adult for the energy baseline line (key = "*").
+    # Optional, like reference_population: see ENERGY_BASELINE_REQUIREMENTS.
+    "avg_fuel_l_per_adult": _NATIONAL,
+    "avg_heating_oil_l_per_adult": _NATIONAL,
+    "heating_oil_price_ttc_per_l": _NATIONAL,
+    "heating_oil_excise_per_l": _NATIONAL,
 }
 
 #: Types whose shares must add up to exactly 1 for each category and scenario.
@@ -128,6 +134,22 @@ MODULE_REQUIREMENTS: dict[str, tuple[str, ...]] = {
     ),
     "rebound": ("respend_share", "respend_vat_rate"),
 }
+
+#: Parameter types needed by the energy baseline line (national averages).
+#: DEVIATION FROM design.md: this is deliberately NOT an entry of
+#: MODULE_REQUIREMENTS. ``available_modules`` feeds ``EngineOutcome.modules`` and
+#: the ``_used_confidence`` computation in simulation_presenter, so a new module
+#: there would alter ``fiscal.modules`` and the reported confidence of existing
+#: results. Availability is exposed through :func:`energy_baseline_available`.
+ENERGY_BASELINE_REQUIREMENTS: tuple[str, ...] = (
+    "avg_fuel_l_per_adult",
+    "avg_heating_oil_l_per_adult",
+    "heating_oil_price_ttc_per_l",
+    "heating_oil_excise_per_l",
+    "fuel_price_ttc_per_l",
+    "fuel_excise_per_l",
+    "fuel_vat_rate",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -274,6 +296,11 @@ def available_modules(snapshot: ModelSnapshot) -> dict[str, bool]:
     for module, types in MODULE_REQUIREMENTS.items():
         result[module] = snapshot.has(*types) and _category_coverage(snapshot, module)
     return result
+
+
+def energy_baseline_available(snapshot: ModelSnapshot) -> bool:
+    """Whether the snapshot holds every parameter of the energy baseline line."""
+    return snapshot.has(*ENERGY_BASELINE_REQUIREMENTS)
 
 
 def _category_coverage(snapshot: ModelSnapshot, module: str) -> bool:

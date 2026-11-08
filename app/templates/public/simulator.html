@@ -122,6 +122,7 @@
           .map(c => c.name + ' : ' + this.errors[c.code])
           .join(' ');
       },
+      get energie() { return this.result?.energie ?? null; },
       // Display-only formatting: every amount is computed server-side with Decimal.
       eur(value) {
         return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(value));
