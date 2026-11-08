@@ -48,6 +48,17 @@
         <p>Valeurs reprises de votre simulation individuelle, ramenées à une personne. Horizon : <span x-text="horizonLabel"></span>.</p>
       </div>
     </template>
+
+    <template x-if="overrideRows().length">
+      <div class="space-y-1 text-sm text-slate-700" data-testid="extrapolation-overrides">
+        <h3 class="font-semibold text-navy-900">Vos montants de référence personnalisés</h3>
+        <ul class="list-disc pl-5">
+          <template x-for="row in overrideRows()" :key="row.code">
+            <li><span x-text="row.name"></span> : <span x-text="row.amount"></span> €</li>
+          </template>
+        </ul>
+      </div>
+    </template>
     <p class="sr-only" aria-live="polite" data-testid="extrapolation-annonce" x-text="announcement"></p>
 
     <p class="text-xs text-slate-600">Estimation modélisée issue d'une hypothèse, pas une prévision. Les économies personnelles par catégorie ne sont pas utilisées.</p>
@@ -85,6 +96,8 @@
 {% endblock %}
 
 {% block scripts %}<script src="/static/js/national_slider.js"></script>
+<script src="/static/js/participer_sync.js"></script>
+<script type="application/json" id="national-categories">{{ categories | tojson }}</script>
 <script src="/static/js/national.js" defer></script>
 <script>
   document.addEventListener('alpine:init', () => {
@@ -92,15 +105,37 @@
       position: 0,
       transfer: null,
       announcement: '',
+      referenceOverrides: {},
+      categories: (() => {
+        try { return JSON.parse(document.getElementById('national-categories').textContent) || []; }
+        catch (e) { return []; }
+      })(),
       horizons: { short: 'court terme', medium: 'moyen terme', long: 'long terme' },
       init() {
         const N = window.PartipoliaNational;
         let transfer = null;
         try { transfer = N.readTransfer(window.sessionStorage); } catch (e) { transfer = null; }
-        if (transfer) {
-          this.transfer = transfer;
-          this.announcement = 'Impact par personne prérempli depuis votre simulation individuelle.';
+        if (transfer) { this.transfer = transfer; }
+
+        // Lecture seule du localStorage : aucun setItem ni removeItem.
+        let overrides = {};
+        try {
+          overrides = window.PartipoliaSync.readReferenceOverrides(
+            window.localStorage, this.categories.map(c => c.code));
+        } catch (e) { overrides = {}; }
+        this.referenceOverrides = overrides;
+
+        const parts = [];
+        if (transfer) { parts.push('Impact par personne prérempli depuis votre simulation individuelle.'); }
+        if (Object.keys(overrides).length > 0) {
+          parts.push('Montants de référence personnalisés appliqués depuis votre simulation individuelle.');
         }
+        this.announcement = parts.join(' ');
+      },
+      overrideRows() {
+        return this.categories
+          .filter(c => this.referenceOverrides[c.code] !== undefined)
+          .map(c => ({ code: c.code, name: c.name, amount: this.referenceOverrides[c.code] }));
       },
       get count() { return window.PartipoliaNational.sliderToCount(this.position); },
       get countText() { return window.PartipoliaNational.formatCount(this.count); },

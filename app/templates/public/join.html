@@ -48,6 +48,24 @@
     <p class="mt-4 text-xs text-slate-500">Vos données se limitent à ce qui est nécessaire. Aucune transaction ni donnée bancaire n'est collectée. Voir la <a class="underline" href="/confidentialite">politique de confidentialité</a>.</p>
   </div>
 
+  {# --- Mon profil (connecté) : valeurs issues de Postgres via l'API ---- #}
+  <section class="card space-y-4" x-show="me" x-cloak data-testid="profil" aria-labelledby="profil-title">
+    <h2 id="profil-title" class="text-xl font-bold text-navy-900">Mon profil</h2>
+    <p class="text-sm text-red-700" role="alert" data-testid="profil-erreur" x-show="profileError" x-text="profileError" x-cloak></p>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div><label for="p-pseudo" class="block text-sm font-medium">Pseudonyme</label>
+        <input id="p-pseudo" type="text" maxlength="120" x-model="profile.pseudonym" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" /></div>
+      <div><label for="p-region" class="block text-sm font-medium">Code région</label>
+        <input id="p-region" type="text" maxlength="3" x-model="profile.region" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" /></div>
+      <div><label for="p-adults" class="block text-sm font-medium">Adultes dans le foyer</label>
+        <input id="p-adults" type="number" min="1" max="10" x-model.number="profile.adults" class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" /></div>
+    </div>
+    <div class="flex items-start gap-2 text-sm">
+      <input id="p-consent" type="checkbox" :checked="profile.consent" @change="profile.consent = $event.target.checked" class="mt-1" />
+      <label for="p-consent">J'accepte que mes engagements déclaratifs soient inclus, de façon <strong>anonyme et agrégée</strong>, dans les indicateurs nationaux.</label>
+    </div>
+  </section>
+
   {% set net_balance_consumption_template = "public/partials/join_consumption.html" %}
   {% include "public/partials/net_balance.html" %}
 </div>
@@ -55,6 +73,7 @@
 
 {% block scripts %}
 <script src="/static/js/national_slider.js"></script>
+<script src="/static/js/participer_sync.js"></script>
 <script>
   document.addEventListener('alpine:init', () => {
     Alpine.data('join', () => ({
@@ -62,6 +81,10 @@
       mode: 'register', ready: false, busy: false, error: '', notice: '', status: { kind: '', text: '' },
       me: null, consent: false, commitments: [], byCode: {}, plan: {}, sim: null, duration: 3,
       form: { email: '', password: '', pseudonym: '', adults: 1, region: '', consent: false },
+      // Profil de l'utilisateur connecté : alimenté uniquement par l'API (Postgres), jamais par le navigateur.
+      profileDefaults: { pseudonym: '', adults: 1, region: '', consent: false },
+      profile: { pseudonym: '', adults: 1, region: '', consent: false },
+      profileError: '',
       notice_declared: 'Vos engagements sont déclaratifs : ils expriment votre intention et ne sont pas vérifiés.',
       // Transfert vers /simulateur-national : navigation toujours, sans paramètre ni fragment.
       goNational() {
@@ -183,14 +206,26 @@
       async init() {
         this.categories.forEach(c => { this.plan[c.code] = 0; });
         this.loadOverrides();
-        try { this.me = await this.api('GET', '/api/v1/auth/me'); await this.load(); } catch (e) { this.me = null; }
+        try { this.me = await this.api('GET', '/api/v1/auth/me'); } catch (e) { this.me = null; }
+        if (this.me) { await this.loadAll(); }
         this.ready = true;
+      },
+      // Profil et engagements en parallèle ; un échec du profil n'empêche pas les engagements.
+      async loadAll() {
+        const [profileResult] = await Promise.allSettled([this.loadProfile(), this.load()]);
+        this.profileError = profileResult.status === 'rejected'
+          ? 'Votre profil n’a pas pu être chargé. Vous pouvez tout de même saisir vos informations.' : '';
+      },
+      async loadProfile() {
+        const citizen = await this.api('GET', '/api/v1/citizens/me');
+        this.profile = window.PartipoliaSync.mergeProfile(this.profileDefaults, this.me, citizen);
       },
       async load() {
         const d = await this.api('GET', '/api/v1/commitments/me' + this.overridesQuery());
         this.commitments = d.commitments; this.consent = d.consent_aggregation; this.sim = d.simulation;
-        this.byCode = {}; this.categories.forEach(c => { this.plan[c.code] = 0; });
-        d.commitments.forEach(c => { this.byCode[c.category_code] = c; this.plan[c.category_code] = Number(c.reduction_percentage); });
+        this.byCode = {};
+        d.commitments.forEach(c => { this.byCode[c.category_code] = c; });
+        this.plan = window.PartipoliaSync.buildPlan(this.categories, d.commitments);
       },
       async register() {
         this.busy = true; this.error = ''; this.notice = '';
@@ -200,7 +235,7 @@
           const profile = { household_adults: Math.min(10, Math.max(1, parseInt(this.form.adults, 10) || 1)), consent_aggregation: !!this.form.consent };
           if (this.form.region.trim()) { profile.region = this.form.region.trim().toUpperCase(); }
           await this.api('PUT', '/api/v1/citizens/me', profile);
-          this.me = await this.api('GET', '/api/v1/auth/me'); await this.load();
+          this.me = await this.api('GET', '/api/v1/auth/me'); await this.loadAll();
           this.notice = 'Bienvenue ! Choisissez maintenant vos engagements.';
           window.dispatchEvent(new CustomEvent('partipolia:session-changed'));
         } catch (e) { this.error = "L'inscription n'a pas abouti. Vérifiez vos informations ou essayez de vous connecter."; }
@@ -210,12 +245,12 @@
         this.busy = true; this.error = ''; this.notice = '';
         try {
           await this.api('POST', '/api/v1/auth/login', { email: this.form.email, password: this.form.password });
-          this.me = await this.api('GET', '/api/v1/auth/me'); await this.load();
+          this.me = await this.api('GET', '/api/v1/auth/me'); await this.loadAll();
           window.dispatchEvent(new CustomEvent('partipolia:session-changed'));
         } catch (e) { this.error = 'Identifiants invalides. Veuillez réessayer.'; }
         this.busy = false;
       },
-      async logout() { try { await this.api('POST', '/api/v1/auth/logout'); } catch (e) {} this.me = null; this.sim = null; },
+      async logout() { try { await this.api('POST', '/api/v1/auth/logout'); } catch (e) {} this.me = null; this.sim = null; this.profile = { ...this.profileDefaults }; this.profileError = ''; },
       async setConsent(value) {
         try { await this.api('PUT', '/api/v1/citizens/me', { consent_aggregation: value }); this.consent = value; await this.load(); }
         catch (e) { this.error = "Le consentement n'a pas pu être enregistré."; }
