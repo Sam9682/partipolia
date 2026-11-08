@@ -22,6 +22,7 @@ fournies ou produites par l'Utilisateur lui-même.
 from __future__ import annotations
 
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -134,6 +135,19 @@ class ExportedConsultationParticipation(BaseModel):
     participated_on: date
 
 
+class ExportedIncome(BaseModel):
+    """Dernier statut et revenu net annuel saisis par l'Utilisateur.
+
+    Seules ces deux données (et la date de mise à jour) sont conservées.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    statut: str
+    revenu_net: Decimal
+    updated_at: datetime
+
+
 class ExportedAccount(BaseModel):
     """Données du compte incluses à l'export — jamais ``password_hash`` (Exigence 28.4)."""
 
@@ -170,6 +184,7 @@ class DataExport(BaseModel):
     consultation_participations: list[ExportedConsultationParticipation] = Field(
         default_factory=list
     )
+    income: ExportedIncome | None = None
 
 
 class AccountDeletionResult(BaseModel):

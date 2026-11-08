@@ -124,6 +124,13 @@ class NetBalanceRequest(BaseModel):
         return self.consommation.reference_overrides if self.consommation is not None else None
 
 
+class UserIncomeOut(BaseModel):
+    """Stored income of the logged-in user (``GET /incomes/me``); nulls when none."""
+
+    statut: str | None = None
+    revenu_net: Decimal | None = None
+
+
 class StatusChargesOut(BaseModel):
     """Detail of one status: net income and estimated charges."""
 

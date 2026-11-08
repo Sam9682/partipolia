@@ -4,7 +4,7 @@
     Aides et le Bilan, la page positionne avant l'include :
       {% set net_balance_consumption_template = "public/partials/xxx.html" %}
     Le composant ne conserve rien (ni localStorage, ni sessionStorage, ni cookie). -#}
-<div x-data="netBalance()" x-init="init()" data-testid="net-balance" class="space-y-8">
+<div x-data="netBalance()" x-init="init()" data-testid="net-balance" data-authenticated="{{ 'true' if identity_email else 'false' }}" class="space-y-8">
 
   <section class="card space-y-4" data-testid="bloc-revenus" aria-labelledby="nb-revenus-title">
     <h2 id="nb-revenus-title" class="text-xl font-bold text-navy-900">1. Mes revenus</h2>
@@ -26,7 +26,7 @@
     <div x-show="form.statut" x-cloak>
       <div class="flex flex-wrap items-center gap-2">
         <label for="nb-revenu" class="text-sm font-semibold text-navy-900">Revenu net annuel</label>
-        <input id="nb-revenu" type="text" inputmode="decimal" autocomplete="off" x-model="form.revenu"
+        <input id="nb-revenu" type="text" inputmode="decimal" autocomplete="off" x-model="form.revenu" @input="_saisieUtilisateur = true"
                :aria-invalid="err('revenus.' + form.statut) ? 'true' : 'false'"
                aria-describedby="nb-err-revenu"
                class="w-32 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
@@ -247,11 +247,18 @@
       erreur: '',
       _timer: null,
       _seq: 0,
+      _revenusSeq: 0, // ignore les lectures de revenus obsolètes (le compteur _seq est bumpé par le calcul initial)
+      _saisieUtilisateur: false, // une saisie manuelle n'est jamais écrasée par les revenus chargés
       _nextId: 1,
       _lastPayload: null,
 
       init() {
         this.aidesMonetaires.forEach(a => { this.form.aides[a.code] = { valeur: '', modifie: false }; });
+        const urlRevenus = '/api/v1/net-balance/incomes/me';
+        // Utilisateur connecté (indicateur d'identité rendu côté serveur) : pré-remplit « Mes revenus »
+        // depuis la base. Aucun appel pour un visiteur anonyme.
+        if (this.$el.dataset.authenticated === 'true') { this.chargerRevenus(urlRevenus); }
+        window.addEventListener('partipolia:session-changed', () => { this.chargerRevenus(urlRevenus); });
         window.addEventListener('consumption-changed', (e) => {
           const d = (e && e.detail) || {};
           this.consommation = {
@@ -272,8 +279,29 @@
         this.schedule(0);
       },
 
+      // Lecture des revenus enregistrés (statut + revenu net) ; l'impôt est recalculé par le serveur.
+      async chargerRevenus(url) {
+        const seq = ++this._revenusSeq;
+        try {
+          const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+          if (seq !== this._revenusSeq || this._saisieUtilisateur) return;
+          if (response.status === 401) return; // non connecté : silencieux
+          if (!response.ok) { this.erreur = 'Vos revenus enregistrés n\'ont pas pu être chargés. Vous pouvez les saisir.'; return; }
+          const data = await response.json();
+          if (seq !== this._revenusSeq || this._saisieUtilisateur) return;
+          if (!data || !data.statut || data.revenu_net === null || data.revenu_net === undefined) return;
+          this.form.statut = data.statut;
+          this.form.revenu = String(data.revenu_net);
+          this._lastPayload = null;
+          await this.calculerBilan();
+        } catch (e) {
+          if (seq !== this._revenusSeq || this._saisieUtilisateur) return;
+          this.erreur = 'Vos revenus enregistrés n\'ont pas pu être chargés. Vous pouvez les saisir.';
+        }
+      },
+
       err(champ) { return this.erreurs[champ] || ''; },
-      choisirStatut(code) { this.form.statut = code; this.form.revenu = ''; },
+      choisirStatut(code) { this._saisieUtilisateur = true; this.form.statut = code; this.form.revenu = ''; },
       retirerPastillesModifiees() {
         Object.keys(this.pastilleEstimation).forEach(code => {
           const champ = this.form.aides[code];

@@ -60,6 +60,7 @@ from app.models.source import SOURCE_TYPES, ProposalSource, Source
 from app.models.team import Team, TeamMember
 from app.models.theme import Theme
 from app.models.user import User
+from app.models.user_income import INCOME_STATUS_VALUES, UserIncome
 from app.models.vote import Vote
 
 __all__ = [
@@ -112,6 +113,8 @@ __all__ = [
     "ScenarioShareLink",
     "NetBalanceVerdict",
     "VERDICT_VALUES",
+    "UserIncome",
+    "INCOME_STATUS_VALUES",
     # Revendications citoyennes
     "Claim",
     "ClaimSupport",

@@ -54,12 +54,14 @@ from app.schemas.privacy import (
     ExportedClaimComment,
     ExportedComment,
     ExportedConsultationParticipation,
+    ExportedIncome,
     ExportedProposal,
     ExportedScenario,
     ExportedVote,
     RetentionPolicy,
     RetentionRule,
 )
+from app.services.user_income_service import UserIncomeService
 
 # Compte système auquel sont réattribuées les Propositions anonymisées lors d'une
 # suppression de compte. Son email réservé ne peut correspondre à aucun compte réel
@@ -155,8 +157,19 @@ class PrivacyService:
                 )
             )
 
+        income_row = await UserIncomeService(self._session).get(user_id)
+
         return DataExport(
             generated_at=datetime.now(UTC),
+            income=(
+                ExportedIncome(
+                    statut=income_row.statut,
+                    revenu_net=income_row.revenu_net,
+                    updated_at=income_row.updated_at,
+                )
+                if income_row is not None
+                else None
+            ),
             account=ExportedAccount.model_validate(user),
             proposals=[
                 ExportedProposal(
@@ -590,6 +603,16 @@ class PrivacyService:
                         "simulations anonymes ne sont liées à aucune personne."
                     ),
                     basis="Reproductibilité des résultats par version de modèle.",
+                ),
+                RetentionRule(
+                    category="Statut et revenu net saisis",
+                    retention=(
+                        "Seuls le dernier statut et le dernier revenu net annuel saisis "
+                        "sont conservés pour pré-remplir le formulaire ; aucun impôt, "
+                        "aide ni donnée immobilière n'est stocké. Supprimés avec le "
+                        "compte et inclus dans l'export."
+                    ),
+                    basis="Service demandé par l'Utilisateur connecté, minimisation des données.",
                 ),
                 RetentionRule(
                     category="Agrégats nationaux",

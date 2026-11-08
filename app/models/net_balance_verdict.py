@@ -1,7 +1,8 @@
 """``NetBalanceVerdict``: dernier verdict du bilan net d'un compte.
 
 Seuls le verdict, le montant du bilan et la date de calcul sont conservés.
-Aucune donnée saisie par l'utilisateur n'est stockée.
+Aucune autre donnée saisie n'est stockée ici ; le statut et le revenu net
+saisis sont conservés séparément dans ``UserIncome`` (``user_incomes``).
 """
 
 from __future__ import annotations

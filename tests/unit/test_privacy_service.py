@@ -135,8 +135,11 @@ class _FakeSession:
         rows = self._rows_for_select(stmt)
         return rows[0] if rows else None
 
-    async def execute(self, stmt: object) -> None:
+    async def execute(self, stmt: object) -> object:
         kind = type(stmt).__name__
+        if kind == "Select":
+            rows = self._rows_for_select(stmt)
+            return _Obj(scalar_one_or_none=lambda: rows[0] if rows else None)
         model = _TABLE_TO_MODEL[_dml_table(stmt)]
         where = _where(stmt)
         rows = self.tables.get(model, [])
