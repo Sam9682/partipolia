@@ -287,7 +287,28 @@ def register_exception_handlers(app: FastAPI) -> None:
     validation Pydantic (400) et toute exception non gérée (500), afin que
     l'ensemble des réponses d'erreur suivent le corps JSON stable (Exigence 26.7).
     """
+    # Import tardif : évite un cycle app.core → app.api.deps → app.core.
+    from app.api.deps import NetContributorRequiredError
+
+    async def _net_contributor_required_handler(
+        request: Request, exc: Exception
+    ) -> JSONResponse:
+        from app.api.deps import (
+            NET_CONTRIBUTOR_REQUIRED_CODE,
+            NET_CONTRIBUTOR_REQUIRED_MESSAGE,
+        )
+
+        return error_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            message=NET_CONTRIBUTOR_REQUIRED_MESSAGE,
+            request_id=_request_id_of(request),
+            code=NET_CONTRIBUTOR_REQUIRED_CODE,
+        )
+
     app.add_exception_handler(StarletteHTTPException, _http_exception_handler)
+    app.add_exception_handler(
+        NetContributorRequiredError, _net_contributor_required_handler
+    )
     app.add_exception_handler(RequestValidationError, _validation_exception_handler)
     app.add_exception_handler(Exception, _unhandled_exception_handler)
 

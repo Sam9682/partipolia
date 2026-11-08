@@ -59,7 +59,7 @@
   document.addEventListener('alpine:init', () => {
     Alpine.data('join', () => ({
       categories: JSON.parse(document.getElementById('join-categories').textContent),
-      mode: 'register', ready: false, busy: false, error: '', notice: '',
+      mode: 'register', ready: false, busy: false, error: '', notice: '', status: { kind: '', text: '' },
       me: null, consent: false, commitments: [], byCode: {}, plan: {}, sim: null, duration: 3,
       form: { email: '', password: '', pseudonym: '', adults: 1, region: '', consent: false },
       notice_declared: 'Vos engagements sont déclaratifs : ils expriment votre intention et ne sont pas vérifiés.',
@@ -77,7 +77,10 @@
       statusText(c) { return (c.status === 'active' ? 'Actif' : 'Suspendu') + ' · du ' + new Date(c.start_date).toLocaleDateString('fr-FR') + ' au ' + new Date(c.end_date).toLocaleDateString('fr-FR'); },
       async api(method, url, body) {
         const r = await fetch(url, { method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
-        if (!r.ok) { const e = new Error('http ' + r.status); e.status = r.status; throw e; }
+        if (!r.ok) {
+          const errBody = await r.json().catch(() => ({}));
+          const e = new Error('http ' + r.status); e.status = r.status; e.code = errBody?.error?.code; throw e;
+        }
         return r.status === 204 ? null : r.json();
       },
       amounts: {},     // text shown in each amount input, by category code
@@ -199,6 +202,7 @@
           await this.api('PUT', '/api/v1/citizens/me', profile);
           this.me = await this.api('GET', '/api/v1/auth/me'); await this.load();
           this.notice = 'Bienvenue ! Choisissez maintenant vos engagements.';
+          window.dispatchEvent(new CustomEvent('partipolia:session-changed'));
         } catch (e) { this.error = "L'inscription n'a pas abouti. Vérifiez vos informations ou essayez de vous connecter."; }
         this.busy = false;
       },
@@ -207,6 +211,7 @@
         try {
           await this.api('POST', '/api/v1/auth/login', { email: this.form.email, password: this.form.password });
           this.me = await this.api('GET', '/api/v1/auth/me'); await this.load();
+          window.dispatchEvent(new CustomEvent('partipolia:session-changed'));
         } catch (e) { this.error = 'Identifiants invalides. Veuillez réessayer.'; }
         this.busy = false;
       },
@@ -216,16 +221,18 @@
         catch (e) { this.error = "Le consentement n'a pas pu être enregistré."; }
       },
       async save() {
-        this.busy = true; this.error = ''; this.notice = '';
+        this.busy = true; this.error = ''; this.notice = ''; this.status = { kind: '', text: '' };
         try {
-          for (const c of this.categories) {
-            const pct = String(this.plan[c.code] || 0), existing = this.byCode[c.code];
-            if (existing && Number(pct) === 0) { await this.api('DELETE', '/api/v1/commitments/' + existing.id); }
-            else if (existing) { await this.api('PUT', '/api/v1/commitments/' + existing.id, { reduction_percentage: pct }); }
-            else if (Number(pct) > 0) { await this.api('POST', '/api/v1/commitments', { category_code: c.code, reduction_percentage: pct, duration_months: this.duration }); }
-          }
-          await this.load(); this.notice = 'Engagement enregistré.';
-        } catch (e) { this.error = "L'engagement n'a pas pu être enregistré."; }
+          const items = this.categories.map(c => ({ category_code: c.code, reduction_percentage: String(this.plan[c.code] || 0) }));
+          const res = await this.api('PUT', '/api/v1/commitments/plan', { items, duration_months: this.duration });
+          const texts = { created: 'Engagement créé.', updated: 'Engagement mis à jour.', unchanged: 'Aucun changement à enregistrer.' };
+          this.status = { kind: 'success', text: texts[res?.outcome] || texts.updated };
+          try { await this.load(); } catch (e) { /* plan saved; refresh failure is non-blocking */ }
+        } catch (e) {
+          if (e.status === 403 && e.code === 'net_contributor_required') { this.status = { kind: 'refused', text: '' }; }
+          else if (e.status === 401) { this.status = { kind: 'error', text: 'Votre session a expiré. Reconnectez-vous.' }; }
+          else { this.status = { kind: 'error', text: "L'engagement n'a pas été enregistré." }; }
+        }
         this.busy = false;
       },
       async toggle(c) { await this.update(c, { status: c.status === 'active' ? 'suspended' : 'active' }); },

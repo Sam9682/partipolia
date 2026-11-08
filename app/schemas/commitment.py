@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -68,6 +68,41 @@ class CommitmentUpdate(BaseModel):
         return self
 
 
+PlanOutcome = Literal["created", "updated", "unchanged"]
+
+
+class PlanItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    category_code: str = Field(min_length=1, max_length=64)
+    reduction_percentage: Decimal = Field(description="0 removes the commitment.")
+
+    _pct = field_validator("reduction_percentage")(_check_percentage)
+
+
+class CommitmentPlan(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[PlanItem] = Field(min_length=1)
+    duration_months: int = Field(default=3, ge=1, le=36)
+
+    @model_validator(mode="after")
+    def _unique_categories(self) -> CommitmentPlan:
+        codes = [item.category_code for item in self.items]
+        if len(codes) != len(set(codes)):
+            raise ValueError("category codes must be unique within a plan")
+        return self
+
+
+def plan_outcome(created: int, updated: int, deleted: int) -> PlanOutcome:
+    """Message kind derived from the plan counters."""
+    if created > 0:
+        return "created"
+    if updated > 0 or deleted > 0:
+        return "updated"
+    return "unchanged"
+
+
 class CommitmentOut(BaseModel):
     id: int
     category_code: str
@@ -78,6 +113,14 @@ class CommitmentOut(BaseModel):
     status: str
     is_current: bool = Field(description="Active and within its dates.")
     declared: bool = True  # always a declared commitment, never verified consumption
+
+
+class CommitmentPlanResult(BaseModel):
+    outcome: PlanOutcome
+    created: int
+    updated: int
+    deleted: int
+    commitments: list[CommitmentOut]
 
 
 class MyCommitments(BaseModel):
@@ -94,6 +137,14 @@ class ProfileOut(BaseModel):
     consent_aggregation: bool
 
 
+class NetBalanceVerdictOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    verdict: str
+    balance: Decimal
+    computed_at: datetime
+
+
 class CitizenExport(BaseModel):
     """Everything Partipolia holds about a citizen (GDPR right of access/portability)."""
 
@@ -102,6 +153,7 @@ class CitizenExport(BaseModel):
     pseudonym: str
     commitments: list[CommitmentOut]
     saved_simulations: list[dict[str, object]]
+    net_balance_verdict: NetBalanceVerdictOut | None = None
     notice: str = DECLARATION_NOTICE
 
 

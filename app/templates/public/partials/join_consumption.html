@@ -44,6 +44,14 @@
             </select></label>
           <button type="submit" class="btn-primary" :disabled="busy">Enregistrer mon engagement</button>
         </div>
+        <div role="status" aria-live="polite" data-testid="engagement-status">
+          <p class="text-sm text-green-800" x-show="status.kind === 'success'" x-text="status.text" x-cloak></p>
+          <p class="text-sm text-red-700" x-show="status.kind === 'error'" x-text="status.text" x-cloak></p>
+          <p class="text-sm text-red-700" x-show="status.kind === 'refused'" data-testid="engagement-refused" x-cloak>
+            L'enregistrement de l'engagement est réservé aux contributeurs nets.
+            <a href="#bilan-net" class="underline">Calculer mon bilan net</a>
+          </p>
+        </div>
       </form>
     </div>
 

@@ -10,8 +10,10 @@ Ce module importe et ré-exporte l'ensemble des modèles ORM du paquet afin que
   chargées.
 """
 
+from app.models.aggregation import AggregatedImpact
 from app.models.argument import ARGUMENT_POSITIONS, Argument
 from app.models.audit import AuditLog
+from app.models.citizen_commitment import CitizenCommitment
 from app.models.claim import (
     CLAIM_COMMENT_STATUSES,
     CLAIM_STATUSES,
@@ -40,21 +42,20 @@ from app.models.economic_dataset import (
     ModelVersion,
     model_version_datasets,
 )
-from app.models.simulation import EconomicSimulation, SimulationResult
-from app.models.aggregation import AggregatedImpact
-from app.models.citizen_commitment import CitizenCommitment
 from app.models.legal_analysis import LegalAnalysis
 from app.models.legal_problem import LegalProblem
 from app.models.legal_problem_reform import LegalProblemReform
 from app.models.mandate import COMMITMENT_STATUSES, Commitment, Indicator
 from app.models.mixins import CreatedAtMixin, TimestampMixin
 from app.models.national_scenario import NationalScenario, ScenarioShareLink
+from app.models.net_balance_verdict import VERDICT_VALUES, NetBalanceVerdict
 from app.models.program import Program, ProgramProposal
 from app.models.proposal import PROPOSAL_STATUSES, Proposal, ProposalVersion
 from app.models.side_effect_report import (
     SIDE_EFFECT_REPORT_STATUSES,
     SideEffectReport,
 )
+from app.models.simulation import EconomicSimulation, SimulationResult
 from app.models.source import SOURCE_TYPES, ProposalSource, Source
 from app.models.team import Team, TeamMember
 from app.models.theme import Theme
@@ -109,6 +110,8 @@ __all__ = [
     "CitizenCommitment",
     "NationalScenario",
     "ScenarioShareLink",
+    "NetBalanceVerdict",
+    "VERDICT_VALUES",
     # Revendications citoyennes
     "Claim",
     "ClaimSupport",

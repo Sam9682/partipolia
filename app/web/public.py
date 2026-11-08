@@ -287,8 +287,8 @@ async def legal_notice(request: Request) -> HTMLResponse:
         "Informations légales sur l'éditeur du site.",
         [
             (
-                "À compléter",
-                "L'identité de l'éditeur et de l'hébergeur doit être renseignée avant la mise en production.",
+                "Editeur:",
+                "Association loi 1901 - Hypervisia France",
             )
         ],
     )

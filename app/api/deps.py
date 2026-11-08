@@ -29,14 +29,15 @@ from typing import Annotated, Final
 
 from fastapi import Depends, Request, status
 from fastapi.exceptions import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit_events import ACTION_ADMIN_ACCESS_DENIED, request_ip_hash
 from app.core.database import get_session
-from app.services.audit_service import AuditService
 from app.models.roles import Role, has_role
-from app.services.auth_service import AuthError, AuthService
 from app.schemas.auth import UserPublic
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.services.audit_service import AuditService
+from app.services.auth_service import AuthError, AuthService
+from app.services.net_balance_verdict_service import NetBalanceVerdictService
 
 # Nom du cookie HttpOnly portant l'access token côté web (Exigence 1.5).
 ACCESS_TOKEN_COOKIE_NAME: Final = "access_token"
@@ -138,6 +139,30 @@ async def require_admin(
             detail=_FORBIDDEN_MESSAGE,
         )
     return current_user
+
+
+class NetContributorRequiredError(Exception):
+    """Levée quand le verdict persisté n'est pas ``contributeur_net`` (ou est absent)."""
+
+
+NET_CONTRIBUTOR_REQUIRED_CODE: Final = "net_contributor_required"
+NET_CONTRIBUTOR_REQUIRED_MESSAGE: Final = (
+    "L'enregistrement d'un engagement est réservé aux contributeurs nets."
+)
+
+
+async def require_net_contributor(
+    user: Annotated[UserPublic, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session, scope="function")],
+) -> UserPublic:
+    """Exige un verdict persisté ``contributeur_net``, sinon ``403`` dédié.
+
+    Le ``401`` de :func:`get_current_user` précède ce ``403``, lui-même évalué
+    avant la validation du corps de la requête.
+    """
+    if not await NetBalanceVerdictService(session).is_net_contributor(user.id):
+        raise NetContributorRequiredError
+    return user
 
 
 def require_roles(*allowed: Role):  # type: ignore[no-untyped-def]

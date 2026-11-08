@@ -1,8 +1,11 @@
 """Net balance service: glue between the pure net balance module and the API.
 
-Stateless and read-only: nothing is written to the database or to a cache, and no
-logger is used on the calculation path so that entered values can never leak into
-logs. Error messages never echo the entered values.
+The calculation is stateless and read-only: this service writes nothing to the
+database or to a cache, and no logger is used on the calculation path so that
+entered values can never leak into logs. Error messages never echo the entered
+values. Persistence of the resulting verdict is not done here: the API router
+records it through ``NetBalanceVerdictService`` only when the user is logged in
+and the calculation succeeded.
 """
 
 from __future__ import annotations

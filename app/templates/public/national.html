@@ -61,6 +61,22 @@
     </div>
   </div>
 
+  <section class="card mt-4" x-show="data" x-cloak data-testid="net-contributors" aria-labelledby="net-contributors-title">
+    <h2 id="net-contributors-title" class="font-bold text-navy-900">Contributeurs nets engagés</h2>
+    <p class="mt-2 text-sm text-slate-700" data-testid="net-contributors-pending" x-show="data && !data.net_contributors">Indicateurs en cours de collecte.</p>
+    <div class="disclaimer mt-2" data-testid="net-contributors-suppressed" x-show="data && data.net_contributors && data.net_contributors.suppressed">
+      <p>Pour protéger l'anonymat, aucun chiffre n'est publié : le nombre de participants est <strong x-text="data && data.net_contributors ? data.net_contributors.contributors_label : ''"></strong>.</p>
+    </div>
+    <div class="mt-2 grid gap-4 sm:grid-cols-2 lg:grid-cols-5" data-testid="net-contributors-figures" x-show="data && data.net_contributors && !data.net_contributors.suppressed">
+      <div><p class="kpi-value" x-text="data && data.net_contributors && data.net_contributors.contributors !== null ? data.net_contributors.contributors : '—'"></p><p class="kpi-label mt-1">Contributeurs nets engagés</p></div>
+      <div><p class="kpi-value" x-text="data && data.net_contributors && data.net_contributors.active_commitments !== null ? data.net_contributors.active_commitments : '—'"></p><p class="kpi-label mt-1">Engagements actifs</p></div>
+      <div><p class="kpi-value" x-text="data && data.net_contributors && data.net_contributors.total_reduction !== null ? eur(data.net_contributors.total_reduction) : '—'"></p><p class="kpi-label mt-1">Réduction annuelle totale</p></div>
+      <div><p class="kpi-value" x-text="data && data.net_contributors && data.net_contributors.mean_reduction_per_contributor !== null ? eur(data.net_contributors.mean_reduction_per_contributor) : '—'"></p><p class="kpi-label mt-1">Réduction moyenne par contributeur</p></div>
+      <div><p class="kpi-value" x-text="data && data.net_contributors && data.net_contributors.mean_reduction_percentage !== null ? pct(data.net_contributors.mean_reduction_percentage) : '—'"></p><p class="kpi-label mt-1">Pourcentage moyen de réduction</p></div>
+    </div>
+    <p class="mt-3 text-xs text-slate-500" x-show="data && data.net_contributors">Ces engagements sont déclaratifs et non vérifiés.</p>
+  </section>
+
   <div class="disclaimer mt-6 space-y-1" data-testid="dashboard-disclaimers">
     <template x-for="d in (data ? data.disclaimers : [])" :key="d"><p x-text="d"></p></template>
   </div>
@@ -75,6 +91,7 @@
       data: null, history: [], sectors: [], loading: true, error: '', charts: {},
       labels: JSON.parse(document.getElementById('sector-labels').textContent),
       eur(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(v)); },
+      pct(v) { return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Number(v)) + ' %'; },
       date(v) { return v ? new Date(v).toLocaleDateString('fr-FR') : ''; },
       async init() {
         try {

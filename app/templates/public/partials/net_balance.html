@@ -172,7 +172,7 @@
 
   {% if net_balance_consumption_template %}{% include net_balance_consumption_template %}{% endif %}
 
-  <section class="card space-y-4" data-testid="bilan-net" aria-labelledby="nb-bilan-title" aria-live="polite">
+  <section id="bilan-net" class="card space-y-4" data-testid="bilan-net" aria-labelledby="nb-bilan-title" aria-live="polite">
     <h2 id="nb-bilan-title" class="text-xl font-bold text-navy-900">Mon bilan net</h2>
 
     <ul class="space-y-1" x-show="erreursGenerales.length" x-cloak>
@@ -260,6 +260,13 @@
             reference_overrides: d.reference_overrides || {},
           };
           this.schedule();
+        });
+        // Connexion/déconnexion : si un bilan existe, on force un nouveau calcul afin que le
+        // verdict soit persisté pour la session courante, sans ressaisie.
+        window.addEventListener('partipolia:session-changed', () => {
+          if (!this.resultat) return;
+          this._lastPayload = null;
+          this.calculerBilan();
         });
         this.$watch('form', () => { this.retirerPastillesModifiees(); this.schedule(); });
         this.schedule(0);

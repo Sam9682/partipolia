@@ -11,6 +11,22 @@ from pydantic import BaseModel
 from app.schemas.simulation import FiscalResult, MoneyRange, SectorImpact
 
 
+class NetContributorIndicators(BaseModel):
+    """Anonymous aggregate of net contributors with an active commitment.
+
+    Below ``min_cohort`` every figure is ``None`` (never 0). No nominative field.
+    """
+
+    suppressed: bool
+    min_cohort: int
+    contributors_label: str
+    contributors: int | None = None
+    active_commitments: int | None = None
+    total_reduction: Decimal | None = None
+    mean_reduction_per_contributor: Decimal | None = None
+    mean_reduction_percentage: Decimal | None = None
+
+
 class DashboardNational(BaseModel):
     """National aggregate of declared commitments.
 
@@ -35,6 +51,7 @@ class DashboardNational(BaseModel):
     model_version: str | None = None
     dataset_versions: list[str] = []
     confidence: str | None = None
+    net_contributors: NetContributorIndicators | None = None
     methodology: str
     disclaimers: list[str]
 

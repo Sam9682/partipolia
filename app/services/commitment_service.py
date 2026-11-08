@@ -10,11 +10,19 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.economics.decimal_utils import ZERO
 from app.models.citizen_commitment import CitizenCommitment
 from app.models.consumption_category import ConsumptionCategory
 from app.models.user import User
 from app.reference.regions import is_valid_region
-from app.schemas.commitment import CommitmentCreate, CommitmentOut, CommitmentUpdate
+from app.schemas.commitment import (
+    CommitmentCreate,
+    CommitmentOut,
+    CommitmentPlan,
+    CommitmentPlanResult,
+    CommitmentUpdate,
+    plan_outcome,
+)
 
 CONSENT_KEY = "aggregate_commitments"
 MAX_CUSTOM_MONTHS = 36
@@ -144,6 +152,70 @@ class CommitmentService:
         commitment, _ = await self._owned(user_id, commitment_id)
         await self._session.delete(commitment)
         await self._session.flush()
+
+    async def save_plan(
+        self, user_id: int, plan: CommitmentPlan, today: date | None = None
+    ) -> CommitmentPlanResult:
+        """Create, update or delete one commitment per plan item (0 % removes it)."""
+        today = today or date.today()
+        codes = [item.category_code for item in plan.items]
+        categories = {
+            cat.code: cat
+            for cat in (
+                await self._session.scalars(
+                    select(ConsumptionCategory).where(
+                        ConsumptionCategory.code.in_(codes), ConsumptionCategory.active.is_(True)
+                    )
+                )
+            ).all()
+        }
+        # Validate everything before writing anything.
+        if any(code not in categories for code in codes):
+            raise CommitmentInvalidError("unknown category")
+
+        existing_rows = await self._session.scalars(
+            select(CitizenCommitment).where(CitizenCommitment.user_id == user_id)
+        )
+        by_category_id = {c.category_id: c for c in existing_rows.all()}
+
+        created = updated = deleted = 0
+        end = add_months(today, plan.duration_months)
+        for item in plan.items:
+            category = categories[item.category_code]
+            current = by_category_id.get(category.id)
+            if item.reduction_percentage > ZERO:
+                if current is not None:
+                    current.reduction_percentage = item.reduction_percentage
+                    updated += 1
+                else:
+                    self._session.add(
+                        CitizenCommitment(
+                            user_id=user_id,
+                            category_id=category.id,
+                            reduction_percentage=item.reduction_percentage,
+                            start_date=today,
+                            end_date=end,
+                            status="active",
+                        )
+                    )
+                    created += 1
+            elif current is not None:
+                await self._session.delete(current)
+                deleted += 1
+        try:
+            await self._session.flush()
+        except IntegrityError as exc:
+            await self._session.rollback()
+            raise CommitmentConflictError(
+                "a commitment already exists for this category; modify it instead"
+            ) from exc
+        return CommitmentPlanResult(
+            outcome=plan_outcome(created, updated, deleted),
+            created=created,
+            updated=updated,
+            deleted=deleted,
+            commitments=await self.list_for(user_id, today),
+        )
 
     # ------------------------------------------------------------------ #
     async def _category(self, code: str) -> ConsumptionCategory:

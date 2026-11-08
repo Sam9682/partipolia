@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_net_contributor
 from app.core.database import get_session
 from app.core.logging import get_logger
 from app.core.rate_limit import default_rate_limit
@@ -21,8 +21,11 @@ from app.schemas.commitment import (
     CitizenExport,
     CommitmentCreate,
     CommitmentOut,
+    CommitmentPlan,
+    CommitmentPlanResult,
     CommitmentUpdate,
     MyCommitments,
+    NetBalanceVerdictOut,
     ProfileOut,
     ProfileUpdate,
 )
@@ -39,6 +42,7 @@ from app.services.commitment_service import (
     reductions_of,
     validate_profile_region,
 )
+from app.services.net_balance_verdict_service import NetBalanceVerdictService
 from app.services.simulation_service import (
     DatabaseSnapshotProvider,
     SimulationService,
@@ -53,6 +57,7 @@ profile_router = APIRouter()
 CurrentUser = Annotated[UserPublic, Depends(get_current_user)]
 Session = Annotated[AsyncSession, Depends(get_session, scope="function")]
 Limit = Depends(default_rate_limit("commitments"))
+NetContributor = Depends(require_net_contributor)
 
 
 def _http(exc: CommitmentError) -> HTTPException:
@@ -69,7 +74,7 @@ def _http(exc: CommitmentError) -> HTTPException:
     "",
     response_model=CommitmentOut,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Limit],
+    dependencies=[Limit, NetContributor],
     summary="Créer un engagement (déclaratif)",
 )
 async def create_commitment(
@@ -145,9 +150,24 @@ async def my_commitments(
 
 
 @router.put(
+    "/plan",
+    response_model=CommitmentPlanResult,
+    dependencies=[Limit, NetContributor],
+    summary="Enregistrer mon plan d'engagements (création, mise à jour, retrait)",
+)
+async def save_commitment_plan(
+    payload: CommitmentPlan, session: Session, user: CurrentUser
+) -> CommitmentPlanResult:
+    try:
+        return await CommitmentService(session).save_plan(user.id, payload)
+    except CommitmentError as exc:
+        raise _http(exc) from exc
+
+
+@router.put(
     "/{commitment_id}",
     response_model=CommitmentOut,
-    dependencies=[Limit],
+    dependencies=[Limit, NetContributor],
     summary="Modifier, suspendre, réactiver ou renouveler un engagement",
 )
 async def update_commitment(
@@ -212,6 +232,7 @@ async def export_my_data(session: Session, user: CurrentUser) -> CitizenExport:
             .order_by(EconomicSimulation.id)
         )
     ).scalars()
+    verdict = await NetBalanceVerdictService(session).get(user.id)
     return CitizenExport(
         profile=_profile(account),
         email=account.email,
@@ -226,6 +247,9 @@ async def export_my_data(session: Session, user: CurrentUser) -> CitizenExport:
             }
             for s in saved
         ],
+        net_balance_verdict=(
+            NetBalanceVerdictOut.model_validate(verdict) if verdict is not None else None
+        ),
     )
 
 
