@@ -93,6 +93,14 @@
       <span class="text-slate-600">Impôts fonciers</span> :
       <span class="font-bold" x-text="resultat ? resultat.taxe_fonciere_fr : '—'"></span>
     </div>
+
+    <div class="border-t pt-3 text-sm" data-testid="ligne-impot-revenus-locatifs" aria-live="polite">
+      <span class="text-slate-600">Impôt sur les revenus locatifs</span> :
+      <span class="font-bold" x-text="resultat ? resultat.impot_revenus_locatifs_fr : '—'"></span>
+      <p class="text-xs text-slate-500">
+        Calculé au taux moyen effectif de la section « Mes revenus » ; ce montant s'ajoute à l'impôt sur le revenu.
+      </p>
+    </div>
   </section>
   <section class="card space-y-4" data-testid="bloc-aides" aria-labelledby="nb-aides-title">
     <h2 id="nb-aides-title" class="text-xl font-bold text-navy-900">2. Mes aides</h2>
@@ -193,6 +201,7 @@
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Contribution de consommation (TVA et accises)</th><td class="py-1 text-right" x-text="resultat.consommation.total_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Impôts sur les revenus</th><td class="py-1 text-right" x-text="resultat.impot_revenu_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Impôts fonciers</th><td class="py-1 text-right" x-text="resultat.taxe_fonciere_fr"></td></tr>
+            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Impôt sur les revenus locatifs</th><td class="py-1 text-right" x-text="resultat.impot_revenus_locatifs_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Revenus immobiliers</th><td class="py-1 text-right" x-text="resultat.revenus_immobiliers_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Aides monétaires</th><td class="py-1 text-right" x-text="resultat.aides_monetaires_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Aides non monétaires</th><td class="py-1 text-right" x-text="resultat.aides_non_monetaires_fr"></td></tr>

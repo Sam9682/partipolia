@@ -22,7 +22,12 @@ from app.economics.net_balance.consumption import (
 )
 from app.economics.net_balance.income_tax import IncomeTaxResult, compute_income_tax
 from app.economics.net_balance.parameters import NetBalanceParameterRow, NetBalanceParameters
-from app.economics.net_balance.real_estate import PropertyTaxResult, compute_property_tax
+from app.economics.net_balance.real_estate import (
+    PropertyTaxResult,
+    RentalIncomeTaxResult,
+    compute_property_tax,
+    compute_rental_income_tax,
+)
 from app.economics.net_balance.types import Status
 from app.economics.net_balance.validation import NetBalanceInput
 from app.economics.types import Confidence, ModelSnapshot
@@ -51,6 +56,7 @@ class NetBalanceResult:
     provisional_parameters: tuple[str, ...]  # identifiants triés, sans doublon
     income_tax: IncomeTaxResult
     property_tax: PropertyTaxResult
+    rental_income_tax: RentalIncomeTaxResult
 
 
 def classify(balance: Decimal) -> Verdict:
@@ -116,8 +122,14 @@ def compute_net_balance(
     property_tax = compute_property_tax(
         data.property_income, data.property_tax_rate, params.property_tax
     )
+    rental_income_tax = compute_rental_income_tax(data.property_income, income_tax.average_rate)
     contributions = (
-        employee_total + employer_total + consumption.total + income_tax.tax + property_tax.tax
+        employee_total
+        + employer_total
+        + consumption.total
+        + income_tax.tax
+        + property_tax.tax
+        + rental_income_tax.tax
     )
 
     totals = compute_aid_totals(
@@ -158,4 +170,5 @@ def compute_net_balance(
         provisional_parameters=provisional,
         income_tax=income_tax,
         property_tax=property_tax,
+        rental_income_tax=rental_income_tax,
     )

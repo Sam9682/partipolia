@@ -238,6 +238,8 @@ class NetBalanceResponse(BaseModel):
     revenus_immobiliers_fr: str
     taxe_fonciere: Decimal
     taxe_fonciere_fr: str
+    impot_revenus_locatifs: Decimal
+    impot_revenus_locatifs_fr: str
     taux_taxe_fonciere: Decimal  # pourcentage appliqué
     taux_taxe_fonciere_defaut: Decimal  # pourcentage par défaut du CSV
 

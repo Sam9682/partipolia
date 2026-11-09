@@ -68,7 +68,7 @@
     <div class="space-y-4">
       <form id="form-scenario" class="card space-y-4" aria-label="Paramètres du scénario national"
             hx-post="/simulateur-national/calcul" hx-target="#resultat" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">
-        <h2 class="font-bold text-navy-900">Votre hypothèse</h2>
+        <h2 class="font-bold text-navy-900">Autre hypothèse de consommation</h2>
         <div class="flex flex-wrap gap-2" role="group" aria-label="Présélections">
           {% for p in presets %}
           <button type="button" class="btn-outline text-xs" data-form="form-scenario" data-preset='{{ p | tojson | forceescape }}' title="{{ p.description }}">{{ p.label }}</button>

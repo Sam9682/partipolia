@@ -208,6 +208,8 @@ class NetBalanceService:
             taxe_fonciere_fr=_fr(property_tax.tax),
             taux_taxe_fonciere=property_tax.rate * hundred,
             taux_taxe_fonciere_defaut=params.property_tax.default_rate * hundred,
+            impot_revenus_locatifs=result.rental_income_tax.tax,
+            impot_revenus_locatifs_fr=_fr(result.rental_income_tax.tax),
             estimations_aides=[
                 AidEstimateOut(
                     aide=estimate.aid.value,

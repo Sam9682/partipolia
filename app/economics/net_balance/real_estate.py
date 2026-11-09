@@ -28,3 +28,21 @@ def compute_property_tax(
     with localcontext(engine_context()):
         tax = money(property_income * applied)
     return PropertyTaxResult(property_income, applied, tax, used_default)
+
+
+@dataclass(frozen=True, slots=True)
+class RentalIncomeTaxResult:
+    property_income: Decimal  # loyers annuels bruts
+    rate: Decimal  # taux moyen effectif appliqué (ratio)
+    tax: Decimal  # money(loyers × taux)
+
+
+def compute_rental_income_tax(
+    property_income: Decimal, average_rate: Decimal
+) -> RentalIncomeTaxResult:
+    """Impôt sur les revenus locatifs au taux moyen effectif (un seul arrondi)."""
+    if property_income <= 0 or average_rate <= 0:
+        return RentalIncomeTaxResult(property_income, average_rate, ZERO)
+    with localcontext(engine_context()):
+        tax = money(property_income * average_rate)
+    return RentalIncomeTaxResult(property_income, average_rate, tax)
