@@ -15,7 +15,6 @@ EXPECTED_NAV = [
     ("Simulateur", "/simulateur"),
     ("Simulateur national", "/simulateur-national"),
     ("Impact national", "/impact-national"),
-    ("Nos revendications", "/nos-revendications"),
     ("Revendications citoyennes", "/revendications"),
     ("Consultations", "/consultations"),
     ("Méthodologie", "/methodologie"),
@@ -27,6 +26,7 @@ EXPECTED_NAV = [
 DB_BACKED_PATHS = {"/revendications", "/consultations"}
 
 PUBLIC_PATHS = [href for _, href in EXPECTED_NAV if href not in DB_BACKED_PATHS] + [
+    "/nos-revendications",  # accessible par URL directe, plus dans le menu
     "/login",
     "/mentions-legales",
     "/confidentialite",

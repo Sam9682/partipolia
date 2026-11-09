@@ -59,7 +59,6 @@ NAV_ITEMS: list[dict[str, str]] = [
     {"label": "Simulateur", "href": "/simulateur"},
     {"label": "Simulateur national", "href": "/simulateur-national"},
     {"label": "Impact national", "href": "/impact-national"},
-    {"label": "Nos revendications", "href": "/nos-revendications"},
     {"label": "Revendications citoyennes", "href": "/revendications"},
     {"label": "Consultations", "href": "/consultations"},
     {"label": "Méthodologie", "href": "/methodologie"},
