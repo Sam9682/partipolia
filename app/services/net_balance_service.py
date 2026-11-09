@@ -180,6 +180,8 @@ class NetBalanceService:
                 tva_carburant_fr=_fr(consumption.fuel_vat),
                 total=consumption.total,
                 total_fr=_fr(consumption.total),
+                depense_restante=consumption.remaining_expenditure,
+                depense_restante_fr=_fr(consumption.remaining_expenditure),
             ),
             total_contributions=result.contributions_total,
             total_contributions_fr=_fr(result.contributions_total),

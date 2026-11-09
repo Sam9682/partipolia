@@ -28,6 +28,7 @@ class ConsumptionContribution:
     fuel_excise: Decimal
     fuel_vat: Decimal
     total: Decimal  # vat + fuel_excise + fuel_vat
+    remaining_expenditure: Decimal = ZERO  # basis the taxes are computed on
 
 
 def compute_consumption_contribution(
@@ -59,4 +60,5 @@ def compute_consumption_contribution(
         fuel_excise=fuel_excise,
         fuel_vat=fuel_vat,
         total=direct.vat + fuel_excise + fuel_vat,
+        remaining_expenditure=remaining.avoided_expenditure,
     )

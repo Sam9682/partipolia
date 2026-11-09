@@ -157,6 +157,8 @@ class ConsumptionOut(BaseModel):
     tva_carburant_fr: str
     total: Decimal
     total_fr: str
+    depense_restante: Decimal
+    depense_restante_fr: str
 
 
 class AidEstimateOut(BaseModel):

@@ -50,6 +50,7 @@
             </select>
           </label>
         </div>
+        <p class="mt-1 text-xs text-slate-600">Mesure les recettes publiques ; différent des taxes payées par votre foyer dans le bilan net.</p>
         <p class="kpi-value mt-2" data-testid="net-impact" x-text="result ? eur(result.fiscal.net_public_impact.central) : '—'"></p>
         <p class="text-sm text-slate-600" data-testid="net-range" x-text="result ? 'Impact net estimé : de ' + eur(result.fiscal.net_public_impact.low) + ' à ' + eur(result.fiscal.net_public_impact.high) + ' par an (EUR)' : ''"></p>
         <p class="mt-2 rounded bg-red-50 px-3 py-2 text-xs text-slate-800" x-show="result && result.fiscal.confidence === 'provisional'">
