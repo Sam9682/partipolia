@@ -9,7 +9,7 @@
       <li class="flex flex-wrap items-center justify-between gap-2 rounded px-2 py-1" :class="t.est_utilisateur ? 'bg-red-50 font-bold border border-brand-red' : 'border border-transparent'" :aria-current="t.est_utilisateur ? 'true' : null">
         <span x-text="t.libelle"></span>
         <span class="flex items-center gap-2">
-          <span class="rounded bg-brand-red px-1.5 py-0.5 text-xs font-semibold text-white" x-show="t.est_utilisateur" x-cloak>Vous êtes ici</span>
+          <span class="text-xs font-bold text-brand-red" x-show="t.est_utilisateur" x-cloak>Vous êtes ici</span>
           <span x-text="t.part_population_fr"></span>
         </span>
       </li>
