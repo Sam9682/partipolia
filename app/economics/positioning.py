@@ -22,8 +22,8 @@ _ADULT_EXTRA = Decimal("0.5")
 _CHILD = Decimal("0.3")
 _SHARE_STEP = Decimal("0.1")
 
-LABEL_TOP_CONTRIBUTORS = "Les 10 % qui contribuent le plus"
-LABEL_TOP_BENEFICIARIES = "Les 10 % qui bénéficient le plus"
+LABEL_TOP_CONTRIBUTORS = "Les 10 % de 'vaches à lait'"
+LABEL_TOP_BENEFICIARIES = "Les 10 % les plus assistés"
 
 
 @dataclass(frozen=True, slots=True)
