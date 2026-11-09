@@ -35,3 +35,26 @@ rsa.coef_enfant_1_et_2,rsa,0.3,coefficient,"Hypothèse d'amorçage (à sourcer)"
 rsa.coef_enfant_3_et_plus,rsa,0.4,coefficient,"Hypothèse d'amorçage (à sourcer)",,provisional
 positionnement.niveau_vie_neutre,positionnement,30900,eur_an_par_uc,"INSEE, niveau de vie moyen 2024 (https://www.insee.fr/fr/statistiques/2491918)",2024,medium
 positionnement.taux_transfert_net,positionnement,0.35,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+repartition_statuts.salarie,repartition_statuts,0.62,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+repartition_statuts.sans_emploi,repartition_statuts,0.10,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+repartition_statuts.fonctionnaire,repartition_statuts,0.18,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+repartition_statuts.entrepreneur,repartition_statuts,0.10,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+revenu_net_moyen.salarie,revenu_net_moyen,24000.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional
+revenu_net_moyen.sans_emploi,revenu_net_moyen,9000.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional
+revenu_net_moyen.fonctionnaire,revenu_net_moyen,28000.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional
+revenu_net_moyen.entrepreneur,revenu_net_moyen,22000.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional
+taux_moyen_ir.salarie,taux_moyen_ir,0.06,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+taux_moyen_ir.sans_emploi,taux_moyen_ir,0,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+taux_moyen_ir.fonctionnaire,taux_moyen_ir,0.07,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+taux_moyen_ir.entrepreneur,taux_moyen_ir,0.05,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+part_locative.part_participants,part_locative,0.08,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+part_locative.loyer_annuel_moyen,part_locative,9000.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional
+aides_beneficiaires.apl_als,aides_beneficiaires,0.20,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+aides_beneficiaires.allocations_familiales,aides_beneficiaires,0.15,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+aides_beneficiaires.prime_activite,aides_beneficiaires,0.10,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+aides_beneficiaires.rsa,aides_beneficiaires,0.05,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+aides_beneficiaires.allocation_chomage,aides_beneficiaires,0.06,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+aides_beneficiaires.complement_familial,aides_beneficiaires,0.03,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+aides_beneficiaires.ars,aides_beneficiaires,0.12,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
+aides_montant.allocation_chomage,aides_montant,11000.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional
+aides_montant.prime_activite,aides_montant,2000.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional

@@ -25,6 +25,9 @@
           <tr class="border-b font-bold"><th scope="row" class="py-1 pr-2">Impact net (bas)</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.fiscal.net_public_impact.low | eur }}</td>{% endfor %}</tr>
           <tr class="border-b font-bold"><th scope="row" class="py-1 pr-2">Impact net (central)</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.fiscal.net_public_impact.central | eur }}</td>{% endfor %}</tr>
           <tr class="border-b font-bold"><th scope="row" class="py-1 pr-2">Impact net (haut)</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.fiscal.net_public_impact.high | eur }}</td>{% endfor %}</tr>
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Prélèvements extrapolés</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{% if c.result.extrapolation %}{{ c.result.extrapolation.total_levies | eur }}{% else %}—{% endif %}</td>{% endfor %}</tr>
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Aides extrapolées</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{% if c.result.extrapolation %}{{ c.result.extrapolation.total_aids | eur }}{% else %}—{% endif %}</td>{% endfor %}</tr>
+          <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Solde extrapolé</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{% if c.result.extrapolation %}{{ c.result.extrapolation.balance | eur }}{% else %}—{% endif %}</td>{% endfor %}</tr>
           <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Niveau de confiance</th>{% for c in columns %}<td class="py-1 pr-2 text-right">{{ c.result.confidence }}</td>{% endfor %}</tr>
         </tbody>
       </table>

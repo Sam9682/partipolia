@@ -17,11 +17,15 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from app.economics.decimal_utils import ONE, ZERO
 from app.economics.net_balance.types import Status
 from app.economics.parameters import parse_decimal
 from app.economics.types import Confidence
+
+if TYPE_CHECKING:
+    from app.economics.net_balance.national_extrapolation import ExtrapolationParameters
 
 PARAMETERS_FILE = (
     Path(__file__).resolve().parents[1] / "data" / "net_balance" / ("net_balance_parameters.csv")
@@ -364,3 +368,16 @@ def load_net_balance_parameters() -> NetBalanceParameters:
     except OSError as exc:
         raise NetBalanceParametersError(f"{FILE_LABEL} : fichier absent ou illisible") from exc
     return build_parameters(parse_net_balance_csv(text))
+
+
+@lru_cache(maxsize=1)
+def load_extrapolation_parameters() -> ExtrapolationParameters:
+    """Charge le CSV livré pour l'extrapolation nationale (cache de processus)."""
+    # Import local : national_extrapolation importe ce module (import circulaire).
+    from app.economics.net_balance.national_extrapolation import build_extrapolation_parameters
+
+    try:
+        text = PARAMETERS_FILE.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise NetBalanceParametersError(f"{FILE_LABEL} : fichier absent ou illisible") from exc
+    return build_extrapolation_parameters(parse_net_balance_csv(text))

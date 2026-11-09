@@ -26,10 +26,14 @@ from app.economics.national import (
     reference_population,
     with_population_fallback,
 )
+from app.economics.net_balance.national_extrapolation import LINE_LABELS, extrapolate
+from app.economics.net_balance.parameters import load_extrapolation_parameters
 from app.economics.types import ModelSnapshot
 from app.schemas.national_simulation import (
     MAX_COMPARED_SCENARIOS,
     MIN_COMPARED_SCENARIOS,
+    ExtrapolatedLine,
+    ExtrapolationBlock,
     MobilisationGap,
     NationalComparison,
     NationalScenarioResult,
@@ -47,6 +51,11 @@ HYPOTHESIS_DISCLAIMER = (
     "Ce scénario est une hypothèse, non une prévision : il ne présume ni de la mobilisation "
     "réelle, ni des engagements effectivement déclarés."
 )
+EXTRAPOLATION_DISCLAIMER = (
+    "Les lignes de charges, d'impôts et d'aides sont des extrapolations indicatives à partir "
+    "de taux moyens par statut, sans foyer type ; elles ne modifient pas l'impact net public."
+)
+EXTRAPOLATION_UNAVAILABLE = "Extrapolation des charges, impôts et aides indisponible"
 DECLARATIVE_MENTION = "engagements déclaratifs non vérifiés"
 _WEAK_LEVELS = frozenset({"provisional", "low"})
 
@@ -100,6 +109,36 @@ _PRESETS: tuple[ScenarioPreset, ...] = (
         },
     ),
 )
+
+
+def _extrapolation_parts(
+    participants: Decimal,
+) -> tuple[ExtrapolationBlock | None, str | None, list[str]]:
+    """Extrapolated block, failure message and provisional ids; never raises."""
+    try:
+        value = extrapolate(participants, load_extrapolation_parameters())
+        lines = [
+            ExtrapolatedLine(
+                code=line.code,
+                label=LINE_LABELS[line.code],
+                kind=line.kind,
+                amount=line.amount,
+                provisional=bool(line.provisional_ids),
+                provisional_parameters=list(line.provisional_ids),
+            )
+            for line in value.lines
+        ]
+        block = ExtrapolationBlock(
+            lines=lines,
+            total_levies=value.total_levies,
+            total_aids=value.total_aids,
+            balance=value.balance,
+        )
+    except Exception:  # noqa: BLE001 - isolated degradation (Exigence 6.2)
+        logger.warning("national_extrapolation_failed", exc_info=True)
+        return None, EXTRAPOLATION_UNAVAILABLE, []
+    ids = [i for line in value.lines for i in line.provisional_ids]
+    return block, None, ids
 
 
 class NationalSimulationService:
@@ -219,6 +258,22 @@ class NationalSimulationService:
                 f"Niveau de confiance {level} : certains paramètres du modèle sont "
                 "provisoires ou peu fiables ; les fourchettes en tiennent compte."
             )
+        block, extrapolation_message, extra_ids = _extrapolation_parts(participants)
+        provisional_parameters = list(fiscal.provisional_parameters)
+        provisional_parameters.extend(
+            i for i in dict.fromkeys(extra_ids) if i not in provisional_parameters
+        )
+        if warning is None and extra_ids:
+            warning = (
+                "Niveau de confiance provisional : certains paramètres du modèle sont "
+                "provisoires ou peu fiables ; les fourchettes en tiennent compte."
+            )
+        disclaimers = [
+            *(d for d in DISCLAIMERS if not d.startswith(_PERSONAL_ONLY)),
+            HYPOTHESIS_DISCLAIMER,
+        ]
+        if block is not None:
+            disclaimers.append(EXTRAPOLATION_DISCLAIMER)
         return NationalScenarioResult(
             scenario=ScenarioEcho(
                 participation_rate=scenario.participation_rate,
@@ -238,11 +293,10 @@ class NationalSimulationService:
             fiscal=fiscal,
             confidence=fiscal.confidence,
             confidence_warning=warning,
-            provisional_parameters=list(fiscal.provisional_parameters),
-            disclaimers=[
-                *(d for d in DISCLAIMERS if not d.startswith(_PERSONAL_ONLY)),
-                HYPOTHESIS_DISCLAIMER,
-            ],
+            provisional_parameters=provisional_parameters,
+            disclaimers=disclaimers,
+            extrapolation=block,
+            extrapolation_message=extrapolation_message,
         )
 
     # ------------------------------------------------------------------ #

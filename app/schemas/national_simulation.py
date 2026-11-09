@@ -91,6 +91,26 @@ class PopulationInfo(BaseModel):
     confidence_label: Literal["official", "provisional", "low"]
 
 
+class ExtrapolatedLine(BaseModel):
+    """One extrapolated line (charge, tax or aid) of the scenario, in euros."""
+
+    code: str
+    label: str
+    kind: Literal["charge", "tax", "aid"]
+    amount: Decimal
+    provisional: bool
+    provisional_parameters: list[str] = Field(default_factory=list)
+
+
+class ExtrapolationBlock(BaseModel):
+    """Extrapolated charges, taxes and aids with totals."""
+
+    lines: list[ExtrapolatedLine]
+    total_levies: Decimal
+    total_aids: Decimal
+    balance: Decimal  # extrapolated levies minus extrapolated aids
+
+
 class NationalScenarioResult(BaseModel):
     """Output of the national simulator. A hypothesis, not a forecast."""
 
@@ -105,6 +125,8 @@ class NationalScenarioResult(BaseModel):
     confidence_warning: str | None = None
     provisional_parameters: list[str] = Field(default_factory=list)
     disclaimers: list[str]
+    extrapolation: ExtrapolationBlock | None = None
+    extrapolation_message: str | None = None
 
 
 class NationalComparison(BaseModel):
