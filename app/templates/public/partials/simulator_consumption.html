@@ -1,5 +1,5 @@
 <div data-testid="bloc-consommation" class="space-y-4">
-  <h2 class="text-xl font-bold text-navy-900">3. Ma consommation</h2>
+  <h2 class="text-xl font-bold text-navy-900">3. Ma consommation réductible</h2>
   <div class="grid gap-8 lg:grid-cols-2">
     <form class="card space-y-6" @submit.prevent aria-label="Réductions par catégorie">
       <div class="flex items-center justify-between gap-4">
@@ -9,7 +9,8 @@
       <template x-for="c in categories" :key="c.code">
         <div>
           <div class="flex items-baseline justify-between gap-2">
-            <label :for="'r-' + c.code" class="font-semibold text-navy-900" x-text="c.name"></label>
+            <label :for="'r-' + c.code" :id="'rn-' + c.code" class="font-semibold text-navy-900" x-text="c.name"></label>
+            <span :id="'rl-' + c.code" class="text-xs text-slate-700">Réduction des dépenses de : </span>
             <output :for="'r-' + c.code" class="text-lg font-extrabold text-brand-red" x-text="reductions[c.code] + ' %'"></output>
           </div>
           <p class="text-xs text-slate-500" x-text="'Référence : ' + eur(c.reference) + ' par adulte et par an'"></p>
@@ -21,7 +22,7 @@
           </div>
           <p :id="'e-' + c.code" class="mt-1 text-xs text-red-700" x-show="errors[c.code]" x-text="errors[c.code]" x-cloak></p>
           <p class="mt-1 text-xs font-semibold text-brand-red" x-show="isCustom(c)" x-cloak>Personnalisé · référence : <span x-text="eur(c.reference)"></span></p>
-          <input :id="'r-' + c.code" type="range" min="0" max="100" step="5" x-model.number="reductions[c.code]" @input.debounce.250ms="calculate()" class="mt-2 w-full accent-brand-red" :aria-valuetext="reductions[c.code] + ' pour cent'" />
+          <input :id="'r-' + c.code" type="range" min="0" max="100" step="5" x-model.number="reductions[c.code]" @input.debounce.250ms="calculate()" :aria-labelledby="'rl-' + c.code + ' rn-' + c.code" class="mt-2 w-full accent-brand-red" :aria-valuetext="reductions[c.code] + ' pour cent'" />
         </div>
       </template>
       <div class="flex flex-wrap gap-3">
@@ -60,18 +61,18 @@
 
         <table class="mt-4 w-full text-left text-sm">
           <caption class="sr-only">Décomposition de l'impact estimé, en euros par an</caption>
-          <thead><tr class="border-b text-xs uppercase text-slate-500"><th class="py-1 pr-2">Composante</th><th class="py-1 pr-2 text-right">Bas</th><th class="py-1 pr-2 text-right">Central</th><th class="py-1 text-right">Haut</th></tr></thead>
+          <thead><tr class="border-b text-xs uppercase text-slate-500"><th class="py-1 pr-2">Composante</th><th class="py-1 pr-2 text-right">Central</th><th class="py-1 text-right" title="100 % = suppression totale de la dépense, donc TVA totale incluse dans la consommation non réduite">Si curseurs à 100 %</th></tr></thead>
           <tbody>
             <template x-for="r in rows()" :key="r.label">
               <tr class="border-b" :class="r.strong ? 'font-bold' : ''">
                 <td class="py-1 pr-2" x-text="r.label"></td>
-                <td class="py-1 pr-2 text-right" x-text="eur(r.v.low)"></td>
-                <td class="py-1 pr-2 text-right" x-text="eur(r.v.central)"></td>
-                <td class="py-1 text-right" x-text="eur(r.v.high)"></td>
+                <td class="py-1 pr-2 text-right" x-text="eur(r.central)"></td>
+                <td class="py-1 text-right" x-text="eur(r.full)"></td>
               </tr>
             </template>
           </tbody>
         </table>
+        <p class="mt-1 text-xs text-slate-600">100 % = suppression totale de la dépense, donc TVA totale incluse dans la consommation non réduite.</p>
 
         <h3 class="mt-4 text-xs font-bold uppercase text-slate-500">Autres indicateurs (distincts des recettes fiscales)</h3>
         <ul class="mt-1 space-y-1 text-sm text-slate-700">
@@ -87,11 +88,6 @@
 
         <p class="mt-3 text-xs text-slate-500" x-text="result ? result.fiscal.methodology : ''"></p>
         <p class="mt-3 text-xs text-slate-500" x-text="result ? 'Version du modèle : ' + result.model_version + ' · jeux de données : ' + result.dataset_versions.join(', ') : ''" data-testid="model-version"></p>
-      </div>
-
-      <div class="card" x-show="result" x-cloak data-testid="my-impact">
-        <h2 class="font-bold text-navy-900">Mon impact estimé</h2>
-        {% include "public/partials/impact_extras.html" %}
       </div>
 
       <p class="rounded-md bg-slate-100 p-3 text-xs text-slate-700" x-show="result && !(result.fiscal.modules.indirect && result.fiscal.modules.induced)" x-cloak>

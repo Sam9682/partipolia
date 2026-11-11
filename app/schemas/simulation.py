@@ -189,6 +189,18 @@ class FiscalResult(BaseModel):
     tax_breakdown: TaxBreakdown | None = None
 
 
+class FiscalCentral(BaseModel):
+    """Central values of the table components, EUR per year (Decimal serialized as a string)."""
+
+    direct: Decimal
+    indirect: Decimal | None = None  # None when the module is unavailable
+    induced: Decimal | None = None
+    gross_revenue_loss: Decimal
+    additional_public_expenditure: Decimal
+    rebound_offset: Decimal
+    net_public_impact: Decimal
+
+
 class SectorImpact(BaseModel):
     code: str
     turnover_change: Decimal
@@ -229,3 +241,5 @@ class SimulationResponse(BaseModel):
     categories: list[CategoryResult]
     disclaimers: list[str]
     energie: EnergyBaselineOut | None = None
+    fiscal_full_reduction: FiscalCentral
+    net_public_impact_central_fr: str

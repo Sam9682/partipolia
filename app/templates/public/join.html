@@ -11,7 +11,7 @@
 
 <script type="application/json" id="join-categories">{{ categories | tojson }}</script>
 
-<div class="mx-auto max-w-4xl px-4 pt-8" x-data="join()" x-init="init()" data-testid="join">
+<div class="mx-auto max-w-4xl px-4 pt-8" x-data="join()" x-init="init()" @net-balance-clear-all.window="onClearAll()" data-testid="join">
   <p class="text-sm text-red-700" role="alert" x-show="error" x-text="error" x-cloak></p>
   <p class="text-sm text-green-800" role="status" x-show="notice" x-text="notice" x-cloak></p>
 
@@ -67,11 +67,13 @@
   </section>
 
   {% set net_balance_consumption_template = "public/partials/join_consumption.html" %}
+  {% set net_balance_impact_template = "public/partials/join_impact.html" %}
   {% include "public/partials/net_balance.html" %}
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/js/net_balance_clear.js"></script>
 <script src="/static/js/national_slider.js"></script>
 <script src="/static/js/participer_sync.js"></script>
 <script>
@@ -153,6 +155,26 @@
         } catch (e) {
           // storage denied or full: keep working with in-memory overrides
         }
+      },
+      // Notifie le bilan net (netBalance) de la consommation courante.
+      emitConsumption() {
+        const reductions = {};
+        this.categories.forEach(c => { reductions[c.code] = String(this.plan[c.code] ?? 0); });
+        const adultes = Math.min(10, Math.max(1, parseInt(this.profile.adults, 10) || 1));
+        window.dispatchEvent(new CustomEvent('consumption-changed', { detail: { reductions, adultes, reference_overrides: { ...this.overrides } } }));
+      },
+      // « Effacer tout » du bilan net : mémoire uniquement (ni PUT, ni stockage navigateur, form.adults intact).
+      onClearAll() {
+        const empty = window.PartipoliaClear.emptyConsumption(this.categories.map(c => c.code));
+        this.categories.forEach(c => {
+          this.plan[c.code] = 0;
+          this.amounts[c.code] = '0';
+          this.overrides[c.code] = empty.reference_overrides[c.code];
+        });
+        this.errors = {};
+        this.liveMessage = '';
+        this.profile.adults = empty.adultes;
+        this.emitConsumption();
       },
       updateLiveMessage() {
         this.liveMessage = this.categories

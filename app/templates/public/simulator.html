@@ -11,8 +11,9 @@
 
 <script type="application/json" id="simulator-categories">{{ categories | tojson }}</script>
 
-<div class="mx-auto max-w-6xl px-4 pt-8" x-data="simulator()" x-init="init()" data-testid="simulator">
+<div class="mx-auto max-w-6xl px-4 pt-8" x-data="simulator()" x-init="init()" @net-balance-clear-all.window="onClearAll()" data-testid="simulator">
   {% set net_balance_consumption_template = "public/partials/simulator_consumption.html" %}
+  {% set net_balance_impact_template = "public/partials/simulator_impact.html" %}
   {% include "public/partials/net_balance.html" %}
 
   <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -23,6 +24,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/js/net_balance_clear.js"></script>
 <script src="/static/js/national_slider.js"></script>
 <script>
   document.addEventListener('alpine:init', () => {
@@ -143,15 +145,16 @@
       rows() {
         if (!this.result) { return []; }
         const f = this.result.fiscal;
+        const fr = this.result.fiscal_full_reduction;
         const out = [
-          { label: 'Direct : TVA et taxes carburant', v: f.direct },
+          { label: 'Direct : TVA et taxes carburant', central: f.direct.central, full: fr.direct },
         ];
-        if (f.indirect) { out.push({ label: 'Indirect : fournisseurs (impôts de production, IS)', v: f.indirect }); }
-        if (f.induced) { out.push({ label: 'Induit : emploi (cotisations, impôt sur le revenu)', v: f.induced }); }
-        out.push({ label: 'Pertes de recettes brutes', v: f.gross_revenue_loss, strong: true });
-        out.push({ label: 'Dépenses publiques supplémentaires', v: f.additional_public_expenditure });
-        out.push({ label: 'Effet de rebond (TVA récupérée)', v: f.rebound_offset });
-        out.push({ label: 'Impact net sur les finances publiques', v: f.net_public_impact, strong: true });
+        if (f.indirect) { out.push({ label: 'Indirect : fournisseurs (impôts de production, IS)', central: f.indirect.central, full: fr.indirect }); }
+        if (f.induced) { out.push({ label: 'Induit : emploi (cotisations, impôt sur le revenu)', central: f.induced.central, full: fr.induced }); }
+        out.push({ label: 'Pertes de recettes brutes', central: f.gross_revenue_loss.central, full: fr.gross_revenue_loss, strong: true });
+        out.push({ label: 'Dépenses publiques supplémentaires', central: f.additional_public_expenditure.central, full: fr.additional_public_expenditure });
+        out.push({ label: 'Effet de rebond (TVA récupérée)', central: f.rebound_offset.central, full: fr.rebound_offset });
+        out.push({ label: 'Impact net sur les finances publiques', central: f.net_public_impact.central, full: fr.net_public_impact, strong: true });
         return out;
       },
       confidenceLabel(c) {
@@ -159,6 +162,18 @@
       },
       applyExample() {
         Object.assign(this.reductions, { restaurants: 100, clothing: 50, leisure: 75, hotels_holidays: 50, electronics: 30, digital_subscriptions: 100 });
+        this.calculate();
+      },
+      // « Effacer tout » du bilan net : consommation à zéro, en mémoire uniquement (pas de saveStore).
+      onClearAll() {
+        const empty = window.PartipoliaClear.emptyConsumption(this.categories.map(c => c.code));
+        this.categories.forEach(c => {
+          this.reductions[c.code] = 0;
+          this.amounts[c.code] = '0';
+          this.overrides[c.code] = empty.reference_overrides[c.code];
+        });
+        this.errors = {};
+        this.adults = empty.adultes;
         this.calculate();
       },
       reset() {
@@ -172,7 +187,12 @@
         const adultes = Math.min(10, Math.max(1, parseInt(this.adults, 10) || 1));
         window.dispatchEvent(new CustomEvent('consumption-changed', { detail: { reductions, adultes, reference_overrides: { ...this.overrides } } }));
       },
+      _calcSeq: 0,
+      _notifyFiscalTotal(total) {
+        window.dispatchEvent(new CustomEvent('fiscal-total-changed', { detail: { total_fr: total } }));
+      },
       async calculate() {
+        const seq = ++this._calcSeq;
         this.error = '';
         this.emitConsumption();
         const adults = Math.min(10, Math.max(1, parseInt(this.adults, 10) || 1));
@@ -184,11 +204,17 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ reductions, adults, horizon: this.horizon, reference_overrides: { ...this.overrides } }),
           });
-          if (response.status === 429) { this.error = 'Trop de requêtes. Réessayez dans un instant.'; return; }
-          if (!response.ok) { this.error = 'Le calcul est momentanément indisponible.'; return; }
-          this.result = await response.json();
+          if (seq !== this._calcSeq) { return; }
+          if (response.status === 429) { this.error = 'Trop de requêtes. Réessayez dans un instant.'; this._notifyFiscalTotal(null); return; }
+          if (!response.ok) { this.error = 'Le calcul est momentanément indisponible.'; this._notifyFiscalTotal(null); return; }
+          const data = await response.json();
+          if (seq !== this._calcSeq) { return; }
+          this.result = data;
+          this._notifyFiscalTotal(this.result.net_public_impact_central_fr);
         } catch (e) {
+          if (seq !== this._calcSeq) { return; }
           this.error = 'Le calcul est momentanément indisponible.';
+          this._notifyFiscalTotal(null);
         }
       },
     }));

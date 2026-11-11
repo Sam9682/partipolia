@@ -10,29 +10,39 @@ and the calculation succeeded.
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
 from decimal import Decimal
 
 from app.economics.net_balance import compute_net_balance, load_net_balance_parameters
 from app.economics.net_balance.balance import NetBalanceResult, Verdict
-from app.economics.net_balance.parameters import NetBalanceParameters
+from app.economics.net_balance.non_reducible import (
+    Line,
+    NonReducibleParameterError,
+    NonReducibleTaxes,
+)
+from app.economics.net_balance.parameters import NetBalanceParameterRow, NetBalanceParameters
 from app.economics.net_balance.types import Status
 from app.economics.net_balance.validation import FieldError, parse_input
 from app.economics.population_deciles import load_decile_table
 from app.economics.positioning import Positioning, compute_positioning
-from app.economics.types import Confidence
+from app.economics.types import Confidence, ModelSnapshot
 from app.schemas.net_balance import (
     AidEstimateOut,
+    ConsommationNonReductibleOut,
     ConsumptionOut,
+    LigneNonReductibleOut,
     NetBalanceRequest,
     NetBalanceResponse,
     PositionnementOut,
+    SourceOut,
     StatusChargesOut,
     TrancheOut,
 )
 from app.services.simulation_service import SnapshotProvider
 from app.web.formatting import format_eur_fr, format_number_fr
 
-__all__ = ["NetBalanceService", "NetBalanceValidationError"]
+__all__ = ["NetBalanceService", "NetBalanceUnavailableError", "NetBalanceValidationError"]
 
 WARNING_TEXT = (
     "Ce bilan est une estimation fondée sur des taux moyens simplifiés, "
@@ -61,6 +71,11 @@ _STATUS_LABELS: dict[Status, str] = {
     Status.ENTREPRENEUR: "Entrepreneur",
 }
 
+_MISSING_PARAMETER_MESSAGE = (
+    "Le calcul est momentanément indisponible : un paramètre nécessaire à la "
+    "consommation non réductible (carburant) est manquant. Réessayez plus tard."
+)
+
 _UNKNOWN_CATEGORY_MESSAGE = (
     "Catégorie de consommation inconnue : utilisez uniquement les catégories proposées."
 )
@@ -74,8 +89,106 @@ class NetBalanceValidationError(ValueError):
         self.errors = errors
 
 
+class NetBalanceUnavailableError(RuntimeError):
+    """A parameter required by the calculation is missing; the router answers 503."""
+
+    code = "parametre_manquant"
+
+    def __init__(self, message: str = _MISSING_PARAMETER_MESSAGE) -> None:
+        super().__init__(message)
+        self.message = message
+
+
+_SOURCE_RE = re.compile(r"^(?P<label>.*?)\s*\((?P<url>https?://[^\s()]+)\)\s*$")
+
+_LINE_LABELS: dict[Line, str] = {
+    Line.NOURRITURE: "Frais de nourriture",
+    Line.ELECTRICITE: "Électricité",
+    Line.ESSENCE: "Frais essence pour voiture",
+}
+
+
 def _fr(value: Decimal) -> str:
     return format_eur_fr(value, places=2)
+
+
+def _rate_pct_fr(rate: Decimal) -> str:
+    """Rate as a French percentage without trailing zeros: ``20 %``, ``6,975 %``."""
+    pct = (rate * Decimal(100)).normalize()
+    places = max(0, -pct.as_tuple().exponent)  # type: ignore[operator]
+    return f"{format_number_fr(pct, places)} %"
+
+
+def _parse_source(row: NetBalanceParameterRow) -> SourceOut:
+    """Split the CSV ``source`` column ``Libellé (URL)``; without URL, label only."""
+    match = _SOURCE_RE.match(row.source.strip())
+    if match is None or not match.group("label"):
+        return SourceOut(libelle=row.source.strip(), url=None, annee=row.year)
+    return SourceOut(libelle=match.group("label"), url=match.group("url"), annee=row.year)
+
+
+def _dedupe_sources(rows: tuple[NetBalanceParameterRow, ...]) -> list[SourceOut]:
+    seen: set[tuple[str, str | None, int | None]] = set()
+    sources: list[SourceOut] = []
+    for row in rows:
+        source = _parse_source(row)
+        key = (source.libelle, source.url, source.annee)
+        if key not in seen:
+            seen.add(key)
+            sources.append(source)
+    return sources
+
+
+def _build_non_reducible(
+    taxes: NonReducibleTaxes,
+    params: NetBalanceParameters,
+    requested: Mapping[Line, Decimal | None],
+    snapshot: ModelSnapshot | None,
+) -> ConsommationNonReductibleOut:
+    nr = params.non_reducible
+    lines: list[LigneNonReductibleOut] = []
+    for line in Line:
+        t = taxes.lines[line]
+        rate_rows = {
+            Line.NOURRITURE: nr.food_rate.rows,
+            Line.ELECTRICITE: nr.electricity_rate.rows,
+            Line.ESSENCE: (nr.fuel_vat_row,),
+        }[line]
+        used: list[NetBalanceParameterRow] = []
+        if requested.get(line) is None:
+            used.append(nr.default_rows[line])
+        if t.amount > 0:
+            used.extend(rate_rows)
+        provisional = any(r.confidence == Confidence.PROVISIONAL for r in used)
+        if line is Line.ESSENCE and t.amount > 0 and snapshot is not None:
+            provisional = provisional or any(
+                snapshot.param(name).confidence == Confidence.PROVISIONAL
+                for name in taxes.used_fuel_parameters
+            )
+        default = nr.default_amounts[line]
+        lines.append(
+            LigneNonReductibleOut(
+                ligne=line.value,
+                libelle=_LINE_LABELS[line],
+                montant=t.amount,
+                montant_fr=_fr(t.amount),
+                montant_defaut=default,
+                montant_defaut_fr=_fr(default),
+                taux_tva=t.rate,
+                taux_tva_pct_fr=_rate_pct_fr(t.rate),
+                tva=t.vat,
+                tva_fr=_fr(t.vat),
+                accises=t.excise,
+                accises_fr=_fr(t.excise),
+                total_taxes=t.total,
+                total_taxes_fr=_fr(t.total),
+                provisoire=provisional,
+                sources=_dedupe_sources(nr.sources[line]),
+            )
+        )
+    return ConsommationNonReductibleOut(
+        lignes=lines, total_taxes=taxes.total, total_taxes_fr=_fr(taxes.total)
+    )
 
 
 def _share_fr(value: Decimal) -> str:
@@ -126,7 +239,16 @@ class NetBalanceService:
             raise NetBalanceValidationError(
                 [FieldError("consommation", _UNKNOWN_CATEGORY_MESSAGE)]
             ) from None
-        return self._build_response(result, params, data.adults, data.children)
+        except NonReducibleParameterError:
+            raise NetBalanceUnavailableError from None
+        return self._build_response(
+            result,
+            params,
+            data.adults,
+            data.children,
+            requested=data.non_reducible,
+            snapshot=snapshot,
+        )
 
     @staticmethod
     def _build_response(
@@ -134,6 +256,9 @@ class NetBalanceService:
         params: NetBalanceParameters,
         adults: int,
         children: int,
+        *,
+        requested: Mapping[Line, Decimal | None] | None = None,
+        snapshot: ModelSnapshot | None = None,
     ) -> NetBalanceResponse:
         consumption = result.consumption
         income_tax = result.income_tax
@@ -182,6 +307,9 @@ class NetBalanceService:
                 total_fr=_fr(consumption.total),
                 depense_restante=consumption.remaining_expenditure,
                 depense_restante_fr=_fr(consumption.remaining_expenditure),
+            ),
+            consommation_non_reductible=_build_non_reducible(
+                result.non_reducible, params, requested or {}, snapshot
             ),
             total_contributions=result.contributions_total,
             total_contributions_fr=_fr(result.contributions_total),

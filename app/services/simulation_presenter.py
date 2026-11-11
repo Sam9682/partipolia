@@ -22,6 +22,7 @@ from app.schemas.simulation import (
     DirectFiscalResult,
     EnergyBaselineOut,
     EnergyLineOut,
+    FiscalCentral,
     FiscalResult,
     MoneyRange,
     PersonalResult,
@@ -32,6 +33,7 @@ from app.schemas.simulation import (
     TaxBreakdown,
     TaxBreakdownLine,
 )
+from app.web.formatting import format_eur_fr
 
 logger = get_logger(__name__)
 
@@ -313,6 +315,36 @@ def build_energy_result(snapshot: ModelSnapshot, baseline: EnergyBaseline) -> En
     )
 
 
+def _central_of(outcome: EngineOutcome) -> FiscalCentral:
+    """Central values of the table components (same accessors as ``build_fiscal_result``)."""
+    modules = dict(outcome.modules)
+    central = outcome.central
+    return FiscalCentral(
+        direct=central.direct_total,
+        indirect=central.indirect_total if modules["indirect"] else None,
+        induced=central.induced_total if modules["induced"] else None,
+        gross_revenue_loss=central.gross_revenue_loss,
+        additional_public_expenditure=central.additional_public_expenditure,
+        rebound_offset=central.rebound_offset,
+        net_public_impact=central.net_public_impact,
+    )
+
+
+def build_full_reduction_scenario(
+    snapshot: ModelSnapshot, request: SimulationRequest
+) -> FiscalCentral:
+    """Central fiscal values if every category were reduced by 100 %.
+
+    The request reductions are ignored; adults, reference overrides and horizon are kept.
+    Engine errors propagate (no partial result).
+    """
+    all_full = {code: Decimal(100) for code in snapshot.category_codes}
+    savings = compute_personal_savings(
+        snapshot, all_full, request.adults, request.reference_overrides
+    )
+    return _central_of(run_engine(snapshot, savings, request.horizon))
+
+
 def build_response(snapshot: ModelSnapshot, request: SimulationRequest) -> SimulationResponse:
     unknown = (set(request.reductions) | set(request.reference_overrides)) - set(
         snapshot.category_codes
@@ -398,6 +430,7 @@ def build_response(snapshot: ModelSnapshot, request: SimulationRequest) -> Simul
         if energy_baseline_available(snapshot)
         else None
     )
+    fiscal_full_reduction = build_full_reduction_scenario(snapshot, request)
 
     return SimulationResponse(
         model_version=snapshot.model_version,
@@ -420,4 +453,6 @@ def build_response(snapshot: ModelSnapshot, request: SimulationRequest) -> Simul
         categories=categories,
         disclaimers=list(DISCLAIMERS),
         energie=energie,
+        fiscal_full_reduction=fiscal_full_reduction,
+        net_public_impact_central_fr=format_eur_fr(fiscal.net_public_impact.central, places=2),
     )

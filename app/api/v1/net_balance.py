@@ -25,10 +25,14 @@ from app.core.rate_limit import default_rate_limit
 from app.economics.net_balance.validation import parse_input
 from app.schemas.auth import UserPublic
 from app.schemas.net_balance import NetBalanceRequest, NetBalanceResponse, UserIncomeOut
-from app.services.net_balance_service import NetBalanceService, NetBalanceValidationError
+from app.services.net_balance_service import (
+    NetBalanceService,
+    NetBalanceUnavailableError,
+    NetBalanceValidationError,
+)
 from app.services.net_balance_verdict_service import NetBalanceVerdictService
-from app.services.user_income_service import UserIncomeService
 from app.services.simulation_service import DatabaseSnapshotProvider
+from app.services.user_income_service import UserIncomeService
 
 router = APIRouter()
 
@@ -45,7 +49,10 @@ def get_net_balance_service(
     response_model=NetBalanceResponse,
     summary="Calculer le bilan contributeur net / bénéficiaire net",
     dependencies=[Depends(default_rate_limit("simulate"))],
-    responses={status.HTTP_400_BAD_REQUEST: {"description": "Entrée invalide"}},
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"description": "Entrée invalide"},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"description": "Paramètre manquant"},
+    },
 )
 async def calculate(
     payload: NetBalanceRequest,
@@ -69,6 +76,13 @@ async def calculate(
             message="Le corps de la requête est invalide.",
             request_id=getattr(request.state, "request_id", None),
             fields=[{"field": e.field, "message": e.message} for e in exc.errors],
+        )
+    except NetBalanceUnavailableError as exc:
+        return error_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            message=exc.message,
+            request_id=getattr(request.state, "request_id", None),
+            code=exc.code,
         )
     if current_user is not None:
         await NetBalanceVerdictService(session).record(

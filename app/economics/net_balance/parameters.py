@@ -20,6 +20,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from app.economics.decimal_utils import ONE, ZERO
+from app.economics.net_balance.non_reducible import Line, NonReducibleParams, WeightedRate
 from app.economics.net_balance.types import Status
 from app.economics.parameters import parse_decimal
 from app.economics.types import Confidence
@@ -59,6 +60,29 @@ _RSA_IDS = {
     "child_1_2": "rsa.coef_enfant_1_et_2",
     "child_3_plus": "rsa.coef_enfant_3_et_plus",
 }
+
+_NR_MAX_AMOUNT = Decimal(1_000_000)
+_NR_AMOUNT_IDS = {
+    Line.NOURRITURE: "non_reductible.nourriture.montant_defaut",
+    Line.ELECTRICITE: "non_reductible.electricite.montant_defaut",
+    Line.ESSENCE: "non_reductible.essence.montant_defaut",
+}
+_FOOD_RATE_IDS = {
+    "reduced": "tva.alimentation.taux_reduit",
+    "intermediate": "tva.alimentation.taux_intermediaire",
+    "normal": "tva.alimentation.taux_normal",
+}
+_FOOD_SHARE_IDS = {
+    "reduced": "tva.alimentation.part_taux_reduit",
+    "intermediate": "tva.alimentation.part_taux_intermediaire",
+    "normal": "tva.alimentation.part_taux_normal",
+}
+_ELEC_IDS = {
+    "abonnement": "tva.electricite.taux_abonnement",
+    "consommation": "tva.electricite.taux_consommation",
+    "part_abonnement": "tva.electricite.part_abonnement",
+}
+_FUEL_VAT_ID = "tva.essence.taux"
 
 _EMPLOYEE_PREFIX = "charges_salariales."
 _EMPLOYER_PREFIX = "charges_patronales."
@@ -161,6 +185,7 @@ class NetBalanceParameters:
     property_tax: PropertyTaxParams
     income_aids: IncomeAidScale
     positioning: PositioningParams
+    non_reducible: NonReducibleParams
     rows: tuple[NetBalanceParameterRow, ...]
 
     def provisional_rows(self) -> tuple[NetBalanceParameterRow, ...]:
@@ -307,6 +332,7 @@ def build_parameters(
         neutral_level_row=neutral_row,
         net_transfer_rate_row=transfer_row,
     )
+    non_reducible = _build_non_reducible(need, label)
     return NetBalanceParameters(
         rates=MappingProxyType(rates),
         family_scale=scale,
@@ -314,7 +340,56 @@ def build_parameters(
         property_tax=property_tax,
         income_aids=income_aids,
         positioning=positioning,
+        non_reducible=non_reducible,
         rows=tuple(rows),
+    )
+
+
+def _build_non_reducible(
+    need: Callable[[str], NetBalanceParameterRow], label: str
+) -> NonReducibleParams:
+    amount_rows = {line: need(ident) for line, ident in _NR_AMOUNT_IDS.items()}
+    for row in amount_rows.values():
+        if not (ZERO <= row.value <= _NR_MAX_AMOUNT):
+            raise _error(row.line, f"montant hors de [0, 1000000] pour {row.id}", label)
+
+    food = {k: need(v) for k, v in _FOOD_RATE_IDS.items()}
+    food_shares = {k: need(v) for k, v in _FOOD_SHARE_IDS.items()}
+    if sum((r.value for r in food_shares.values()), ZERO) != ONE:
+        raise _error(
+            next(iter(food_shares.values())).line,
+            "les parts de pondération alimentaires doivent sommer à 1 "
+            f"({', '.join(r.id for r in food_shares.values())})",
+            label,
+        )
+    food_rate = sum((food[k].value * food_shares[k].value for k in food), ZERO)
+
+    sub_rate = need(_ELEC_IDS["abonnement"])
+    cons_rate = need(_ELEC_IDS["consommation"])
+    sub_share = need(_ELEC_IDS["part_abonnement"])
+    if not (ZERO <= sub_share.value <= ONE):
+        raise _error(sub_share.line, f"part hors de [0, 1] pour {sub_share.id}", label)
+    elec_rate = sub_share.value * sub_rate.value + (ONE - sub_share.value) * cons_rate.value
+    # La répartition n'influence le résultat (et n'est « utilisée ») que si les taux diffèrent.
+    elec_rows = (
+        (sub_rate, cons_rate, sub_share) if sub_rate.value != cons_rate.value else (sub_rate,)
+    )
+
+    fuel_vat = need(_FUEL_VAT_ID)
+    return NonReducibleParams(
+        default_amounts=MappingProxyType({ln: r.value for ln, r in amount_rows.items()}),
+        default_rows=MappingProxyType(amount_rows),
+        food_rate=WeightedRate(food_rate, (*food.values(), *food_shares.values())),
+        electricity_rate=WeightedRate(elec_rate, elec_rows),
+        fuel_vat_rate=fuel_vat.value,
+        fuel_vat_row=fuel_vat,
+        sources=MappingProxyType(
+            {
+                Line.NOURRITURE: (amount_rows[Line.NOURRITURE], *food.values()),
+                Line.ELECTRICITE: (amount_rows[Line.ELECTRICITE], sub_rate, cons_rate),
+                Line.ESSENCE: (amount_rows[Line.ESSENCE], fuel_vat),
+            }
+        ),
     )
 
 

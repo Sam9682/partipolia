@@ -58,3 +58,16 @@ aides_beneficiaires.complement_familial,aides_beneficiaires,0.03,ratio,"Hypothè
 aides_beneficiaires.ars,aides_beneficiaires,0.12,ratio,"Hypothèse d'amorçage (à sourcer)",,provisional
 aides_montant.allocation_chomage,aides_montant,11000.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional
 aides_montant.prime_activite,aides_montant,2000.00,eur_an,"Hypothèse d'amorçage (à sourcer)",,provisional
+non_reductible.nourriture.montant_defaut,non_reductible,9600,eur_an,Valeur par défaut choisie par le produit PARTIPOLIA,,medium
+non_reductible.electricite.montant_defaut,non_reductible,1141,eur_an,"SDES, Bilan énergétique de la France pour 2023, fig. 5.2.2 (https://www.statistiques.developpement-durable.gouv.fr/edition-numerique/bilan-energetique/fr/27-52-legere-diminution-de-la.php)",2023,medium
+non_reductible.essence.montant_defaut,non_reductible,2400,eur_an,Valeur par défaut choisie par le produit PARTIPOLIA,,medium
+tva.alimentation.taux_reduit,tva_alimentation,0.055,ratio,"service-public.gouv.fr, Taux de TVA sur les produits alimentaires et les boissons (https://entreprendre.service-public.gouv.fr/vosdroits/F22399)",2026,high
+tva.alimentation.taux_intermediaire,tva_alimentation,0.10,ratio,"service-public.gouv.fr, Taux de TVA sur les produits alimentaires et les boissons (https://entreprendre.service-public.gouv.fr/vosdroits/F22399)",2026,high
+tva.alimentation.taux_normal,tva_alimentation,0.20,ratio,"service-public.gouv.fr, Taux de TVA sur les produits alimentaires et les boissons (https://entreprendre.service-public.gouv.fr/vosdroits/F22399)",2026,high
+tva.alimentation.part_taux_reduit,tva_alimentation,0.85,ratio,Hypothèse d'amorçage (à sourcer),,provisional
+tva.alimentation.part_taux_intermediaire,tva_alimentation,0.07,ratio,Hypothèse d'amorçage (à sourcer),,provisional
+tva.alimentation.part_taux_normal,tva_alimentation,0.08,ratio,Hypothèse d'amorçage (à sourcer),,provisional
+tva.electricite.taux_abonnement,tva_electricite,0.20,ratio,"service-public.gouv.fr, Taux de TVA dans le secteur des énergies et des déchets (https://entreprendre.service-public.gouv.fr/vosdroits/F37826)",2026,high
+tva.electricite.taux_consommation,tva_electricite,0.20,ratio,"service-public.gouv.fr, Taux de TVA dans le secteur des énergies et des déchets (https://entreprendre.service-public.gouv.fr/vosdroits/F37826)",2026,high
+tva.electricite.part_abonnement,tva_electricite,0.20,ratio,Hypothèse d'amorçage (à sourcer),,provisional
+tva.essence.taux,tva_essence,0.20,ratio,"economie.gouv.fr, TVA : quels sont les taux de votre quotidien ? (https://www.economie.gouv.fr/particuliers/impots-et-fiscalite/gerer-mes-autres-impots-et-taxes/tva-quels-sont-les-taux-de-votre-quotidien)",2026,high

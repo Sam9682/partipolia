@@ -21,6 +21,10 @@ from app.economics.net_balance.consumption import (
     compute_consumption_contribution,
 )
 from app.economics.net_balance.income_tax import IncomeTaxResult, compute_income_tax
+from app.economics.net_balance.non_reducible import (
+    NonReducibleTaxes,
+    compute_non_reducible_taxes,
+)
 from app.economics.net_balance.parameters import NetBalanceParameterRow, NetBalanceParameters
 from app.economics.net_balance.real_estate import (
     PropertyTaxResult,
@@ -57,6 +61,7 @@ class NetBalanceResult:
     income_tax: IncomeTaxResult
     property_tax: PropertyTaxResult
     rental_income_tax: RentalIncomeTaxResult
+    non_reducible: NonReducibleTaxes
 
 
 def classify(balance: Decimal) -> Verdict:
@@ -74,6 +79,7 @@ def _used_rows(
     params: NetBalanceParameters,
     income_tax: IncomeTaxResult,
     property_tax: PropertyTaxResult,
+    non_reducible: NonReducibleTaxes,
 ) -> list[NetBalanceParameterRow]:
     """Lignes de paramètres réellement utilisées par le calcul."""
     rows: list[NetBalanceParameterRow] = []
@@ -92,6 +98,7 @@ def _used_rows(
         rows.append(params.property_tax.default_rate_row)
     rows.extend(params.income_aids.housing_rows)
     rows.extend(params.income_aids.rsa_rows)
+    rows.extend(non_reducible.used_rows)
     return rows
 
 
@@ -123,10 +130,12 @@ def compute_net_balance(
         data.property_income, data.property_tax_rate, params.property_tax
     )
     rental_income_tax = compute_rental_income_tax(data.property_income, income_tax.average_rate)
+    non_reducible = compute_non_reducible_taxes(data.non_reducible, params.non_reducible, snapshot)
     contributions = (
         employee_total
         + employer_total
         + consumption.total
+        + non_reducible.total
         + income_tax.tax
         + property_tax.tax
         + rental_income_tax.tax
@@ -137,15 +146,17 @@ def compute_net_balance(
     )
     balance = contributions - totals.total
 
-    provisional = tuple(
-        sorted(
-            {
-                r.id
-                for r in _used_rows(charges, data.children, params, income_tax, property_tax)
-                if r.confidence == Confidence.PROVISIONAL
-            }
-        )
+    provisional_ids = {
+        r.id
+        for r in _used_rows(charges, data.children, params, income_tax, property_tax, non_reducible)
+        if r.confidence == Confidence.PROVISIONAL
+    }
+    provisional_ids.update(
+        name
+        for name in non_reducible.used_fuel_parameters
+        if snapshot.param(name).confidence == Confidence.PROVISIONAL
     )
+    provisional = tuple(sorted(provisional_ids))
 
     aid_estimates = {
         **estimate_child_aids(data.children, params.family_scale),
@@ -171,4 +182,5 @@ def compute_net_balance(
         income_tax=income_tax,
         property_tax=property_tax,
         rental_income_tax=rental_income_tax,
+        non_reducible=non_reducible,
     )

@@ -76,6 +76,16 @@ class ImmobilierIn(BaseModel):
     taux_taxe_fonciere: Any = None
 
 
+class ConsommationNonReductibleIn(BaseModel):
+    """Annual non-reducible amounts (TTC); omitted or null means server default."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    nourriture: Any = None
+    electricite: Any = None
+    essence: Any = None
+
+
 class NetBalanceRequest(BaseModel):
     """Input of the net balance endpoint (satisfies ``validation.NetBalanceRequest``)."""
 
@@ -86,6 +96,18 @@ class NetBalanceRequest(BaseModel):
     aides: AidsIn | None = None
     consommation: ConsumptionIn | None = None
     immobilier: ImmobilierIn | None = None
+    consommation_non_reductible: ConsommationNonReductibleIn | None = None
+
+    @property
+    def non_reducible_amounts(self) -> dict[str, Any] | None:
+        block = self.consommation_non_reductible
+        if block is None:
+            return None
+        return {
+            "nourriture": block.nourriture,
+            "electricite": block.electricite,
+            "essence": block.essence,
+        }
 
     @property
     def property_income(self) -> Any:
@@ -198,6 +220,41 @@ class PositionnementOut(BaseModel):
     avertissement: str
 
 
+class SourceOut(BaseModel):
+    """Source of a parameter: label, optional link and optional reference year."""
+
+    libelle: str
+    url: str | None = None
+    annee: int | None = None
+
+
+class LigneNonReductibleOut(BaseModel):
+    """One non-reducible consumption line with the taxes it contains."""
+
+    ligne: str  # nourriture | electricite | essence
+    libelle: str
+    montant: Decimal
+    montant_fr: str
+    montant_defaut: Decimal
+    montant_defaut_fr: str
+    taux_tva: Decimal
+    taux_tva_pct_fr: str
+    tva: Decimal
+    tva_fr: str
+    accises: Decimal  # TICPE, 0 outside fuel
+    accises_fr: str
+    total_taxes: Decimal
+    total_taxes_fr: str
+    provisoire: bool
+    sources: list[SourceOut] = Field(default_factory=list)
+
+
+class ConsommationNonReductibleOut(BaseModel):
+    lignes: list[LigneNonReductibleOut]
+    total_taxes: Decimal
+    total_taxes_fr: str
+
+
 class NetBalanceResponse(BaseModel):
     """Output of the net balance endpoint: one verdict and its breakdown."""
 
@@ -214,6 +271,7 @@ class NetBalanceResponse(BaseModel):
     charges_patronales: Decimal
     charges_patronales_fr: str
     consommation: ConsumptionOut
+    consommation_non_reductible: ConsommationNonReductibleOut
     total_contributions: Decimal
     total_contributions_fr: str
 

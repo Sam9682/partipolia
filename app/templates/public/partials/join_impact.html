@@ -1,0 +1,13 @@
+<div class="card" x-show="sim" x-cloak data-testid="my-impact">
+  <h2 class="font-bold text-navy-900">Mon impact estimé</h2>
+  <p class="mt-2" x-text="sim ? 'Économies personnelles : ' + eur(sim.personal.annual_savings) + ' par an (' + eur(sim.personal.monthly_savings) + ' par mois)' : ''"></p>
+  <p class="text-sm text-slate-700" x-text="sim ? 'Impact net estimé sur les finances publiques : ' + eur(sim.fiscal.net_public_impact.low) + ' à ' + eur(sim.fiscal.net_public_impact.high) + ' par an' : ''"></p>
+  <p class="mt-2 text-xs text-slate-500" x-text="sim ? sim.disclaimers[0] : ''"></p>
+  <p class="mt-1 text-xs text-slate-500" x-text="sim ? 'Version du modèle : ' + sim.model_version : ''"></p>
+  {% include "public/partials/impact_extras.html" %}
+  <template x-if="me">
+    <div class="mt-4">
+      <button type="button" class="btn-outline" @click="goNational()">Simulation nationale</button>
+    </div>
+  </template>
+</div>

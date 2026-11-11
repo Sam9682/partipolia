@@ -16,14 +16,17 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
+from types import MappingProxyType
 from typing import Any, Protocol
 
 from app.economics.decimal_utils import HUNDRED, ZERO, pct_to_fraction
 from app.economics.net_balance.aids import MonetaryAid
+from app.economics.net_balance.non_reducible import Line
 from app.economics.net_balance.types import Status
 from app.economics.personal import MAX_ADULTS
 
 MAX_AMOUNT = Decimal(10_000_000)
+NON_REDUCIBLE_CAP = Decimal(1_000_000)
 MAX_CHILDREN = 20
 MAX_LABEL_LENGTH = 80
 MAX_NON_MONETARY_AIDS = 20
@@ -39,7 +42,18 @@ _STATUS_LABELS: dict[Status, str] = {
 }
 
 _AMOUNT_MESSAGE = "saisissez un montant positif ou nul (deux décimales au plus)."
-_CAP_MESSAGE = "le montant dépasse le plafond autorisé de 10 000 000 €."
+
+
+def _cap_message(cap: Decimal) -> str:
+    return f"le montant dépasse le plafond autorisé de {cap:,.0f} €.".replace(",", " ")
+
+
+_CAP_MESSAGE = _cap_message(MAX_AMOUNT)
+_NON_REDUCIBLE_LABELS: dict[Line, str] = {
+    Line.NOURRITURE: "Frais de nourriture",
+    Line.ELECTRICITE: "Électricité",
+    Line.ESSENCE: "Frais essence pour voiture",
+}
 
 
 class IncomeLineRequest(Protocol):
@@ -88,6 +102,9 @@ class NetBalanceRequest(Protocol):
     @property
     def property_tax_rate(self) -> Any: ...
 
+    @property
+    def non_reducible_amounts(self) -> Mapping[str, Any] | None: ...
+
 
 @dataclass(frozen=True, slots=True)
 class FieldError:
@@ -118,17 +135,18 @@ class NetBalanceInput:
     reference_overrides: Mapping[str, Decimal]
     property_income: Decimal = ZERO
     property_tax_rate: Decimal | None = None  # ratio dans [0, 1]
+    non_reducible: Mapping[Line, Decimal | None] = MappingProxyType({})
 
 
-def _parse_amount(value: Any) -> tuple[Decimal | None, str | None]:
+def _parse_amount(value: Any, cap: Decimal = MAX_AMOUNT) -> tuple[Decimal | None, str | None]:
     """Retourne ``(montant, None)`` ou ``(None, message_sans_la_valeur)``."""
     if not isinstance(value, str) or _AMOUNT_RE.fullmatch(value) is None:
         return None, _AMOUNT_MESSAGE
     amount = Decimal(value.replace(",", "."))
     if amount < ZERO:
         return None, _AMOUNT_MESSAGE
-    if amount > MAX_AMOUNT:
-        return None, _CAP_MESSAGE
+    if amount > cap:
+        return None, _CAP_MESSAGE if cap == MAX_AMOUNT else _cap_message(cap)
     return amount, None
 
 
@@ -326,6 +344,31 @@ def _parse_property_tax_rate(raw: Any, errors: list[FieldError]) -> Decimal | No
     return pct_to_fraction(percentage)
 
 
+def _parse_non_reducible(
+    raw: Mapping[str, Any] | None, errors: list[FieldError]
+) -> dict[Line, Decimal | None]:
+    """``None`` = défaut serveur (bloc ou clé absents) ; chaîne vide = 0."""
+    result: dict[Line, Decimal | None] = {}
+    for line in Line:
+        value = raw.get(line.value) if raw is not None else None
+        if value is None:
+            result[line] = None
+        elif value == "":
+            result[line] = ZERO
+        else:
+            amount, problem = _parse_amount(value, cap=NON_REDUCIBLE_CAP)
+            if amount is None:
+                errors.append(
+                    FieldError(
+                        f"consommation_non_reductible.{line.value}",
+                        f"{_NON_REDUCIBLE_LABELS[line]} : {problem}",
+                    )
+                )
+                continue
+            result[line] = amount
+    return result
+
+
 def parse_input(
     raw: NetBalanceRequest,
 ) -> tuple[NetBalanceInput | None, list[FieldError]]:
@@ -340,6 +383,7 @@ def parse_input(
     overrides = _parse_overrides(getattr(raw, "reference_overrides", None), errors)
     property_income = _parse_property_income(getattr(raw, "property_income", None), errors)
     property_tax_rate = _parse_property_tax_rate(getattr(raw, "property_tax_rate", None), errors)
+    non_reducible = _parse_non_reducible(getattr(raw, "non_reducible_amounts", None), errors)
     if errors:
         return None, errors
     return (
@@ -353,6 +397,7 @@ def parse_input(
             reference_overrides=overrides,
             property_income=property_income,
             property_tax_rate=property_tax_rate,
+            non_reducible=non_reducible,
         ),
         [],
     )

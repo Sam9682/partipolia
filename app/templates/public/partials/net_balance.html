@@ -6,6 +6,10 @@
     Le composant ne conserve rien (ni localStorage, ni sessionStorage, ni cookie). -#}
 <div x-data="netBalance()" x-init="init()" data-testid="net-balance" data-authenticated="{{ 'true' if identity_email else 'false' }}" class="space-y-8">
 
+  <div class="flex justify-end">
+    <button type="button" class="btn-outline" data-testid="effacer-tout" @click="effacerTout()">Effacer tout</button>
+  </div>
+
   <section class="card space-y-4" data-testid="bloc-revenus" aria-labelledby="nb-revenus-title">
     <h2 id="nb-revenus-title" class="text-xl font-bold text-navy-900">1. Mes revenus</h2>
     <p class="text-sm text-slate-600">Revenu net annuel en euros. Choisissez le statut qui décrit vos revenus.</p>
@@ -26,7 +30,7 @@
     <div x-show="form.statut" x-cloak>
       <div class="flex flex-wrap items-center gap-2">
         <label for="nb-revenu" class="text-sm font-semibold text-navy-900">Revenu net annuel</label>
-        <input id="nb-revenu" type="text" inputmode="decimal" autocomplete="off" x-model="form.revenu" @input="_saisieUtilisateur = true"
+        <input id="nb-revenu" type="text" inputmode="decimal" autocomplete="off" x-model="form.revenu" @input="_saisieUtilisateur = true; PartipoliaClear.onRevenuInput(form.immobilier)"
                :aria-invalid="err('revenus.' + form.statut) ? 'true' : 'false'"
                aria-describedby="nb-err-revenu"
                class="w-32 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
@@ -72,7 +76,7 @@
 
     <div class="flex flex-wrap items-center gap-2">
       <label for="nb-loyers" class="text-sm font-semibold text-navy-900">Loyers annuels bruts</label>
-      <input id="nb-loyers" type="text" inputmode="decimal" autocomplete="off" x-model="form.immobilier.loyers"
+      <input id="nb-loyers" type="text" inputmode="decimal" autocomplete="off" x-model="form.immobilier.loyers" @input="PartipoliaClear.onRevenuInput(form.immobilier)"
              :aria-invalid="err('immobilier.loyers_annuels') ? 'true' : 'false'" aria-describedby="nb-err-loyers"
              class="w-32 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
       <span class="text-xs" aria-hidden="true">€</span>
@@ -82,7 +86,7 @@
     <div class="flex flex-wrap items-center gap-2">
       <label for="nb-taux-tf" class="text-sm font-semibold text-navy-900">Taux de taxe foncière</label>
       <input id="nb-taux-tf" type="text" inputmode="decimal" autocomplete="off" x-model="form.immobilier.taux"
-             @input="form.immobilier.tauxModifie = true"
+             @input="form.immobilier.tauxModifie = true; form.immobilier.tauxEfface = false"
              :aria-invalid="err('immobilier.taux_taxe_fonciere') ? 'true' : 'false'" aria-describedby="nb-err-taux-tf"
              class="w-24 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
       <span class="text-xs" aria-hidden="true">%</span>
@@ -178,6 +182,40 @@
     </dl>
   </section>
 
+  <section class="card space-y-4" data-testid="bloc-non-reductible" aria-labelledby="nb-non-reductible-title">
+    <h2 id="nb-non-reductible-title" class="text-xl font-bold text-navy-900">Ma consommation non réductible</h2>
+    <p class="text-sm text-slate-600">Montants annuels TTC. Les taxes qu'ils contiennent sont calculées par le serveur et comptées dans vos contributions.</p>
+
+    <template x-for="d in lignesNonReductibles" :key="d.code">
+      <div :data-testid="'non-reductible-' + d.code">
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="w-64 text-sm font-semibold text-navy-900" :for="'nb-nr-' + d.code" x-text="d.label"></label>
+          <input :id="'nb-nr-' + d.code" type="text" inputmode="decimal" autocomplete="off"
+                 x-model="form.nonReductible[d.code].valeur" @input="form.nonReductible[d.code].modifie = true"
+                 :aria-invalid="err('consommation_non_reductible.' + d.code) ? 'true' : 'false'"
+                 :aria-describedby="'nb-err-nr-' + d.code"
+                 class="w-28 rounded-md border border-slate-300 px-2 py-1 text-right text-sm" />
+          <span class="text-xs" aria-hidden="true">€</span>
+        </div>
+        <p :id="'nb-err-nr-' + d.code" class="mt-1 text-xs text-red-700" role="alert"
+           x-show="err('consommation_non_reductible.' + d.code)" x-text="err('consommation_non_reductible.' + d.code)" x-cloak></p>
+        <p class="mt-1 text-xs text-slate-600" x-show="d.note" x-text="d.note"></p>
+        <template x-if="ligneNR(d.code)">
+          <p class="mt-1 text-xs text-slate-500" :data-testid="'sources-' + d.code">
+            <template x-for="s in ligneNR(d.code).sources" :key="s.libelle">
+              <span class="mr-2">
+                Source :
+                <template x-if="s.url"><a :href="s.url" target="_blank" rel="noopener noreferrer" class="underline" x-text="s.libelle"></a></template>
+                <template x-if="!s.url"><span x-text="s.libelle"></span></template>
+                <span x-show="s.annee" x-text="s.annee ? '(' + s.annee + ')' : ''"></span>
+              </span>
+            </template>
+          </p>
+        </template>
+      </div>
+    </template>
+  </section>
+
   {% if net_balance_consumption_template %}{% include net_balance_consumption_template %}{% endif %}
 
   <section id="bilan-net" class="card space-y-4" data-testid="bilan-net" aria-labelledby="nb-bilan-title" aria-live="polite">
@@ -198,8 +236,19 @@
           <tbody>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Charges salariales</th><td class="py-1 text-right" x-text="resultat.charges_salariales_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Charges patronales</th><td class="py-1 text-right" x-text="resultat.charges_patronales_fr"></td></tr>
-            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Contribution de consommation (TVA et accises)</th><td class="py-1 text-right" x-text="resultat.consommation.total_fr"></td></tr>
-            <tr class="border-b"><td colspan="2" class="pb-1 text-xs text-slate-600">Taxes payées sur votre dépense restante de <span x-text="resultat.consommation.depense_restante_fr"></span> par an (0 % de réduction = aucune baisse de dépense). Différent de l'impact sur les finances publiques.</td></tr>
+            <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Contribution de consommation (TVA et accises)</th><td class="py-1 text-right" data-testid="contribution-consommation" x-text="contributionConsommationFr"></td></tr>
+            <tr class="border-b" x-show="totalFinancesPubliques !== null"><td colspan="2" class="pb-1 text-xs text-slate-600" data-testid="note-contribution-tableau">Montant égal au total du tableau « Impact estimé sur les finances publiques » pour l'horizon choisi.</td></tr>
+            <tr class="border-b" x-show="totalFinancesPubliques === null"><td colspan="2" class="pb-1 text-xs text-slate-600" data-testid="note-contribution-repli">Taxes payées sur votre dépense restante de <span x-text="resultat.consommation.depense_restante_fr"></span> par an (0 % de réduction = aucune baisse de dépense). Différent de l'impact sur les finances publiques.</td></tr>
+            <template x-for="d in lignesNonReductibles" :key="'taxe-' + d.code">
+              <tr class="border-b" x-show="ligneNR(d.code)" :data-testid="d.rowTestid">
+                <th scope="row" class="py-1 pr-2 font-normal">
+                  <span x-text="d.rowLabel"></span>
+                  <span class="ml-1 rounded bg-red-50 px-1.5 py-0.5 text-xs font-semibold text-brand-red" x-show="ligneNR(d.code) &amp;&amp; ligneNR(d.code).provisoire" data-testid="pastille-provisoire-non-reductible">provisoire</span>
+                  <span class="block text-xs text-slate-500" x-show="ligneNR(d.code) &amp;&amp; d.code === 'essence'" x-text="ligneNR(d.code) ? 'dont TVA ' + ligneNR(d.code).tva_fr + ' et TICPE ' + ligneNR(d.code).accises_fr : ''"></span>
+                </th>
+                <td class="py-1 text-right" x-text="ligneNR(d.code) ? (d.code === 'essence' ? ligneNR(d.code).total_taxes_fr : ligneNR(d.code).tva_fr) : ''"></td>
+              </tr>
+            </template>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Impôts sur les revenus</th><td class="py-1 text-right" x-text="resultat.impot_revenu_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Impôts fonciers</th><td class="py-1 text-right" x-text="resultat.taxe_fonciere_fr"></td></tr>
             <tr class="border-b"><th scope="row" class="py-1 pr-2 font-normal">Impôt sur les revenus locatifs</th><td class="py-1 text-right" x-text="resultat.impot_revenus_locatifs_fr"></td></tr>
@@ -218,6 +267,8 @@
     <p class="text-sm text-slate-500" x-show="!resultat &amp;&amp; !erreur" x-cloak>Le bilan s'affiche dès que le calcul est disponible.</p>
 
     <p class="disclaimer" data-testid="avertissement-bilan" x-text="resultat ? resultat.avertissement : avertissementParDefaut"></p>
+
+    {% if net_balance_impact_template %}{% include net_balance_impact_template %}{% endif %}
   </section>
 </div>
 
@@ -246,12 +297,21 @@
 
       // État local uniquement : rien n'est écrit dans localStorage, sessionStorage ni cookie.
       form: { statut: null, revenu: '', enfants: '0', aides: {}, nonMonetaires: [],
-              immobilier: { loyers: '', taux: '', tauxModifie: false } },
+              immobilier: { loyers: '', taux: '', tauxModifie: false, tauxEfface: false },
+              nonReductible: { nourriture: { valeur: '', modifie: false }, electricite: { valeur: '', modifie: false }, essence: { valeur: '', modifie: false } } },
+      lignesNonReductibles: [
+        { code: 'nourriture', label: 'Frais de nourriture', rowLabel: 'TVA sur la nourriture', rowTestid: 'taxe-nourriture-tva', note: '' },
+        { code: 'electricite', label: 'Électricité', rowLabel: "TVA sur l'électricité", rowTestid: 'taxe-electricite-tva',
+          note: 'Montant moyen par ménage, France métropolitaine uniquement (Corse et outre-mer exclus).' },
+        { code: 'essence', label: 'Frais essence pour voiture', rowLabel: "Taxes sur l'essence (TVA et TICPE)", rowTestid: 'taxe-essence',
+          note: 'Le prix inclut la TVA à 20 % et la TICPE.' },
+      ],
       pastilleEstimation: {}, // code -> provisoire (bool), retirée dès que le champ est modifié
       estimationEnCours: null, // code de l'aide en cours d'estimation, sinon null
       _valeurEstimee: {},
       consommation: { reductions: {}, adultes: 1, reference_overrides: {} },
       resultat: null,
+      totalFinancesPubliques: null,
       erreurs: {},
       erreursGenerales: [],
       erreur: '',
@@ -277,6 +337,10 @@
             reference_overrides: d.reference_overrides || {},
           };
           this.schedule();
+        });
+        window.addEventListener('fiscal-total-changed', (e) => {
+          const t = e && e.detail ? e.detail.total_fr : null;
+          this.totalFinancesPubliques = typeof t === 'string' && t !== '' ? t : null;
         });
         // Connexion/déconnexion : si un bilan existe, on force un nouveau calcul afin que le
         // verdict soit persisté pour la session courante, sans ressaisie.
@@ -310,6 +374,26 @@
         }
       },
 
+      // « Effacer tout » : remet formulaire et état d'interface à vide, puis recalcule. Aucun stockage.
+      effacerTout() {
+        clearTimeout(this._timer);
+        ++this._seq;
+        ++this._revenusSeq;
+        this._saisieUtilisateur = true;
+        this.form = PartipoliaClear.emptyForm(this.aidesMonetaires.map(a => a.code));
+        Object.assign(this, PartipoliaClear.emptyUiState());
+        this._valeurEstimee = {};
+        this.estimationEnCours = null;
+        this.totalFinancesPubliques = null;
+        window.dispatchEvent(new CustomEvent('net-balance-clear-all'));
+        this._lastPayload = null;
+        return this.calculerBilan();
+      },
+
+      get contributionConsommationFr() {
+        if (!this.resultat) return '';
+        return PartipoliaClear.contributionLine(this.totalFinancesPubliques, this.resultat.consommation.total_fr);
+      },
       err(champ) { return this.erreurs[champ] || ''; },
       choisirStatut(code) { this._saisieUtilisateur = true; this.form.statut = code; this.form.revenu = ''; },
       retirerPastillesModifiees() {
@@ -379,6 +463,12 @@
           const v = String(this.form.aides[a.code].valeur).trim();
           if (v !== '') monetaires[a.code] = v;
         });
+        // Montant non réductible envoyé seulement s'il a été modifié (sinon défaut serveur).
+        const nonReductible = {};
+        this.lignesNonReductibles.forEach(d => {
+          const c = this.form.nonReductible[d.code];
+          if (c.modifie) nonReductible[d.code] = String(c.valeur).trim();
+        });
         const reductions = {};
         Object.keys(this.consommation.reductions || {}).forEach(k => { reductions[k] = String(this.consommation.reductions[k]); });
         const overrides = {};
@@ -392,6 +482,7 @@
             non_monetaires: this.form.nonMonetaires.map(n => ({ libelle: n.libelle, valeur: String(n.valeur).trim() })),
           },
           consommation: { reductions, adultes: this.consommation.adultes, reference_overrides: overrides },
+          consommation_non_reductible: nonReductible,
         };
       },
 
@@ -428,6 +519,7 @@
           this.resultat = data;
           this.prefillerEstimations();
           this.prefillerTauxDefaut();
+          this.prefillerDefautsNonReductible();
         } catch (e) {
           if (seq !== this._seq) return;
           this._lastPayload = null;
@@ -449,9 +541,22 @@
       prefillerTauxDefaut() {
         const imm = this.form.immobilier;
         const defaut = this.resultat && this.resultat.taux_taxe_fonciere_defaut;
-        if (!imm.tauxModifie && defaut !== undefined && defaut !== null && imm.taux !== String(defaut)) {
-          imm.taux = String(defaut);
-        }
+        const suivant = PartipoliaClear.nextTaux(imm, (defaut === undefined || defaut === null) ? null : String(defaut));
+        if (suivant !== imm.taux) imm.taux = suivant;
+      },
+
+      ligneNR(code) {
+        const r = this.resultat && this.resultat.consommation_non_reductible;
+        return r ? (r.lignes || []).find(l => l.ligne === code) || null : null;
+      },
+
+      // Affiche le montant par défaut renvoyé par l'API tant que l'utilisateur ne l'a pas modifié.
+      prefillerDefautsNonReductible() {
+        this.lignesNonReductibles.forEach(d => {
+          const l = this.ligneNR(d.code);
+          const champ = this.form.nonReductible[d.code];
+          if (l && !champ.modifie && champ.valeur !== String(l.montant_defaut)) champ.valeur = String(l.montant_defaut);
+        });
       },
 
       afficherErreurs(data) {
@@ -473,6 +578,7 @@
       champAffiche(champ) {
         return champ === 'enfants_a_charge' || champ === 'aides.non_monetaires'
           || champ === 'immobilier.loyers_annuels' || champ === 'immobilier.taux_taxe_fonciere'
+          || /^consommation_non_reductible\.(nourriture|electricite|essence)$/.test(champ)
           || /^revenus\.[a-z_]+$/.test(champ) || /^aides\.[a-z_]+$/.test(champ)
           || /^aides\.non_monetaires\[\d+\](\.(libelle|valeur))?$/.test(champ);
       },
